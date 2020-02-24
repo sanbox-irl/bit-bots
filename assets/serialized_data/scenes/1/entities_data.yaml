@@ -1,0 +1,84 @@
+---
+0c2af0a5-7d99-4182-8aed-57bab959d996:
+  name:
+    inner:
+      name: Tester
+    active: true
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 20.0
+        y: 16.0
+      world_position:
+        x: 20.0
+        y: 16.0
+      parent:
+        target_serialized_id: ~
+    active: true
+  grid_object: ~
+  scene_switcher: ~
+  graph_node: ~
+  velocity: ~
+  sprite:
+    inner:
+      sprite_name: Grass
+      running_data:
+        draw_order:
+          draw_layer: Instance
+          order: 1
+        facing_horizontal: Right
+        facing_vertical: Up
+        scale:
+          x: 1.0
+          y: 1.0
+        tint:
+          r: 1.0
+          g: 1.0
+          b: 1.0
+          a: 1.0
+        current_frame: 0
+        frame_time: 0.0
+        is_animating: false
+    active: true
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 0c2af0a5-7d99-4182-8aed-57bab959d996
+  marker: ~
+ee3c15de-a320-4288-a6de-82128daa3a6e:
+  name: ~
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 30.0
+        y: 40.0
+      world_position:
+        x: 25.0
+        y: 40.0
+      parent:
+        target_serialized_id: ~
+    active: true
+  grid_object: ~
+  scene_switcher: ~
+  graph_node: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker:
+    inner:
+      main_id: 2b787f59-9759-4077-9642-4bec1468f75c
+      sub_id: 2b787f59-9759-4077-9642-4bec1468f75c
+    active: true
+  id: ee3c15de-a320-4288-a6de-82128daa3a6e
+  marker: ~

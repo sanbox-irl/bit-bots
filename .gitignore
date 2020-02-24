@@ -1,0 +1,8 @@
+/target
+/dev
+.vscode/
+
+# These are probably scripts used to build the project
+*.sh
+*.zsh
+*.cmd

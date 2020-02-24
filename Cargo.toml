@@ -1,0 +1,85 @@
+[package]
+name = "bit-bots"
+version = "0.1.0"
+authors = ["Jack Spira <jjspira@gmail.com>"]
+edition = "2018"
+build = "build/build_scripts/build_main.rs"
+
+[features]
+metal = ["gfx-backend-metal"]
+dx12 = ["gfx-backend-dx12"]
+vulkan = ["gfx-backend-vulkan"]
+
+[dependencies]
+clockwork_build_shared = { path = "build/clockwork_build_shared" }
+bit-bots-derive = { path = "bit-bots-derive" }
+lazy_static = "1.4.0"
+log = "0.4.8"
+log-once = "0.3.1"
+pretty_env_logger = "0.3.1"
+arrayvec = "0.4.11"
+bitflags = "1.1.0"
+memoffset = "0.5.1"
+maplit = "1.0.2"
+serde = { version = "1.0.101", features = ["derive"] }
+serde_yaml = "0.8"
+bincode = "1.2.0"
+winit = "0.20.0"
+gfx-hal = "0.4.1"
+image = "0.22.2"
+strum = "0.16.0"
+strum_macros = "0.16.0"
+rodio = "0.10.0"
+imgui = {version = "0.3.0-pre", path = "vendor/imgui-rs" }
+uuid = { version = "0.7.4", features = ["serde", "v4"] }
+typename = "0.1.1"
+glyph_brush = "0.6.1"
+num-traits = "0.2"
+num-derive = "0.3"
+array2d = "0.2.1"
+regex = "1.3.4"
+clipboard = "0.5.0"
+glob = "0.3.0"
+matches = "0.1.8"
+anyhow = "1.0.26"
+once_cell = "1.3"
+thiserror = "1.0"
+
+
+[patch.crates-io]
+winit = { git = 'https://github.com/rust-windowing/winit.git' }
+rodio = { git = 'https://github.com/RustAudio/rodio.git' }
+
+[build-dependencies]
+glob = "0.3.0"
+shaderc = "0.6.1"
+serde = { version = "1.0.101", features = ["derive"] }
+serde_json = "1.0.40"
+serde_yaml = "0.8"
+log = "0.4.8"
+log4rs = "0.8.3"
+sheep = "0.3.0"
+image = "0.22.2"
+failure = "0.1.5"
+clockwork_build_shared = { path = "build/clockwork_build_shared" }
+
+[dependencies.imgui-winit-support]
+version = "0.3.0-pre"
+path = "vendor/imgui-rs/imgui-winit-support"
+default-features = false
+features = ["winit-20"]
+
+[dependencies.gfx-backend-vulkan]
+version = "0.4"
+optional = true
+
+[dependencies.gfx-backend-metal]
+version = "0.4"
+optional = true
+
+[dependencies.gfx-backend-dx12]
+version = "0.4"
+optional = true
+
+[profile.dev.package."*"]
+opt-level = 3

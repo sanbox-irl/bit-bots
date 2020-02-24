@@ -1,0 +1,84 @@
+---
+- sprite_name: PixelMainCharacterStanding
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.6000000238418579
+    - 0.6000000238418579
+- sprite_name: PlayerDead
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: Grass
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: Block
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: Fire
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+    - 0.10000000149011612
+    - 0.10000000149011612
+- sprite_name: Flag
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: PushableBlock
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: Wall
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: Button
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612
+- sprite_name: Target
+  origin:
+    horizontal: Left
+    vertical: Top
+  facing_horizontal: Right
+  facing_vertical: Up
+  frame_durations:
+    - 0.10000000149011612

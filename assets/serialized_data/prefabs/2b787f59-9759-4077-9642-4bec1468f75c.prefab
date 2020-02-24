@@ -1,0 +1,58 @@
+---
+root_id: 2b787f59-9759-4077-9642-4bec1468f75c
+valid: true
+members:
+  2b787f59-9759-4077-9642-4bec1468f75c:
+    name:
+      inner:
+        name: Player
+      active: true
+    player: ~
+    transform:
+      inner:
+        local_position:
+          x: 25.0
+          y: 40.0
+        world_position:
+          x: 25.0
+          y: 40.0
+        parent:
+          target_serialized_id: ~
+      active: true
+    grid_object: ~
+    scene_switcher: ~
+    graph_node: ~
+    velocity:
+      inner:
+        intended_direction: ~
+      active: true
+    sprite:
+      inner:
+        sprite_name: PixelMainCharacterStanding
+        running_data:
+          draw_order:
+            draw_layer: Instance
+            order: 0
+          facing_horizontal: Right
+          facing_vertical: Up
+          scale:
+            x: 1.0
+            y: 1.0
+          tint:
+            r: 1.0
+            g: 1.0
+            b: 1.0
+            a: 1.0
+          current_frame: 0
+          frame_time: 0.0
+          is_animating: false
+      active: true
+    sound_source: ~
+    draw_rectangle: ~
+    bounding_box: ~
+    text_source: ~
+    follow: ~
+    conversant_npc: ~
+    prefab_marker: ~
+    id: 2b787f59-9759-4077-9642-4bec1468f75c
+    marker: ~

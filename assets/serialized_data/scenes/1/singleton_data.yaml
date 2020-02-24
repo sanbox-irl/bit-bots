@@ -1,0 +1,12 @@
+---
+camera:
+  marker: Camera
+  inner:
+    native_resolution:
+      x: 48.0
+      y: 84.0
+    zoom_level: 1.0
+    current_mode: Standard
+    default_position:
+      x: 24.0
+      y: 42.0

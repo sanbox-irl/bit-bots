@@ -1,0 +1,36 @@
+---
+root_id: b7e35ef7-1ad1-4ab7-a8ee-c2d573bd141c
+valid: true
+members:
+  b7e35ef7-1ad1-4ab7-a8ee-c2d573bd141c:
+    name:
+      inner:
+        name: Camera
+      active: true
+    player: ~
+    transform:
+      inner:
+        local_position:
+          x: 24.0
+          y: 42.0
+        world_position:
+          x: 24.0
+          y: 42.0
+        parent:
+          target_serialized_id: ~
+      active: true
+    grid_object: ~
+    scene_switcher: ~
+    graph_node: ~
+    velocity: ~
+    sprite: ~
+    sound_source: ~
+    draw_rectangle: ~
+    bounding_box: ~
+    text_source: ~
+    tilemap: ~
+    follow: ~
+    conversant_npc: ~
+    prefab_marker: ~
+    id: b7e35ef7-1ad1-4ab7-a8ee-c2d573bd141c
+    marker: Camera
