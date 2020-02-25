@@ -64,7 +64,7 @@ impl IndexMut<NodeId> for SceneGraph {
     }
 }
 
-const TREE_DELIMITER: &'static str = "\u{2022} ";
+const TREE_DELIMITER: &'static str = "|--┬";
 impl fmt::Display for SceneGraph {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for node in self.iter() {
@@ -76,7 +76,7 @@ impl fmt::Display for SceneGraph {
 
                 if let Some(child) = node.first_child() {
                     for child in Siblings::new(self, child) {
-                        pprint_tree(f, child, TREE_DELIMITER.to_string(), self)?;
+                        pprint_tree(f, child, " ".to_string(), self)?;
                     }
                 }
             }
