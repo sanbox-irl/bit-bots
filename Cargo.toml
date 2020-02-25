@@ -18,6 +18,8 @@ log = "0.4.8"
 log-once = "0.3.1"
 pretty_env_logger = "0.3.1"
 arrayvec = "0.4.11"
+num-derive = "0.3.0"
+num-traits = "0.2"
 bitflags = "1.1.0"
 memoffset = "0.5.1"
 maplit = "1.0.2"
@@ -34,8 +36,6 @@ imgui = {version = "0.3.0-pre", path = "vendor/imgui-rs" }
 uuid = { version = "0.7.4", features = ["serde", "v4"] }
 typename = "0.1.1"
 glyph_brush = "0.6.1"
-num-traits = "0.2"
-num-derive = "0.3"
 array2d = "0.2.1"
 regex = "1.3.4"
 clipboard = "0.5.0"
@@ -44,7 +44,6 @@ matches = "0.1.8"
 anyhow = "1.0.26"
 once_cell = "1.3"
 thiserror = "1.0"
-
 
 [patch.crates-io]
 winit = { git = 'https://github.com/rust-windowing/winit.git' }
