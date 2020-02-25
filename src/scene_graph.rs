@@ -10,6 +10,7 @@ mod node_error;
 mod node_id;
 mod scene_graph;
 mod siblings_range;
+mod traverse;
 
 pub use node::*;
 pub use node_error::*;

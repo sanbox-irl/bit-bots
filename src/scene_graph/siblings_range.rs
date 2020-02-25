@@ -100,7 +100,7 @@ impl DetachedSiblingsRange {
     /// Returns an error if the given parent is a node in the range.
     pub(super) fn transplant(
         self,
-        arena: &mut SceneGraph,
+        scene_grpah: &mut SceneGraph,
         parent: Option<NodeId>,
         previous_sibling: Option<NodeId>,
         next_sibling: Option<NodeId>,
@@ -108,13 +108,13 @@ impl DetachedSiblingsRange {
         // Check that the given arguments are consistent.
         if cfg!(debug_assertions) {
             if let Some(previous_sibling) = previous_sibling {
-                debug_assert_eq!(arena[previous_sibling].parent, parent);
+                debug_assert_eq!(scene_grpah[previous_sibling].parent, parent);
             }
             if let Some(next_sibling) = next_sibling {
-                debug_assert_eq!(arena[next_sibling].parent, parent);
+                debug_assert_eq!(scene_grpah[next_sibling].parent, parent);
             }
-            debug_assert_triangle_nodes!(arena, parent, previous_sibling, next_sibling);
-            if let Some(parent_node) = parent.map(|id| &arena[id]) {
+            debug_assert_triangle_nodes!(scene_grpah, parent, previous_sibling, next_sibling);
+            if let Some(parent_node) = parent.map(|id| &scene_grpah[id]) {
                 debug_assert_eq!(
                     parent_node.first_child.is_some(),
                     parent_node.last_child.is_some()
@@ -123,26 +123,26 @@ impl DetachedSiblingsRange {
         }
 
         // Rewrite parents of the nodes in the range.
-        self.rewrite_parents(arena, parent)?;
+        self.rewrite_parents(scene_grpah, parent)?;
 
         // Connect the previous sibling and the first node in the range.
-        connect_neighbors(arena, parent, previous_sibling, Some(self.first));
+        connect_neighbors(scene_grpah, parent, previous_sibling, Some(self.first));
 
         // Connect the next sibling and the last node in the range.
-        connect_neighbors(arena, parent, Some(self.last), next_sibling);
+        connect_neighbors(scene_grpah, parent, Some(self.last), next_sibling);
 
         // Ensure related nodes are consistent.
         // Check only in debug build.
         if cfg!(debug_assertions) {
-            debug_assert_triangle_nodes!(arena, parent, previous_sibling, Some(self.first));
-            debug_assert_triangle_nodes!(arena, parent, Some(self.last), next_sibling);
-            if let Some(parent_node) = parent.map(|id| &arena[id]) {
+            debug_assert_triangle_nodes!(scene_grpah, parent, previous_sibling, Some(self.first));
+            debug_assert_triangle_nodes!(scene_grpah, parent, Some(self.last), next_sibling);
+            if let Some(parent_node) = parent.map(|id| &scene_grpah[id]) {
                 debug_assert!(
                     parent_node.first_child.is_some() && parent_node.last_child.is_some(),
                     "parent should have children (at least `self.first`)"
                 );
-                debug_assert_triangle_nodes!(arena, parent, None, parent_node.first_child);
-                debug_assert_triangle_nodes!(arena, parent, parent_node.last_child, None);
+                debug_assert_triangle_nodes!(scene_grpah, parent, None, parent_node.first_child);
+                debug_assert_triangle_nodes!(scene_grpah, parent, parent_node.last_child, None);
             }
         }
 

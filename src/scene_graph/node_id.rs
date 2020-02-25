@@ -1,4 +1,9 @@
-use super::{relations::insert_with_neighbors, siblings_range::SiblingsRange, NodeError, SceneGraph};
+use super::{
+    relations::insert_with_neighbors,
+    siblings_range::SiblingsRange,
+    traverse::{Ancestors, Children},
+    NodeError, SceneGraph,
+};
 use std::fmt;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
@@ -58,9 +63,9 @@ impl NodeId {
     /// ```
     ///
     /// [`skip`]: https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html#method.skip
-    // pub fn ancestors<T>(self, scene_graph: &mut SceneGraph) -> Ancestors<'_, T> {
-    //     Ancestors::new(scene_graph, self)
-    // }
+    pub fn ancestors(self, scene_graph: &SceneGraph) -> Ancestors<'_> {
+        Ancestors::new(scene_graph, self)
+    }
 
     /// Returns an iterator of references to this node’s children.
     ///
@@ -92,9 +97,9 @@ impl NodeId {
     /// assert_eq!(iter.next(), Some(n1_3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    // pub fn children(self, scene_graph: &SceneGraph) -> Children<'_, Entity> {
-    //     Children::new(scene_graph, self)
-    // }
+    pub fn children(self, scene_graph: &SceneGraph) -> Children<'_> {
+        Children::new(scene_graph, self)
+    }
 
     /// Detaches a node from its parent. Children are not affected.
     ///
