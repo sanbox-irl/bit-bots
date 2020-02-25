@@ -44,6 +44,15 @@ pub use utilities::*;
 fn main() {
     pretty_env_logger::init();
 
+    let mut scene_graph = SceneGraph::new();
+    let entity = Entity::default();
+    let second_entity = Entity::default();
+    let node = scene_graph.instantiate_node(entity);
+    let second_node = scene_graph.instantiate_node(second_entity);
+    node.append(second_node, &mut scene_graph);
+
+    info!("Scene Graph is: {:#?}", scene_graph);
+
     let mut clockwork = match clockwork::Clockwork::new() {
         Ok(clockwork) => clockwork,
         Err(e) => {

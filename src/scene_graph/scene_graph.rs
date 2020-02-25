@@ -14,7 +14,7 @@ impl SceneGraph {
 
     /// Create a new node on the scene graph. The new Node ID is not
     /// connected to anything and is therefore a "root" node.
-    pub fn create_node(&mut self, entity: Entity) -> NodeId {
+    pub fn instantiate_node(&mut self, entity: Entity) -> NodeId {
         let index = self.nodes.len();
         self.nodes.push(Node::new(entity));
 

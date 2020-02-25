@@ -14,9 +14,7 @@ mod siblings_range;
 pub use node::*;
 pub use node_error::*;
 pub use node_id::*;
-pub use relations::*;
 pub use scene_graph::*;
-pub use siblings_range::*;
 
 lazy_static! {
     pub static ref ROOT_NODES: Mutex<GraphNode> = Mutex::new(GraphNode {

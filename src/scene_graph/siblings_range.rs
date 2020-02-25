@@ -56,7 +56,7 @@ impl SiblingsRange {
 /// `rewrite_parents()`.
 #[derive(Debug, Clone, Copy)]
 #[must_use = "This range can have outdated parent information and they should be updated"]
-pub(crate) struct DetachedSiblingsRange {
+pub(super) struct DetachedSiblingsRange {
     /// First node.
     first: NodeId,
     /// Last node.
@@ -69,7 +69,7 @@ impl DetachedSiblingsRange {
     /// # Failures
     ///
     /// Returns an error if the given parent is a node in the range.
-    pub(crate) fn rewrite_parents(
+    pub(super) fn rewrite_parents(
         &self,
         arena: &mut SceneGraph,
         new_parent: Option<NodeId>,
@@ -98,7 +98,7 @@ impl DetachedSiblingsRange {
     /// # Failures
     ///
     /// Returns an error if the given parent is a node in the range.
-    pub(crate) fn transplant(
+    pub(super) fn transplant(
         self,
         arena: &mut SceneGraph,
         parent: Option<NodeId>,

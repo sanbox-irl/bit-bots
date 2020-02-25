@@ -1,4 +1,4 @@
-use super::{relations::insert_with_neighbors, Entity, Node, NodeError, SceneGraph, SiblingsRange};
+use super::{relations::insert_with_neighbors, siblings_range::SiblingsRange, NodeError, SceneGraph};
 use std::fmt;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]

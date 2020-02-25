@@ -4,41 +4,19 @@ use thiserror::Error;
 #[derive(Debug, Clone, Copy, Error)]
 /// Possible node failures.
 pub enum NodeError {
-    /// Attempt to append a node to itself.
+    #[error("Cannot append a node to itself")]
     AppendSelf,
-    /// Attempt to prepend a node to itself.
+    #[error("Cannot prepend a node to itself")]
     PrependSelf,
-    /// Attempt to insert a node before itself.
-    InsertBeforeSelf,
-    /// Attempt to insert a node after itself.
-    InsertAfterSelf,
-    /// Attempt to insert a removed node, or insert to a removed node.
+    #[error("Removed node cannot have any parent, siblings, and children")]
     Removed,
-}
-
-impl NodeError {
-    fn as_str(self) -> &'static str {
-        match self {
-            NodeError::AppendSelf => "Can not append a node to itself",
-            NodeError::PrependSelf => "Can not prepend a node to itself",
-            NodeError::InsertBeforeSelf => "Can not insert a node before itself",
-            NodeError::InsertAfterSelf => "Can not insert a node after itself",
-            NodeError::Removed => "Removed node cannot have any parent, siblings, and children",
-        }
-    }
-}
-
-impl fmt::Display for NodeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
-    }
 }
 
 /// An error type that represents the given structure or argument is
 /// inconsistent or invalid.
 // Intended for internal use.
 #[derive(Debug, Clone, Copy, Error)]
-pub enum ConsistencyError {
+pub(super) enum ConsistencyError {
     /// Specified a node as its parent.
     ParentChildLoop,
     /// Specified a node as its sibling.
