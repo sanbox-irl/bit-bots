@@ -44,6 +44,24 @@ pub use utilities::*;
 fn main() {
     pretty_env_logger::init();
 
+    let mut scene_graph = SceneGraph::new();
+    let n_1 = scene_graph.instantiate_node(Entity::debug_stub(0));
+    let n_1_1 = scene_graph.instantiate_node(Entity::debug_stub(1));
+    let n_1_2 = scene_graph.instantiate_node(Entity::debug_stub(2));
+    n_1.append(n_1_1, &mut scene_graph);
+    n_1.append(n_1_2, &mut scene_graph);
+
+    let n_2 = scene_graph.instantiate_node(Entity::debug_stub(3));
+    let n_2_1 = scene_graph.instantiate_node(Entity::debug_stub(4));
+    n_2.append(n_2_1, &mut scene_graph);
+
+    let n_2_1_1 = scene_graph.instantiate_node(Entity::debug_stub(5));
+    let n_2_1_2 = scene_graph.instantiate_node(Entity::debug_stub(6));
+    n_2_1.append(n_2_1_1, &mut scene_graph);
+    n_2_1.append(n_2_1_2, &mut scene_graph);
+
+    println!("Scene Graph:\n{}", scene_graph);
+
     let mut clockwork = match clockwork::Clockwork::new() {
         Ok(clockwork) => clockwork,
         Err(e) => {

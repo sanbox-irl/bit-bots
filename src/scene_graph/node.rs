@@ -1,4 +1,5 @@
 use super::{Entity, NodeId};
+use std::fmt;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Node {
@@ -59,5 +60,11 @@ impl Node {
     /// Checks if the node is detached. `is_detached()` != `parent().is_some()`
     pub(super) fn is_detached(&self) -> bool {
         self.parent.is_none()
+    }
+}
+
+impl fmt::Display for Node {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.entity)
     }
 }

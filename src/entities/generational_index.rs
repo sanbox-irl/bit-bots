@@ -1,10 +1,17 @@
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Default, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct GenerationalIndex {
     pub(super) index: usize,
     pub(super) generation: u64,
 }
 
 impl GenerationalIndex {
+    /// This is made available *only* for debugging purposes. You should
+    /// never load an entity using this ID!
+    #[cfg(debug_assertions)]
+    pub fn debug_stub(index: usize) -> GenerationalIndex {
+        Self { index, generation: 0 }
+    }
+
     pub fn index(&self) -> usize {
         self.index
     }
@@ -12,11 +19,7 @@ impl GenerationalIndex {
 
 impl std::fmt::Display for GenerationalIndex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Entity: [Index: {}, Generation: {}]",
-            self.index, self.generation
-        )
+        write!(f, "{{{}/{}}}", self.index, self.generation)
     }
 }
 
