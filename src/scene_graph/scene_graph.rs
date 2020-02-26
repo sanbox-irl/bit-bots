@@ -64,20 +64,34 @@ impl IndexMut<NodeId> for SceneGraph {
     }
 }
 
-const TREE_DELIMITER: &'static str = "|--┬";
+const TREE_DELIMITER: char = '├';
+const TREE_DOWN: char = '└';
+const TREE_HORIZ: char = '─';
+const TREE_VERT: char = '|';
 impl fmt::Display for SceneGraph {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for node in self.iter() {
+        writeln!(f, "Scene Graph Root")?;
+
+        let root_nodes: Vec<&Node> = self.iter().filter(|n| n.parent().is_none()).collect();
+        let mut top_level_iterator = root_nodes.iter().peekable();
+
+        while let Some(node) = top_level_iterator.next() {
             let node: &Node = node;
+            let top_level_last = top_level_iterator.peek().is_none();
 
-            // Okay it's a root node, so we'll handle it
-            if node.parent().is_none() {
-                writeln!(f, "{}{}", TREE_DELIMITER, node)?;
+            writeln!(
+                f,
+                "{}── {}",
+                if top_level_last { TREE_DOWN } else { TREE_DELIMITER },
+                node_name = node
+            )?;
 
-                if let Some(child) = node.first_child() {
-                    for child in Siblings::new(self, child) {
-                        pprint_tree(f, child, " ".to_string(), self)?;
-                    }
+            if let Some(child) = node.first_child() {
+                let mut iterator = Siblings::new(self, child).peekable();
+
+                while let Some(child) = iterator.next() {
+                    let local_last = iterator.peek().is_none();
+                    pprint_tree(f, child, 3, top_level_last, local_last, self)?;
                 }
             }
         }
@@ -88,22 +102,32 @@ impl fmt::Display for SceneGraph {
 fn pprint_tree(
     f: &mut fmt::Formatter<'_>,
     node_id: NodeId,
-    prefix: String,
+    number_of_spaces: usize,
+    main_last: bool,
+    local_last: bool,
     scene_graph: &SceneGraph,
 ) -> fmt::Result {
+    // Line and Blank Space...
+    write!(f, "{}", if main_last { ' ' } else { TREE_VERT })?;
+    for _ in 0..number_of_spaces {
+        write!(f, " ")?;
+    }
+
     writeln!(
         f,
-        "{}{}{}",
-        prefix,
-        TREE_DELIMITER,
+        "{}── {}",
+        if local_last { TREE_DOWN } else { TREE_DELIMITER },
         scene_graph.get(node_id).unwrap()
     )?;
-    let prefix = prefix + "   ";
 
     let node_id_children = node_id.children(scene_graph);
     if node_id_children.count() != 0 {
-        for child in node_id.children(scene_graph) {
-            pprint_tree(f, child, prefix.to_string(), scene_graph)?;
+        let mut iterator = node_id.children(scene_graph).peekable();
+
+        while let Some(child) = iterator.next() {
+            let is_last = iterator.peek().is_none();
+
+            pprint_tree(f, child, number_of_spaces + 4, main_last, is_last, scene_graph)?;
         }
     }
 

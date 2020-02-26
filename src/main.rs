@@ -57,10 +57,11 @@ fn main() {
 
     let n_2_1_1 = scene_graph.instantiate_node(Entity::debug_stub(5));
     let n_2_1_2 = scene_graph.instantiate_node(Entity::debug_stub(6));
-    n_2_1.append(n_2_1_1, &mut scene_graph);
-    n_2_1.append(n_2_1_2, &mut scene_graph);
+    n_2.append(n_2_1_1, &mut scene_graph);
+n_2.append(n_2_1_2, &mut scene_graph);
 
-    println!("Scene Graph:\n{}", scene_graph);
+    let _ = scene_graph.instantiate_node(Entity::debug_stub(7));
+    println!("{}", scene_graph);
 
     let mut clockwork = match clockwork::Clockwork::new() {
         Ok(clockwork) => clockwork,
