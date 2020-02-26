@@ -48,6 +48,14 @@ impl SceneGraph {
     pub fn iter(&self) -> impl Iterator<Item = &Node> {
         self.nodes.iter()
     }
+
+    /// Returns an iterator only over root nodes, or nodes with no parents who
+    /// are not removed.
+    pub fn iter_roots(&self) -> impl Iterator<Item = &Node> {
+        self.nodes
+            .iter()
+            .filter(|n| n.is_removed() == false && n.parent().is_none())
+    }
 }
 
 impl Index<NodeId> for SceneGraph {
@@ -66,15 +74,12 @@ impl IndexMut<NodeId> for SceneGraph {
 
 const TREE_DELIMITER: char = '├';
 const TREE_DOWN: char = '└';
-const TREE_HORIZ: char = '─';
 const TREE_VERT: char = '|';
 impl fmt::Display for SceneGraph {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Scene Graph Root")?;
 
-        let root_nodes: Vec<&Node> = self.iter().filter(|n| n.parent().is_none()).collect();
-        let mut top_level_iterator = root_nodes.iter().peekable();
-
+        let mut top_level_iterator = self.iter_roots().peekable();
         while let Some(node) = top_level_iterator.next() {
             let node: &Node = node;
             let top_level_last = top_level_iterator.peek().is_none();
@@ -86,13 +91,10 @@ impl fmt::Display for SceneGraph {
                 node_name = node
             )?;
 
-            if let Some(child) = node.first_child() {
-                let mut iterator = Siblings::new(self, child).peekable();
-
-                while let Some(child) = iterator.next() {
-                    let local_last = iterator.peek().is_none();
-                    pprint_tree(f, child, 3, top_level_last, local_last, self)?;
-                }
+            let mut iterator = node.children(self).peekable();
+            while let Some(child) = iterator.next() {
+                let local_last = iterator.peek().is_none();
+                pprint_tree(f, child, 3, top_level_last, local_last, self)?;
             }
         }
         Ok(())
@@ -101,7 +103,7 @@ impl fmt::Display for SceneGraph {
 
 fn pprint_tree(
     f: &mut fmt::Formatter<'_>,
-    node_id: NodeId,
+    node: &Node,
     number_of_spaces: usize,
     main_last: bool,
     local_last: bool,
@@ -117,18 +119,14 @@ fn pprint_tree(
         f,
         "{}── {}",
         if local_last { TREE_DOWN } else { TREE_DELIMITER },
-        scene_graph.get(node_id).unwrap()
+        node
     )?;
 
-    let node_id_children = node_id.children(scene_graph);
-    if node_id_children.count() != 0 {
-        let mut iterator = node_id.children(scene_graph).peekable();
+    let mut iterator = node.children(scene_graph).peekable();
+    while let Some(child) = iterator.next() {
+        let is_last = iterator.peek().is_none();
 
-        while let Some(child) = iterator.next() {
-            let is_last = iterator.peek().is_none();
-
-            pprint_tree(f, child, number_of_spaces + 4, main_last, is_last, scene_graph)?;
-        }
+        pprint_tree(f, child, number_of_spaces + 4, main_last, is_last, scene_graph)?;
     }
 
     Ok(())

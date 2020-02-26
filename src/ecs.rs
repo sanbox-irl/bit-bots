@@ -42,7 +42,6 @@ impl Ecs {
         &mut self,
         resources: &ResourcesDatabase,
         hardware_interfaces: &HardwareInterface,
-        grid: &mut grid_system::Grid,
     ) -> Result<(), Error> {
         self.singleton_database
             .initialize_with_runtime_resources(resources, hardware_interfaces);
@@ -54,17 +53,10 @@ impl Ecs {
             &mut self.component_database.sprites,
         );
 
-        grid_system::initialize_transforms(
-            &mut self.component_database.transforms,
-            &self.component_database.names,
-            grid,
-            &self.singleton_database.associated_entities,
-        );
-
         Ok(())
     }
 
-    pub fn update(&mut self, grid: &mut grid_system::Grid, actions: &ActionMap) -> Result<(), Error> {
+    pub fn update(&mut self, actions: &ActionMap) -> Result<(), Error> {
         // // Player Stuff
         player_system::player_update(
             &mut self.component_database.players,
@@ -72,9 +64,6 @@ impl Ecs {
             &mut self.component_database.velocities,
             actions,
         );
-
-        // Movement Stuff
-        grid_system::update_grid_positions(self, grid);
 
         Ok(())
     }

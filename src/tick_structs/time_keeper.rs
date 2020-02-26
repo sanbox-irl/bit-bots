@@ -13,17 +13,6 @@ pub struct TimeKeeper {
 }
 
 impl TimeKeeper {
-    pub fn new() -> Self {
-        Self {
-            time: Instant::now(),
-            accumulator: 0.0,
-            delta_time: Self::SIXTIETH,
-            tick_count: 0,
-            fps_tracker: FPSTracker::default(),
-            last_deltas: ArrayVec::new(),
-        }
-    }
-
     pub const SIXTIETH: f32 = 1.0 / 60.0;
 
     pub fn start_frame(&mut self) {
@@ -78,6 +67,19 @@ impl TimeKeeper {
         }
 
         is_opened
+    }
+}
+
+impl Default for TimeKeeper {
+    fn default() -> Self {
+        Self {
+            time: Instant::now(),
+            accumulator: 0.0,
+            delta_time: Self::SIXTIETH,
+            tick_count: 0,
+            fps_tracker: FPSTracker::default(),
+            last_deltas: ArrayVec::new(),
+        }
     }
 }
 

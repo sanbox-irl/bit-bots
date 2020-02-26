@@ -29,40 +29,6 @@ impl Transform {
         }
     }
 
-    pub(super) fn set_new_parent(&mut self, my_id: Entity, new_parent_node: RawComponent) {
-        // Dirty the Transform, cause it needs to be moved again!
-        self.dirty = true;
-
-        self.remove_self_from_parent(my_id);
-
-        // Now Set the new Parent:
-        self.parent.target = new_parent_node;
-    }
-
-    fn remove_self_from_parent(&mut self, my_id: Entity) {
-        // Remove the old Parent!
-        if let Some(parent) = self.parent_mut() {
-            let children = parent.children.as_mut().unwrap();
-            let pos = children
-                .iter()
-                .position(|ser| ser.target.map(|target| target == my_id).unwrap_or_default());
-
-            if let Some(pos) = pos {
-                children.remove(pos);
-            } else {
-                error!("Entity {} had a parent, but it was not their parent.", my_id);
-            }
-        }
-    }
-
-    pub fn parent_exists(&self) -> bool {
-        self.parent.target.is_real()
-    }
-
-    pub fn parent_mut(&mut self) -> Option<&mut GraphNode> {
-        self.parent.parent_mut()
-    }
-
     pub fn world_position(&self) -> Vec2 {
         self.world_position
     }
@@ -79,14 +45,14 @@ impl Transform {
         self.local_position = f(self.local_position);
     }
 
-    pub fn local_position_fast(clist: &ComponentList<Transform>, entity_id: &Entity) -> Option<Vec2> {
-        clist.get(entity_id).as_ref().map(|&t| t.inner().local_position)
-    }
-
     pub fn update_world_position(&mut self, parent_position: Vec2) -> Vec2 {
         self.world_position = self.local_position + parent_position;
         self.dirty = false;
-        self.world_position()
+        self.world_position
+    }
+
+    pub fn local_position_fast(clist: &ComponentList<Transform>, entity_id: &Entity) -> Option<Vec2> {
+        clist.get(entity_id).as_ref().map(|&t| t.inner().local_position)
     }
 }
 
@@ -133,13 +99,13 @@ impl ComponentBounds for Transform {
     fn uncommit_to_scene(&self, se: &mut super::SerializedEntity) {
         se.transform = None;
     }
-    
+
     fn post_deserialization(
         &mut self,
         entity: super::Entity,
         serialization_markers: &super::ComponentList<super::SerializationMarker>,
     ) {
-        super::scene_graph::add_to_scene_graph((self, entity), serialization_markers);
+        // super::scene_graph::add_to_scene_graph((self, entity), serialization_markers);
     }
 }
 

@@ -17,7 +17,7 @@ impl<T: GenerationalIndexValue> GenerationalIndexArray<T> {
 
     /// Returns a mutable Iterator over the internal members of the Vec.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
-        self.0.iter_mut().flat_map(|opt_ent| {
+        self.0.iter_mut().filter_map(|opt_ent| {
             let value = &mut opt_ent.as_mut()?.value;
             if value.is_active() {
                 Some(value)
@@ -29,7 +29,7 @@ impl<T: GenerationalIndexValue> GenerationalIndexArray<T> {
 
     /// Returns an immutable Iterator over the internal members of the Vec.
     pub fn iter(&self) -> impl Iterator<Item = &T> {
-        self.0.iter().flat_map(|opt_ent| {
+        self.0.iter().filter_map(|opt_ent| {
             let value = &opt_ent.as_ref()?.value;
             if value.is_active() {
                 Some(value)

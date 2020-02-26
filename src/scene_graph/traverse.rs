@@ -1,4 +1,4 @@
-use super::{NodeId, SceneGraph};
+use super::{Node, NodeId, SceneGraph};
 
 #[derive(Clone)]
 /// An iterator of references to the ancestors a given node.
@@ -40,6 +40,13 @@ impl<'a> Children<'a> {
             node: scene_graph[current].first_child,
         }
     }
+
+    pub(super) fn new_from_node(scene_graph: &'a SceneGraph, current: &Node) -> Self {
+        Self {
+            scene_graph,
+            node: current.first_child,
+        }
+    }
 }
 
 impl<'a> Iterator for Children<'a> {
@@ -52,6 +59,33 @@ impl<'a> Iterator for Children<'a> {
     }
 }
 
+#[derive(Clone)]
+/// An iterator of references to the children of a given node.
+pub struct NodeChildren<'a> {
+    scene_graph: &'a SceneGraph,
+    node_id: Option<NodeId>,
+}
+
+impl<'a> NodeChildren<'a> {
+    pub(super) fn new(scene_graph: &'a SceneGraph, current: &Node) -> Self {
+        Self {
+            scene_graph,
+            node_id: current.first_child,
+        }
+    }
+}
+
+impl<'a> Iterator for NodeChildren<'a> {
+    type Item = &'a Node;
+
+    fn next(&mut self) -> Option<&'a Node> {
+        let node: &Node = &self.scene_graph[self.node_id.take()?];
+
+        self.node_id = node.next_sibling;
+        Some(node)
+    }
+}
+
 /// An iterator of references to the siblings after a given node.
 /// We have this in the codebase essentially only for pretty printing
 /// the tree.
@@ -60,7 +94,6 @@ pub struct Siblings<'a> {
     scene_graph: &'a SceneGraph,
     node: Option<NodeId>,
 }
-// impl_node_iterator!(FollowingSiblings, |node: &Node<T>| node.next_sibling);
 
 impl<'a> Siblings<'a> {
     pub(super) fn new(scene_graph: &'a SceneGraph, current: NodeId) -> Self {

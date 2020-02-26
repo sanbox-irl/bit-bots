@@ -1,14 +1,13 @@
 use super::{
-    systems::grid_system::Grid, systems::*, Ecs, HardwareInterface, ImGui, ImGuiDrawCommands,
-    ResourcesDatabase, TimeKeeper,
+    scene_graph::SceneGraph, systems::*, Ecs, HardwareInterface, ImGui, ImGuiDrawCommands, ResourcesDatabase,
+    TimeKeeper,
 };
 use anyhow::Error;
-use array2d::Array2D;
 
 pub struct Clockwork {
     pub ecs: Ecs,
+    pub scene_graph: SceneGraph,
     pub action_map: ActionMap,
-    pub grid: grid_system::Grid,
     pub hardware_interfaces: HardwareInterface,
     pub resources: ResourcesDatabase,
     pub time_keeper: TimeKeeper,
@@ -21,15 +20,16 @@ impl Clockwork {
         let mut hardware_interfaces = HardwareInterface::new(&resources.config)?;
         resources.initialize(&mut hardware_interfaces.renderer)?;
 
-        let (ecs, grid) = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
+        let mut scene_graph = SceneGraph::default();
+        let ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
 
         Ok(Clockwork {
             ecs,
             hardware_interfaces,
             resources,
+            scene_graph,
             action_map: ActionMap::default(),
-            time_keeper: TimeKeeper::new(),
-            grid,
+            time_keeper: TimeKeeper::default(),
         })
     }
 
@@ -92,7 +92,7 @@ impl Clockwork {
             // Update
             while self.time_keeper.accumulator >= self.time_keeper.delta_time {
                 if scene_mode == SceneMode::Playing {
-                    self.ecs.update(&mut self.grid, &self.action_map)?;
+                    self.ecs.update(&self.action_map)?;
                     self.ecs
                         .update_resources(&self.resources, self.time_keeper.delta_time);
                 }
@@ -124,13 +124,12 @@ impl Clockwork {
 
     pub fn render(&mut self, ui_handler: UiHandler<'_>) -> Result<(), Error> {
         // Update transform by walking the scene graph...
-        scene_graph::walk_graph(
+        scene_graph::update_transforms_via_scene_graph(
             &mut self.ecs.component_database.transforms,
-            &self.ecs.component_database.graph_nodes,
+            &self.scene_graph,
         );
 
         let mut draw_commands = DrawCommand::default();
-
         self.ecs.render(&mut draw_commands, &self.resources);
         draw_commands.imgui = Some(ImGuiDrawCommands {
             draw_data: ui_handler.ui.render(),
@@ -163,9 +162,8 @@ impl Clockwork {
         };
 
         if should_change_scene {
-            let (ecs, grid) = Clockwork::start_scene(&mut self.resources, &mut self.hardware_interfaces)?;
+            let ecs = Clockwork::start_scene(&mut self.resources, &mut self.hardware_interfaces)?;
             self.ecs = ecs;
-            self.grid = grid;
 
             // Clear up the ImGui
             imgui.meta_data.entity_list_information.clear();
@@ -179,7 +177,7 @@ impl Clockwork {
     fn start_scene(
         resources: &mut ResourcesDatabase,
         hardware_interfaces: &mut HardwareInterface,
-    ) -> Result<(Ecs, Grid), Error> {
+    ) -> Result<Ecs, Error> {
         // Change the Scene Name!
         {
             let next_scene = scene_system::NEXT_SCENE.lock().unwrap().take();
@@ -190,16 +188,12 @@ impl Clockwork {
             }
         }
 
-        // Grid
-        let mut grid = Array2D::filled_with(None, 5, 10);
-        scene_graph::clear_root();
-
         // Initialize the ECS
         let mut ecs = Ecs::new(&resources.prefabs())?;
-        ecs.game_start(resources, hardware_interfaces, &mut grid)?;
+        ecs.game_start(resources, hardware_interfaces)?;
 
         info!("..Scene Loaded!");
 
-        Ok((ecs, grid))
+        Ok(ecs)
     }
 }

@@ -1,6 +1,4 @@
 use super::{imgui_component_utils::NameInspectorParameters, *};
-use lazy_static::lazy_static;
-use std::sync::Mutex;
 
 #[macro_use]
 mod relations;
@@ -17,60 +15,47 @@ pub use node_error::*;
 pub use node_id::*;
 pub use scene_graph::*;
 
-lazy_static! {
-    pub static ref ROOT_NODES: Mutex<GraphNode> = Mutex::new(GraphNode {
-        children: Some(vec![])
-    });
-}
-
-pub fn add_to_scene_graph<'a>(
-    transform_c: impl Into<ComponentData<'a, Transform>>,
-    serializations: &ComponentList<SerializationMarker>,
-) {
-    ROOT_NODES
-        .lock()
-        .unwrap()
-        .add_child_directly(None, transform_c.into(), serializations);
-}
-
-pub fn clear_root() {
-    if let Some(children) = &mut ROOT_NODES.lock().unwrap().children {
-        children.clear();
-    }
-}
-
-pub fn walk_graph(transforms: &mut ComponentList<Transform>, nodes: &ComponentList<GraphNode>) {
-    let root_nodes = ROOT_NODES.lock().unwrap();
-
-    if let Some(root_nodes) = &root_nodes.children {
-        for secondary_node in root_nodes {
-            if let Some(target) = &secondary_node.target {
-                walk_node(target, transforms, nodes, Vec2::ZERO);
-            }
-        }
-    }
-}
-
-fn walk_node(
-    entity: &Entity,
+/// This function walks the SceneGraph, updating each Transform/GraphNode
+/// which had previously been marked as "dirty" with a new WorldPosition.
+/// Given the Following SceneGraph, for Example:
+///
+/// ```text
+/// Root
+///    └-A
+///      └--B
+/// ```
+/// If A's `local_position` has been updated from 0 to 40, and B's `local_position` is
+/// at 20, then B's `world_position` will be updated to `60` at the end of
+/// this frame.
+///
+/// This function is the primary responsibility of the scene graph!
+pub fn update_transforms_via_scene_graph(
     transforms: &mut ComponentList<Transform>,
-    nodes: &ComponentList<GraphNode>,
-    last_world_position: Vec2,
+    scene_graph: &SceneGraph,
 ) {
-    let new_world_position = if let Some(transform) = transforms.get_mut(entity) {
-        transform.inner_mut().update_world_position(last_world_position)
-    } else {
-        last_world_position
-    };
+    fn update_this_node(
+        node: &Node,
+        transforms: &mut ComponentList<Transform>,
+        last_world_position: Vec2,
+        scene_graph: &SceneGraph,
+    ) {
+        // Update this Entity's Position if it has A Transform
+        // It might not have a Transform if it's just got a GraphNode,
+        // which makes it really just a Folder.
+        let last_world_position = if let Some(transform) = transforms.get_mut(&node.entity) {
+            transform.inner_mut().update_world_position(last_world_position)
+        } else {
+            last_world_position
+        };
 
-    if let Some(this_node) = nodes.get(entity) {
-        if let Some(children) = &this_node.inner().children {
-            for child in children {
-                if let Some(target) = &child.target {
-                    walk_node(target, transforms, nodes, new_world_position);
-                }
-            }
+        // Propogate this Virus to their Children (you know how we do)
+        for child in node.children(scene_graph) {
+            update_this_node(child, transforms, last_world_position, scene_graph);
         }
+    }
+
+    for root_node in scene_graph.iter_roots() {
+        update_this_node(root_node, transforms, Vec2::ZERO, scene_graph);
     }
 }
 
@@ -87,21 +72,16 @@ pub fn walk_graph_inspect(
     component_database: &mut super::ComponentDatabase,
     singleton_database: &mut SingletonDatabase,
     resources: &ResourcesDatabase,
+    scene_graph: &SceneGraph,
     f: GraphInspectorLambda<'_>,
 ) {
-    let root_nodes = ROOT_NODES.lock().unwrap();
-
-    if let Some(root_nodes) = &root_nodes.children {
-        for secondary_node in root_nodes {
-            if let Some(target) = &secondary_node.target {
-                walk_node_inspect(target, component_database, singleton_database, resources, 0, f);
-            }
-        }
+    for root_node in scene_graph.iter_roots() {
+        walk_node_inspect(root_node, component_database, singleton_database, resources, 0, f);
     }
 }
 
 fn walk_node_inspect(
-    entity: &Entity,
+    node: &Node,
     component_database: &mut ComponentDatabase,
     singleton_database: &mut SingletonDatabase,
     resources: &ResourcesDatabase,

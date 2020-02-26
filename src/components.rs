@@ -7,7 +7,6 @@ mod conversant_npc;
 mod draw_rectangle;
 mod follow;
 mod graph_node;
-mod grid_object;
 mod name;
 pub mod physics_components;
 mod player;
@@ -36,7 +35,6 @@ pub use {
     draw_rectangle::*,
     follow::*,
     graph_node::*,
-    grid_object::{GridObject, GridType},
     name::Name,
     player::Player,
     prefab_marker::{PrefabLoadRequired, PrefabMarker},

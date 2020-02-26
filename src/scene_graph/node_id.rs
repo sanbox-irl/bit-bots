@@ -6,7 +6,7 @@ use super::{
 };
 use std::fmt;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct NodeId {
     index: usize,
 }
@@ -29,40 +29,6 @@ impl NodeId {
     ///
     /// Use [`.skip(1)`][`skip`] or call `.next()` once on the iterator to skip
     /// the node itself.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use indextree::Arena;
-    /// # let mut arena = Arena::new();
-    /// # let n1 = arena.new_node("1");
-    /// # let n1_1 = arena.new_node("1_1");
-    /// # n1.append(n1_1, &mut arena);
-    /// # let n1_1_1 = arena.new_node("1_1_1");
-    /// # n1_1.append(n1_1_1, &mut arena);
-    /// # let n1_1_1_1 = arena.new_node("1_1_1_1");
-    /// # n1_1_1.append(n1_1_1_1, &mut arena);
-    /// # let n1_2 = arena.new_node("1_2");
-    /// # n1.append(n1_2, &mut arena);
-    /// # let n1_3 = arena.new_node("1_3");
-    /// # n1.append(n1_3, &mut arena);
-    /// #
-    /// // arena
-    /// // `-- 1
-    /// //     |-- 1_1
-    /// //     |   `-- 1_1_1
-    /// //     |       `-- 1_1_1_1
-    /// //     _-- 1_2
-    /// //     `-- 1_3
-    ///
-    /// let mut iter = n1_1_1.ancestors(&arena);
-    /// assert_eq!(iter.next(), Some(n1_1_1));
-    /// assert_eq!(iter.next(), Some(n1_1));
-    /// assert_eq!(iter.next(), Some(n1));
-    /// assert_eq!(iter.next(), None);
-    /// ```
-    ///
-    /// [`skip`]: https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html#method.skip
     pub fn ancestors(self, scene_graph: &SceneGraph) -> Ancestors<'_> {
         Ancestors::new(scene_graph, self)
     }

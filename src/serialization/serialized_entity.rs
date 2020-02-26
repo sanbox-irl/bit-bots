@@ -1,6 +1,6 @@
 use super::{
     physics_components::*, prefab_system, ComponentBounds, ComponentDatabase, ConversantNPC, DrawRectangle,
-    Entity, Follow, GraphNode, GridObject, Marker, Name, NonInspectableEntities, Player, PrefabMarker,
+    Entity, Follow, GraphNode, Marker, Name, NonInspectableEntities, Player, PrefabMarker,
     ResourcesDatabase, SceneSwitcher, SerializableComponent, SingletonDatabase, SoundSource, Sprite,
     TextSource, Transform, Velocity,
 };
@@ -57,7 +57,6 @@ pub struct SerializedEntity {
     pub name: SerializedComponentWrapper<Name>,
     pub player: SerializedComponentWrapper<Player>,
     pub transform: SerializedComponentWrapper<Transform>,
-    pub grid_object: SerializedComponentWrapper<GridObject>,
     pub scene_switcher: SerializedComponentWrapper<SceneSwitcher>,
     pub graph_node: SerializedComponentWrapper<GraphNode>,
     pub velocity: SerializedComponentWrapper<Velocity>,
@@ -172,7 +171,6 @@ impl SerializedEntity {
             name,
             player,
             transform,
-            grid_object,
             scene_switcher,
             graph_node,
             velocity,
@@ -206,7 +204,6 @@ impl SerializedEntity {
         do_action!(
             player,
             transform,
-            grid_object,
             scene_switcher,
             velocity,
             sprite,
@@ -237,7 +234,6 @@ impl SerializedEntity {
             name,
             player,
             transform,
-            grid_object,
             scene_switcher,
             graph_node,
             velocity,
@@ -270,7 +266,6 @@ impl SerializedEntity {
             name,
             player,
             transform,
-            grid_object,
             scene_switcher,
             graph_node,
             velocity,

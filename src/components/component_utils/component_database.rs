@@ -3,12 +3,12 @@ use anyhow::Error;
 use std::collections::HashMap;
 use uuid::Uuid;
 
+#[derive(Default)]
 pub struct ComponentDatabase {
     pub names: ComponentList<Name>,
     pub prefab_markers: ComponentList<PrefabMarker>,
     pub transforms: ComponentList<Transform>,
     pub players: ComponentList<Player>,
-    pub grid_objects: ComponentList<GridObject>,
     pub graph_nodes: ComponentList<GraphNode>,
     pub velocities: ComponentList<Velocity>,
     pub sprites: ComponentList<Sprite>,
@@ -93,9 +93,9 @@ impl ComponentDatabase {
         });
 
         // @update_components exceptions
-        if let Some(transformc_c) = self.transforms.get_mut(new_entity) {
-            scene_graph::add_to_scene_graph(transformc_c, &self.serialization_markers);
-        }
+        // if let Some(transformc_c) = self.transforms.get_mut(new_entity) {
+        //     scene_graph::add_to_scene_graph(transformc_c, &self.serialization_markers);
+        // }
     }
 
     // @update_components
@@ -131,7 +131,6 @@ impl ComponentDatabase {
     /// Use `foreach_component_list` to iterate over all.
     fn foreach_component_list_inspectable_mut(&mut self, f: &mut impl FnMut(&mut dyn ComponentListBounds)) {
         f(&mut self.transforms);
-        f(&mut self.grid_objects);
         f(&mut self.players);
         f(&mut self.velocities);
         f(&mut self.sprites);
@@ -178,7 +177,6 @@ impl ComponentDatabase {
     /// Use `foreach_component_list` to iterate over all.
     fn foreach_component_list_inspectable(&self, f: &mut impl FnMut(&dyn ComponentListBounds)) {
         f(&self.transforms);
-        f(&self.grid_objects);
         f(&self.players);
         f(&self.graph_nodes);
         f(&self.velocities);
@@ -265,51 +263,51 @@ impl ComponentDatabase {
             self.prefab_markers
                 .set_component(entity_to_load_into, PrefabMarker::new_main(prefab.root_id()));
 
-            if let Some(SerializedComponent { inner, .. }) = root_entity_children {
-                if let Some(children) = inner.children {
-                    for child in children.iter() {
-                        let member_serialized_id = child.target_serialized_id().unwrap();
+            // if let Some(SerializedComponent { inner, .. }) = root_entity_children {
+            //     if let Some(children) = inner.children {
+            //         for child in children.iter() {
+            //             let member_serialized_id = child.target_serialized_id().unwrap();
 
-                        match prefab.members.get(&member_serialized_id).cloned() {
-                            Some(serialized_entity) => {
-                                let new_id = Ecs::create_entity_raw(self, entity_allocator, entities);
+            //             match prefab.members.get(&member_serialized_id).cloned() {
+            //                 Some(serialized_entity) => {
+            //                     let new_id = Ecs::create_entity_raw(self, entity_allocator, entities);
 
-                                post_marker.fold_in(self.load_serialized_entity_into_database(
-                                    &new_id,
-                                    serialized_entity,
-                                    marker_map,
-                                ));
+            //                     post_marker.fold_in(self.load_serialized_entity_into_database(
+            //                         &new_id,
+            //                         serialized_entity,
+            //                         marker_map,
+            //                     ));
 
-                                self.prefab_markers.set_component(
-                                    &new_id,
-                                    PrefabMarker::new(prefab.root_id(), member_serialized_id),
-                                );
-                            }
+            //                     self.prefab_markers.set_component(
+            //                         &new_id,
+            //                         PrefabMarker::new(prefab.root_id(), member_serialized_id),
+            //                     );
+            //                 }
 
-                            None => {
-                                error!("Our Root ID for Prefab {} had a child {} but we couldn't find it in the prefab list! Are you sure it's there?",
-                                        Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
-                                        member_serialized_id
-                                    );
-                            }
-                        }
-                    }
+            //                 None => {
+            //                     error!("Our Root ID for Prefab {} had a child {} but we couldn't find it in the prefab list! Are you sure it's there?",
+            //                             Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
+            //                             member_serialized_id
+            //                         );
+            //                 }
+            //             }
+            //         }
 
-                    #[cfg(debug_assertions)]
-                    {
-                        if children.iter().all(|child| {
-                            let id = child.target_serialized_id().unwrap();
-                            self.serialization_markers.iter().any(|sd| sd.inner().id == id)
-                        }) == false
-                        {
-                            error!(
-                                "Not all members of Prefab {prefab_name} were assigned into the Scene! Prefab {prefab_name} does not make a true Scene Graph!",
-                                prefab_name = Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
-                            )
-                        }
-                    }
-                }
-            }
+            //         #[cfg(debug_assertions)]
+            //         {
+            //             if children.iter().all(|child| {
+            //                 let id = child.target_serialized_id().unwrap();
+            //                 self.serialization_markers.iter().any(|sd| sd.inner().id == id)
+            //             }) == false
+            //             {
+            //                 error!(
+            //                     "Not all members of Prefab {prefab_name} were assigned into the Scene! Prefab {prefab_name} does not make a true Scene Graph!",
+            //                     prefab_name = Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
+            //                 )
+            //             }
+            //         }
+            //     }
+            // }
             Some(post_marker)
         } else {
             error!(
@@ -368,7 +366,6 @@ impl ComponentDatabase {
             velocity,
             graph_node,
             player,
-            grid_object,
         } = serialized_entity;
 
         // Helper macro
@@ -388,7 +385,6 @@ impl ComponentDatabase {
         transfer_serialized_components!(prefab_marker, prefab_markers);
         transfer_serialized_components!(name, names);
         transfer_serialized_components!(transform, transforms);
-        transfer_serialized_components!(grid_object, grid_objects);
         transfer_serialized_components!(scene_switcher, scene_switchers);
         transfer_serialized_components!(player, players);
         transfer_serialized_components!(graph_node, graph_nodes);
@@ -442,31 +438,6 @@ impl ComponentDatabase {
         self.foreach_component_list_mut(bitflag, |component_list| {
             f(component_list, unsafe { &*s_pointer });
         });
-    }
-}
-
-impl Default for ComponentDatabase {
-    fn default() -> ComponentDatabase {
-        ComponentDatabase {
-            names: Default::default(),
-            prefab_markers: Default::default(),
-            transforms: Default::default(),
-            players: Default::default(),
-            grid_objects: Default::default(),
-            graph_nodes: Default::default(),
-            velocities: Default::default(),
-            sprites: Default::default(),
-            sound_sources: Default::default(),
-            bounding_boxes: Default::default(),
-            draw_rectangles: Default::default(),
-            // tilemaps: Default::default(),
-            text_sources: Default::default(),
-            follows: Default::default(),
-            conversant_npcs: Default::default(),
-            scene_switchers: Default::default(),
-            serialization_markers: Default::default(),
-            size: 0,
-        }
     }
 }
 

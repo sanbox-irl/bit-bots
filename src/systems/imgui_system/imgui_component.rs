@@ -189,10 +189,10 @@ pub fn entity_inspector(
 
                     if had_transform == false {
                         if let Some(new_transform) = component_database.transforms.get_mut(entity) {
-                            scene_graph::add_to_scene_graph(
-                                new_transform,
-                                &component_database.serialization_markers,
-                            );
+                            // scene_graph::add_to_scene_graph(
+                            //     new_transform,
+                            //     &component_database.serialization_markers,
+                            // );
                         }
                     }
 
@@ -267,18 +267,18 @@ pub fn entity_inspector(
                         if scene_is_prefab {
                             // THIS IS A CRAZY PERSON WAY TO DO THIS. EVERYTHING CAN GO WRONG
                             // LETS DO IT:
-                            let root_entity_id: Entity =
-                                scene_graph::ROOT_NODES.lock().unwrap().children.as_ref().unwrap()[0]
-                                    .target
-                                    .unwrap();
-                            let root_uuid = component_database
-                                .serialization_markers
-                                .get(&root_entity_id)
-                                .map(|pmc| pmc.inner().id)
-                                .unwrap();
+                            // let root_entity_id: Entity =
+                            //     scene_graph::ROOT_NODES.lock().unwrap().children.as_ref().unwrap()[0]
+                            //         .target
+                            //         .unwrap();
+                            // let root_uuid = component_database
+                            //     .serialization_markers
+                            //     .get(&root_entity_id)
+                            //     .map(|pmc| pmc.inner().id)
+                            //     .unwrap();
 
-                            let prefab = resources.prefabs_mut().unwrap().get_mut(&root_uuid).unwrap();
-                            prefab.members.insert(uuid, new_serialized_entity);
+                            // let prefab = resources.prefabs_mut().unwrap().get_mut(&root_uuid).unwrap();
+                            // prefab.members.insert(uuid, new_serialized_entity);
                         }
                     }
                     ComponentSerializationCommandType::Revert

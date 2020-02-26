@@ -1,4 +1,4 @@
-use super::{Entity, NodeId};
+use super::{traverse::NodeChildren, Entity, NodeId, SceneGraph};
 use std::fmt;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -57,8 +57,13 @@ impl Node {
         self.removed
     }
 
+    /// Returns an iterator of references to this node’s children.
+    pub fn children<'a>(&self, scene_graph: &'a SceneGraph) -> NodeChildren<'a> {
+        NodeChildren::new(scene_graph, self)
+    }
+
     /// Checks if the node is detached. `is_detached()` != `parent().is_some()`
-    pub(super) fn is_detached(&self) -> bool {
+    pub fn is_detached(&self) -> bool {
         self.parent.is_none()
     }
 }
