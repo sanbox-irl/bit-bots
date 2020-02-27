@@ -1,9 +1,10 @@
-use super::{imgui_component_utils::*, *};
+use super::{imgui_component_utils::*, scene_graph::SceneGraph, *};
 use anyhow::Error;
 
 pub fn entity_list(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
+    scene_graph: &SceneGraph,
     ui_handler: &mut UiHandler<'_>,
 ) -> Result<Option<EntitySerializationCommand>, Error> {
     let mut open = true;
@@ -13,7 +14,14 @@ pub fn entity_list(
         ui_handler.flags.remove(ImGuiFlags::ENTITY_VIEWER);
     }
 
-    imgui_entity_list(ecs, resources, ui_handler, &mut open, &mut later_action_on_entity);
+    imgui_entity_list(
+        ecs,
+        resources,
+        scene_graph,
+        ui_handler,
+        &mut open,
+        &mut later_action_on_entity,
+    );
 
     if let Some((entity, later_action)) = later_action_on_entity {
         match later_action {
@@ -162,6 +170,7 @@ pub fn entity_list(
 fn imgui_entity_list(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
+    scene_graph: &SceneGraph,
     ui_handler: &mut UiHandler<'_>,
     open: &mut bool,
     later_action_on_entity: &mut Option<(Entity, NameRequestedAction)>,
@@ -232,36 +241,53 @@ fn imgui_entity_list(
         ui_handler.scene_graph_entities.clear();
 
         // SCENE GRAPH
-        scene_graph::walk_graph_inspect(
+        let singleton_database = &ecs.singleton_database;
+        scene_graph_system::walk_graph_inspect(
             &mut ecs.component_database,
-            &mut ecs.singleton_database,
-            resources,
-            &mut |entity,
-                  names,
-                  serialization_data,
-                  current_serialized_entity,
-                  prefabs,
-                  mut name_inspector_params| {
-                // Update Name Inspector Parameter:
-                name_inspector_params.serialization_status = serialization_data
-                    .get_mut(entity)
-                    .map(|smc| {
-                        smc.inner_mut()
-                            .get_serialization_status(current_serialized_entity.as_ref())
-                    })
-                    .unwrap_or_default();
-
-                name_inspector_params.being_inspected = ui_handler.stored_ids.contains(entity);
-                name_inspector_params.prefab_status = prefabs
-                    .get(entity)
-                    .map(|_| PrefabStatus::PrefabInstance)
-                    .unwrap_or_default();
-
+            scene_graph,
+            |entity, component_database, depth, has_children| {
                 ui_handler.scene_graph_entities.push(*entity);
 
-                let (show_children, requested_action) =
-                    display_entity_id(entity, &name_inspector_params, names, ui_handler);
+                let serialized_entity: Option<SerializedEntity> = component_database
+                    .serialization_markers
+                    .get(entity)
+                    .and_then(|smc| {
+                        SerializedEntity::new(
+                            entity,
+                            smc.inner().id,
+                            component_database,
+                            singleton_database,
+                            resources,
+                        )
+                    });
 
+                let name_inspector_params = NameInspectorParameters {
+                    has_children,
+                    depth,
+                    prefab_status: component_database
+                        .prefab_markers
+                        .get(entity)
+                        .map(|_| PrefabStatus::PrefabInstance)
+                        .unwrap_or_default(),
+                    being_inspected: ui_handler.stored_ids.contains(entity),
+                    serialization_status: component_database
+                        .serialization_markers
+                        .get_mut(entity)
+                        .map(|smc| {
+                            smc.inner_mut()
+                                .get_serialization_status(serialized_entity.as_ref())
+                        })
+                        .unwrap_or_default(),
+                };
+
+                let (show_children, requested_action) = display_entity_id(
+                    entity,
+                    &name_inspector_params,
+                    &mut component_database.names,
+                    ui_handler,
+                );
+
+                // Record the Requested Action
                 if let Some(requested_action) = requested_action {
                     *later_action_on_entity = Some((*entity, requested_action));
                 }

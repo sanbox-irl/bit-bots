@@ -23,6 +23,9 @@ impl Clockwork {
         let mut scene_graph = SceneGraph::default();
         let ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
 
+        // @jack @nocheckin
+        scene_graph_system::flat_build_headass_code(&mut ecs.component_database, &mut scene_graph);
+
         Ok(Clockwork {
             ecs,
             hardware_interfaces,
@@ -71,6 +74,7 @@ impl Clockwork {
                 &mut self.ecs,
                 &mut self.resources,
                 &mut self.hardware_interfaces,
+                &mut self.scene_graph,
                 &mut ui_handler,
                 &self.time_keeper,
             );
@@ -124,7 +128,7 @@ impl Clockwork {
 
     pub fn render(&mut self, ui_handler: UiHandler<'_>) -> Result<(), Error> {
         // Update transform by walking the scene graph...
-        scene_graph::update_transforms_via_scene_graph(
+        scene_graph_system::update_transforms_via_scene_graph(
             &mut self.ecs.component_database.transforms,
             &self.scene_graph,
         );

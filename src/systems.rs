@@ -13,3 +13,4 @@ pub mod singleton_systems;
 pub mod sound_system;
 pub mod sprite_system;
 pub mod tilemap_system;
+pub mod scene_graph_system;

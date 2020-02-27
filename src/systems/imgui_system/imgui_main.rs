@@ -4,6 +4,7 @@ pub fn imgui_main(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
     hardware_interfaces: &mut HardwareInterface,
+    scene_graph: &mut scene_graph::SceneGraph,
     ui_handler: &mut UiHandler<'_>,
     time_keeper: &TimeKeeper,
 ) {
@@ -19,7 +20,7 @@ pub fn imgui_main(
 
     // Scene Entity Inspector
     if ui_handler.flags.contains(ImGuiFlags::ENTITY_VIEWER) {
-        match imgui_entity::entity_list(ecs, resources, ui_handler) {
+        match imgui_entity::entity_list(ecs, resources, scene_graph, ui_handler) {
             Ok(sc) => {
                 if let Some(sc) = sc {
                     entity_serialization_command = Some(sc)
