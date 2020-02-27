@@ -9,7 +9,6 @@ pub struct ComponentDatabase {
     pub prefab_markers: ComponentList<PrefabMarker>,
     pub transforms: ComponentList<Transform>,
     pub players: ComponentList<Player>,
-    pub graph_nodes: ComponentList<GraphNode>,
     pub velocities: ComponentList<Velocity>,
     pub sprites: ComponentList<Sprite>,
     pub sound_sources: ComponentList<SoundSource>,
@@ -32,7 +31,8 @@ impl ComponentDatabase {
         prefabs: &PrefabMap,
     ) -> Result<ComponentDatabase, Error> {
         // Update the database...
-        if cfg!(debug_assertions) {
+        #[cfg(debug_assertions)]
+        {
             if update_serialization::UPDATE_COMPONENT_DATABASE {
                 update_serialization::update_component_database()?;
             }
@@ -110,9 +110,6 @@ impl ComponentDatabase {
         }
 
         self.foreach_component_list_inspectable_mut(&mut f);
-        if non_inspectable_entities.contains(NonInspectableEntities::GRAPH_NODE) {
-            f(&mut self.graph_nodes);
-        }
 
         if non_inspectable_entities.contains(NonInspectableEntities::PREFAB) {
             f(&mut self.prefab_markers);
@@ -157,9 +154,6 @@ impl ComponentDatabase {
 
         self.foreach_component_list_inspectable(&mut f);
 
-        if non_inspectable_entities.contains(NonInspectableEntities::GRAPH_NODE) {
-            f(&self.graph_nodes);
-        }
         if non_inspectable_entities.contains(NonInspectableEntities::PREFAB) {
             f(&self.prefab_markers);
         }
@@ -178,7 +172,6 @@ impl ComponentDatabase {
     fn foreach_component_list_inspectable(&self, f: &mut impl FnMut(&dyn ComponentListBounds)) {
         f(&self.transforms);
         f(&self.players);
-        f(&self.graph_nodes);
         f(&self.velocities);
         f(&self.sprites);
         f(&self.sound_sources);
@@ -255,7 +248,7 @@ impl ComponentDatabase {
         if let Some(prefab) = prefabs.get(&prefab_id) {
             // Load the Main
             let root_entity: SerializedEntity = prefab.root_entity().clone();
-            let root_entity_children: SerializedComponentWrapper<GraphNode> = root_entity.graph_node.clone();
+            let root_entity_children: SerializedComponentWrapper<Transform> = root_entity.transform.clone();
 
             let post_marker =
                 self.load_serialized_entity_into_database(entity_to_load_into, root_entity, marker_map);
@@ -364,7 +357,6 @@ impl ComponentDatabase {
             // tilemap,
             transform,
             velocity,
-            graph_node,
             player,
         } = serialized_entity;
 
@@ -387,7 +379,6 @@ impl ComponentDatabase {
         transfer_serialized_components!(transform, transforms);
         transfer_serialized_components!(scene_switcher, scene_switchers);
         transfer_serialized_components!(player, players);
-        transfer_serialized_components!(graph_node, graph_nodes);
         transfer_serialized_components!(sound_source, sound_sources);
         transfer_serialized_components!(bounding_box, bounding_boxes);
         transfer_serialized_components!(draw_rectangle, draw_rectangles);
@@ -447,6 +438,5 @@ bitflags! {
         const NAME                  =   0b0000_0001;
         const PREFAB                =   0b0000_0010;
         const SERIALIZATION         =   0b0000_0100;
-        const GRAPH_NODE            =   0b0000_1000;
     }
 }

@@ -6,7 +6,6 @@ mod component_utils;
 mod conversant_npc;
 mod draw_rectangle;
 mod follow;
-mod graph_node;
 mod name;
 pub mod physics_components;
 mod player;
@@ -27,14 +26,12 @@ pub use {
         component_database::{ComponentDatabase, NonInspectableEntities},
         component_traits::*,
         draw_layer::*,
-        imgui_component_utils, Approach, DrawCommand, EditingMode,
-        GameWorldDrawCommands, ImGuiDrawCommands, PositionalRect, SerializableEntityReference,
-        SerializablePrefabReference, Tile, TransformParent,
+        imgui_component_utils, Approach, DrawCommand, EditingMode, GameWorldDrawCommands, ImGuiDrawCommands,
+        PositionalRect, SerializableEntityReference, SerializablePrefabReference, Tile,
     },
     conversant_npc::*,
     draw_rectangle::*,
     follow::*,
-    graph_node::*,
     name::Name,
     player::Player,
     prefab_marker::{PrefabLoadRequired, PrefabMarker},

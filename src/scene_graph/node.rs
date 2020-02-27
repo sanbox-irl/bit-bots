@@ -1,20 +1,20 @@
-use super::{traverse::NodeChildren, Entity, NodeId, SceneGraph};
+use super::{graph::Graph, traverse::NodeChildren, node_id::NodeId};
 use std::fmt;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Node {
+pub struct GraphNode<T> {
     pub(super) parent: Option<NodeId>,
     pub(super) first_child: Option<NodeId>,
     pub(super) last_child: Option<NodeId>,
     pub(super) previous_sibling: Option<NodeId>,
     pub(super) next_sibling: Option<NodeId>,
     pub(super) removed: bool,
-    pub(super) entity: Entity,
+    pub(super) data: T,
 }
 
-impl Node {
+impl<T> GraphNode<T> {
     /// Creates a new `Node` with the default state and the given data.
-    pub(super) fn new(entity: Entity) -> Self {
+    pub(super) fn new(data: T) -> Self {
         Self {
             parent: None,
             previous_sibling: None,
@@ -22,18 +22,18 @@ impl Node {
             first_child: None,
             last_child: None,
             removed: false,
-            entity,
+            data,
         }
     }
 
     /// Returns a reference to the node data.
-    pub fn inner(&self) -> &Entity {
-        &self.entity
+    pub fn inner(&self) -> &T {
+        &self.data
     }
 
     /// Returns a mutable reference to the entity ID.
-    pub fn inner_mut(&mut self) -> &mut Entity {
-        &mut self.entity
+    pub fn inner_mut(&mut self) -> &mut T {
+        &mut self.data
     }
 
     /// Returns the ID of the parent node, unless this node is the root of the
@@ -58,7 +58,7 @@ impl Node {
     }
 
     /// Returns an iterator of references to this node’s children.
-    pub fn children<'a>(&self, scene_graph: &'a SceneGraph) -> NodeChildren<'a> {
+    pub fn children<'a>(&self, scene_graph: &'a Graph<T>) -> NodeChildren<'a, T> {
         NodeChildren::new(scene_graph, self)
     }
 
@@ -68,8 +68,8 @@ impl Node {
     }
 }
 
-impl fmt::Display for Node {
+impl<T: std::fmt::Display> fmt::Display for GraphNode<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.entity)
+        write!(f, "{}", self.data)
     }
 }

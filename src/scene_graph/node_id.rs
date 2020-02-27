@@ -1,8 +1,9 @@
 use super::{
+    graph::Graph,
     relations::insert_with_neighbors,
     siblings_range::SiblingsRange,
     traverse::{Ancestors, Children},
-    NodeError, SceneGraph,
+    NodeError,
 };
 use std::fmt;
 
@@ -10,6 +11,7 @@ use std::fmt;
 pub struct NodeId {
     index: usize,
 }
+
 impl fmt::Display for NodeId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.index)
@@ -29,91 +31,17 @@ impl NodeId {
     ///
     /// Use [`.skip(1)`][`skip`] or call `.next()` once on the iterator to skip
     /// the node itself.
-    pub fn ancestors(self, scene_graph: &SceneGraph) -> Ancestors<'_> {
+    pub fn ancestors<T>(self, scene_graph: &Graph<T>) -> Ancestors<'_, T> {
         Ancestors::new(scene_graph, self)
     }
 
     /// Returns an iterator of references to this node’s children.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use indextree::Arena;
-    /// # let mut arena = Arena::new();
-    /// # let n1 = arena.new_node("1");
-    /// # let n1_1 = arena.new_node("1_1");
-    /// # n1.append(n1_1, &mut arena);
-    /// # let n1_1_1 = arena.new_node("1_1_1");
-    /// # n1_1.append(n1_1_1, &mut arena);
-    /// # let n1_2 = arena.new_node("1_2");
-    /// # n1.append(n1_2, &mut arena);
-    /// # let n1_3 = arena.new_node("1_3");
-    /// # n1.append(n1_3, &mut arena);
-    /// #
-    /// // arena
-    /// // `-- 1
-    /// //     |-- 1_1
-    /// //     |   `-- 1_1_1
-    /// //     |-- 1_2
-    /// //     `-- 1_3
-    ///
-    /// let mut iter = n1.children(&arena);
-    /// assert_eq!(iter.next(), Some(n1_1));
-    /// assert_eq!(iter.next(), Some(n1_2));
-    /// assert_eq!(iter.next(), Some(n1_3));
-    /// assert_eq!(iter.next(), None);
-    /// ```
-    pub fn children(self, scene_graph: &SceneGraph) -> Children<'_> {
+    pub fn children<T>(self, scene_graph: &Graph<T>) -> Children<'_, T> {
         Children::new(scene_graph, self)
     }
 
     /// Detaches a node from its parent. Children are not affected.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use indextree::{Arena, NodeEdge};
-    /// # let mut arena = Arena::new();
-    /// # let n1 = arena.new_node("1");
-    /// # let n1_1 = arena.new_node("1_1");
-    /// # n1.append(n1_1, &mut arena);
-    /// # let n1_1_1 = arena.new_node("1_1_1");
-    /// # n1_1.append(n1_1_1, &mut arena);
-    /// # let n1_2 = arena.new_node("1_2");
-    /// # n1.append(n1_2, &mut arena);
-    /// # let n1_3 = arena.new_node("1_3");
-    /// # n1.append(n1_3, &mut arena);
-    /// #
-    /// // arena
-    /// // `-- (implicit)
-    /// //     `-- 1
-    /// //         |-- 1_1
-    /// //         |   `-- 1_1_1
-    /// //         |-- 1_2 *
-    /// //         `-- 1_3
-    ///
-    /// n1_2.detach(&mut arena);
-    /// // arena
-    /// // |-- (implicit)
-    /// // |   `-- 1
-    /// // |       |-- 1_1
-    /// // |       |   `-- 1_1_1
-    /// // |       `-- 1_3
-    /// // `-- (implicit)
-    /// //     `-- 1_2
-    ///
-    /// assert!(arena[n1_2].parent().is_none());
-    /// assert!(arena[n1_2].previous_sibling().is_none());
-    /// assert!(arena[n1_2].next_sibling().is_none());
-    ///
-    /// let mut iter = n1.descendants(&arena);
-    /// assert_eq!(iter.next(), Some(n1));
-    /// assert_eq!(iter.next(), Some(n1_1));
-    /// assert_eq!(iter.next(), Some(n1_1_1));
-    /// assert_eq!(iter.next(), Some(n1_3));
-    /// assert_eq!(iter.next(), None);
-    /// ```
-    pub fn detach(self, scene_graph: &mut SceneGraph) {
+    pub fn detach<T>(self, scene_graph: &mut Graph<T>) {
         let range = SiblingsRange::new(self, self).detach_from_siblings(scene_graph);
         range
             .rewrite_parents(scene_graph, None)
@@ -136,7 +64,7 @@ impl NodeId {
     /// * the current node or the given new child was already [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn append(self, new_child: NodeId, scene_graph: &mut SceneGraph) {
+    pub fn append<T>(self, new_child: Self, scene_graph: &mut Graph<T>) {
         self.checked_append(new_child, scene_graph)
             .expect("Preconditions not met: invalid argument");
     }
@@ -151,7 +79,7 @@ impl NodeId {
     ///   is [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn checked_append(self, new_child: NodeId, scene_graph: &mut SceneGraph) -> Result<(), NodeError> {
+    pub fn checked_append<T>(self, new_child: Self, scene_graph: &mut Graph<T>) -> Result<(), NodeError> {
         if new_child == self {
             return Err(NodeError::AppendSelf);
         }
@@ -181,7 +109,7 @@ impl NodeId {
     /// * the current node or the given new child was already [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn prepend(self, new_child: NodeId, scene_graph: &mut SceneGraph) {
+    pub fn prepend<T>(self, new_child: Self, scene_graph: &mut Graph<T>) {
         self.checked_prepend(new_child, scene_graph)
             .expect("Preconditions not met: invalid argument");
     }
@@ -196,7 +124,7 @@ impl NodeId {
     ///   is [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn checked_prepend(self, new_child: NodeId, scene_graph: &mut SceneGraph) -> Result<(), NodeError> {
+    pub fn checked_prepend<T>(self, new_child: Self, scene_graph: &mut Graph<T>) -> Result<(), NodeError> {
         if new_child == self {
             return Err(NodeError::PrependSelf);
         }

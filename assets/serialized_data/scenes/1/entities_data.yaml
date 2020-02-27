@@ -13,12 +13,8 @@
       world_position:
         x: 20.0
         y: 16.0
-      parent:
-        target_serialized_id: ~
     active: true
-  grid_object: ~
   scene_switcher: ~
-  graph_node: ~
   velocity: ~
   sprite:
     inner:
@@ -61,12 +57,8 @@ ee3c15de-a320-4288-a6de-82128daa3a6e:
       world_position:
         x: 25.0
         y: 40.0
-      parent:
-        target_serialized_id: ~
     active: true
-  grid_object: ~
   scene_switcher: ~
-  graph_node: ~
   velocity: ~
   sprite: ~
   sound_source: ~

@@ -1,12 +1,12 @@
-use super::{scene_graph::*, ComponentDatabase, ComponentList, Entity, GraphNode, Transform, Vec2};
+use super::{scene_graph::*, ComponentDatabase, ComponentList, Entity, Transform, Vec2};
 
 /// This is code for dumbasses. Do not actually leave it in the game!
 pub fn flat_build_headass_code(component_database: &mut ComponentDatabase, scene_graph: &mut SceneGraph) {
-    for graph_node_c in component_database.graph_nodes.iter_mut() {
-        let scene_graph_node_id = scene_graph.instantiate_node(graph_node_c.entity_id());
-        let graph_node: &mut GraphNode = graph_node_c.inner_mut();
+    for transform_c in component_database.transforms.iter_mut() {
+        let scene_graph_node_id = scene_graph.instantiate_node(transform_c.entity_id());
+        let transform: &mut Transform = transform_c.inner_mut();
 
-        graph_node.scene_graph_node_id = Some(scene_graph_node_id);
+        transform.scene_graph_node_id = Some(scene_graph_node_id);
     }
 }
 

@@ -1,8 +1,8 @@
 use super::{
     physics_components::*, prefab_system, ComponentBounds, ComponentDatabase, ConversantNPC, DrawRectangle,
-    Entity, Follow, GraphNode, Marker, Name, NonInspectableEntities, Player, PrefabMarker,
-    ResourcesDatabase, SceneSwitcher, SerializableComponent, SingletonDatabase, SoundSource, Sprite,
-    TextSource, Transform, Velocity,
+    Entity, Follow, Marker, Name, NonInspectableEntities, Player, PrefabMarker, ResourcesDatabase,
+    SceneSwitcher, SerializableComponent, SingletonDatabase, SoundSource, Sprite, TextSource, Transform,
+    Velocity,
 };
 use serde_yaml::Value as YamlValue;
 use uuid::Uuid;
@@ -58,7 +58,6 @@ pub struct SerializedEntity {
     pub player: SerializedComponentWrapper<Player>,
     pub transform: SerializedComponentWrapper<Transform>,
     pub scene_switcher: SerializedComponentWrapper<SceneSwitcher>,
-    pub graph_node: SerializedComponentWrapper<GraphNode>,
     pub velocity: SerializedComponentWrapper<Velocity>,
     pub sprite: SerializedComponentWrapper<Sprite>,
     pub sound_source: SerializedComponentWrapper<SoundSource>,
@@ -132,16 +131,13 @@ impl SerializedEntity {
         serialized_entity.id = serialization_id;
 
         // Now add in all the normal components:
-        component_database.foreach_component_list(
-            NonInspectableEntities::NAME | NonInspectableEntities::GRAPH_NODE,
-            |component_list| {
-                component_list.load_component_into_serialized_entity(
-                    entity_id,
-                    &mut serialized_entity,
-                    &component_database.serialization_markers,
-                );
-            },
-        );
+        component_database.foreach_component_list(NonInspectableEntities::NAME, |component_list| {
+            component_list.load_component_into_serialized_entity(
+                entity_id,
+                &mut serialized_entity,
+                &component_database.serialization_markers,
+            );
+        });
         serialized_entity.marker = singleton_database.save_singleton_markers(entity_id);
 
         Some(serialized_entity)
@@ -172,7 +168,6 @@ impl SerializedEntity {
             player,
             transform,
             scene_switcher,
-            graph_node,
             velocity,
             sprite,
             sound_source,
@@ -216,10 +211,6 @@ impl SerializedEntity {
             conversant_npc
         );
 
-        if entity_bitmask.contains(NonInspectableEntities::GRAPH_NODE) {
-            do_action!(graph_node);
-        }
-
         if entity_bitmask.contains(NonInspectableEntities::PREFAB) {
             do_action!(prefab_marker);
         }
@@ -235,7 +226,6 @@ impl SerializedEntity {
             player,
             transform,
             scene_switcher,
-            graph_node,
             velocity,
             sprite,
             sound_source,
@@ -267,7 +257,6 @@ impl SerializedEntity {
             player,
             transform,
             scene_switcher,
-            graph_node,
             velocity,
             sprite,
             sound_source,

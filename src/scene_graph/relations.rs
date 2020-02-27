@@ -1,4 +1,4 @@
-use super::{siblings_range::SiblingsRange, ConsistencyError, NodeId, SceneGraph};
+use super::{siblings_range::SiblingsRange, ConsistencyError, node_id::NodeId, graph::Graph};
 
 /// Ensures the given parent, previous, and next nodes are consistent.
 ///
@@ -17,8 +17,8 @@ macro_rules! debug_assert_triangle_nodes {
 /// # Panics
 ///
 /// Panics if the given nodes are inconsistent.
-pub(super) fn assert_triangle_nodes(
-    scene_graph: &SceneGraph,
+pub(super) fn assert_triangle_nodes<T>(
+    scene_graph: &Graph<T>,
     parent: Option<NodeId>,
     previous: Option<NodeId>,
     next: Option<NodeId>,
@@ -53,8 +53,8 @@ pub(super) fn assert_triangle_nodes(
 ///    /    \
 /// prev -> next
 /// ```
-pub(super) fn connect_neighbors(
-    scene_graph: &mut SceneGraph,
+pub(super) fn connect_neighbors<T>(
+    scene_graph: &mut Graph<T>,
     parent: Option<NodeId>,
     previous: Option<NodeId>,
     next: Option<NodeId>,
@@ -117,8 +117,8 @@ pub(super) fn connect_neighbors(
 ///   /       |      \
 /// prev -> (new) -> next
 /// ```
-pub(super) fn insert_with_neighbors(
-    scene_graph: &mut SceneGraph,
+pub(super) fn insert_with_neighbors<T>(
+    scene_graph: &mut Graph<T>,
     new: NodeId,
     parent: Option<NodeId>,
     previous_sibling: Option<NodeId>,

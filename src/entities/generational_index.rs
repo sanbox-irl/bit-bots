@@ -1,4 +1,4 @@
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct GenerationalIndex {
     pub(super) index: usize,
     pub(super) generation: u64,

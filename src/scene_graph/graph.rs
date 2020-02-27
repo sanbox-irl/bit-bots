@@ -1,23 +1,23 @@
-use super::{Entity, Node, NodeId};
+use super::{node::GraphNode, node_id::NodeId};
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
 #[derive(PartialEq, Eq, Clone, Default, Debug)]
-pub struct SceneGraph {
-    nodes: Vec<Node>,
+pub struct Graph<T> {
+    nodes: Vec<GraphNode<T>>,
 }
 
-impl SceneGraph {
+impl<T> Graph<T> {
     /// Creates a new empty `SceneGraph`.
-    pub fn new() -> SceneGraph {
+    pub fn new() -> Self {
         Self { nodes: Vec::new() }
     }
 
     /// Create a new node on the scene graph. The new Node ID is not
     /// connected to anything and is therefore a "root" node.
-    pub fn instantiate_node(&mut self, entity: Entity) -> NodeId {
+    pub fn instantiate_node(&mut self, data: T) -> NodeId {
         let index = self.nodes.len();
-        self.nodes.push(Node::new(entity));
+        self.nodes.push(GraphNode::new(data));
 
         NodeId::new(index)
     }
@@ -31,13 +31,13 @@ impl SceneGraph {
     }
 
     /// Returns a reference to the node with the given id if in the arena.
-    pub fn get(&self, id: NodeId) -> Option<&Node> {
+    pub fn get(&self, id: NodeId) -> Option<&GraphNode<T>> {
         self.nodes.get(id.index())
     }
 
     /// Returns a mutable reference to the node with the given id if in the
     /// arena.
-    pub fn get_mut(&mut self, id: NodeId) -> Option<&mut Node> {
+    pub fn get_mut(&mut self, id: NodeId) -> Option<&mut GraphNode<T>> {
         self.nodes.get_mut(id.index())
     }
 
@@ -45,28 +45,28 @@ impl SceneGraph {
     ///
     /// Note that this iterator returns also removed elements, which can be
     /// tested with the [`is_removed()`] method on the node.
-    pub fn iter(&self) -> impl Iterator<Item = &Node> {
+    pub fn iter(&self) -> impl Iterator<Item = &GraphNode<T>> {
         self.nodes.iter()
     }
 
     /// Returns an iterator only over root nodes, or nodes with no parents who
     /// are not removed.
-    pub fn iter_roots(&self) -> impl Iterator<Item = &Node> {
+    pub fn iter_roots(&self) -> impl Iterator<Item = &GraphNode<T>> {
         self.nodes
             .iter()
             .filter(|n| n.is_removed() == false && n.parent().is_none())
     }
 }
 
-impl Index<NodeId> for SceneGraph {
-    type Output = Node;
+impl<T> Index<NodeId> for Graph<T> {
+    type Output = GraphNode<T>;
 
-    fn index(&self, index: NodeId) -> &Node {
+    fn index(&self, index: NodeId) -> &GraphNode<T> {
         &self.nodes[index.index()]
     }
 }
 
-impl IndexMut<NodeId> for SceneGraph {
+impl<T> IndexMut<NodeId> for Graph<T> {
     fn index_mut(&mut self, index: NodeId) -> &mut Self::Output {
         &mut self.nodes[index.index()]
     }
@@ -75,13 +75,12 @@ impl IndexMut<NodeId> for SceneGraph {
 const TREE_DELIMITER: char = '├';
 const TREE_DOWN: char = '└';
 const TREE_VERT: char = '|';
-impl fmt::Display for SceneGraph {
+impl<T: std::fmt::Display> fmt::Display for Graph<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Scene Graph Root")?;
 
         let mut top_level_iterator = self.iter_roots().peekable();
         while let Some(node) = top_level_iterator.next() {
-            let node: &Node = node;
             let top_level_last = top_level_iterator.peek().is_none();
 
             writeln!(
@@ -101,13 +100,13 @@ impl fmt::Display for SceneGraph {
     }
 }
 
-fn pprint_tree(
+fn pprint_tree<T: std::fmt::Display>(
     f: &mut fmt::Formatter<'_>,
-    node: &Node,
+    node: &GraphNode<T>,
     number_of_spaces: usize,
     main_last: bool,
     local_last: bool,
-    scene_graph: &SceneGraph,
+    scene_graph: &Graph<T>,
 ) -> fmt::Result {
     // Line and Blank Space...
     write!(f, "{}", if main_last { ' ' } else { TREE_VERT })?;

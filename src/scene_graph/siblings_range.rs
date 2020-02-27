@@ -1,4 +1,4 @@
-use super::{relations::*, ConsistencyError, NodeId, SceneGraph};
+use super::{graph::Graph, node_id::NodeId, relations::*, ConsistencyError};
 
 #[derive(Debug, Clone, Copy)]
 pub(super) struct SiblingsRange {
@@ -17,7 +17,7 @@ impl SiblingsRange {
 
     /// Detaches the range from the siblings out of the range, preserving
     /// sibling relations inside the range.
-    pub(super) fn detach_from_siblings(self, arena: &mut SceneGraph) -> DetachedSiblingsRange {
+    pub(super) fn detach_from_siblings<T>(self, arena: &mut Graph<T>) -> DetachedSiblingsRange {
         // Update children's parents, siblings relations outside the range, and
         // old parent's first and last child nodes.
         let parent = arena[self.first].parent;
@@ -69,9 +69,9 @@ impl DetachedSiblingsRange {
     /// # Failures
     ///
     /// Returns an error if the given parent is a node in the range.
-    pub(super) fn rewrite_parents(
+    pub(super) fn rewrite_parents<T>(
         &self,
-        arena: &mut SceneGraph,
+        arena: &mut Graph<T>,
         new_parent: Option<NodeId>,
     ) -> Result<(), ConsistencyError> {
         // Update parents of children in the range.
@@ -98,9 +98,9 @@ impl DetachedSiblingsRange {
     /// # Failures
     ///
     /// Returns an error if the given parent is a node in the range.
-    pub(super) fn transplant(
+    pub(super) fn transplant<T>(
         self,
-        scene_grpah: &mut SceneGraph,
+        scene_grpah: &mut Graph<T>,
         parent: Option<NodeId>,
         previous_sibling: Option<NodeId>,
         next_sibling: Option<NodeId>,

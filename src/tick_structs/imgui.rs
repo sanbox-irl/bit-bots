@@ -215,6 +215,7 @@ impl<'a> UiHandler<'a> {
 #[derive(Serialize, Deserialize, Default)]
 pub struct ImGuiMetaData {
     pub flags: ImGuiFlags,
+    #[serde(skip)]
     pub stored_ids: HashSet<Entity>,
     #[serde(skip)]
     pub entity_vec: Vec<Entity>,

@@ -1,7 +1,7 @@
 use super::{imgui_system, ComponentList, Entity, InspectorParameters, SerializationMarker};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct SerializableEntityReference {
     #[serde(skip)]
     pub target: Option<Entity>,

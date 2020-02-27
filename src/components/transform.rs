@@ -1,4 +1,4 @@
-use super::{ComponentBounds, ComponentList, Entity, InspectorParameters, TransformParent, Vec2};
+use super::{scene_graph::NodeId, ComponentBounds, ComponentList, Entity, InspectorParameters, Vec2};
 
 #[derive(Debug, SerializableComponent, Clone, Default, Serialize, Deserialize, typename::TypeName)]
 #[serde(default)]
@@ -9,20 +9,17 @@ pub struct Transform {
     // probably some other garbanzo
     #[serde(skip)]
     dirty: bool,
-    parent: TransformParent,
+    #[serde(skip)]
+    pub scene_graph_node_id: Option<NodeId>,
 }
 
 impl Transform {
-    pub const TILE: Vec2 = Vec2::new(8.0, 8.0);
-    pub const TILE_RIGHT: Vec2 = Vec2::new(8.0, 0.0);
-    pub const TILE_UP: Vec2 = Vec2::new(0.0, 8.0);
-
     pub fn new(local_position: Vec2) -> Self {
         Transform {
             local_position,
             world_position: Vec2::ZERO,
             dirty: true,
-            parent: TransformParent::blank(),
+            scene_graph_node_id: None,
         }
     }
 
@@ -82,10 +79,10 @@ impl ComponentBounds for Transform {
     ) {
         let clone = {
             let mut clone = self.clone();
-            if self.parent.is_root() {
-                clone.parent = TransformParent::default();
-                clone.dirty = false;
-            }
+            // if self.parent.is_root() {
+            //     clone.parent = TransformParent::default();
+            //     clone.dirty = false;
+            // }
             clone
         };
 
@@ -108,7 +105,7 @@ impl ComponentBounds for Transform {
 
 impl PartialEq for Transform {
     fn eq(&self, other: &Transform) -> bool {
-        if self.parent == other.parent {
+        if self.scene_graph_node_id == other.scene_graph_node_id {
             self.local_position == other.local_position
         } else {
             false

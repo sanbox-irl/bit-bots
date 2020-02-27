@@ -367,7 +367,7 @@ pub fn serialization_menu(
     let mut post_action: Option<ComponentInspectorPostAction> = None;
 
     component_database.foreach_component_list(
-        NonInspectableEntities::NAME | NonInspectableEntities::PREFAB | NonInspectableEntities::GRAPH_NODE,
+        NonInspectableEntities::NAME | NonInspectableEntities::PREFAB,
         |component_list| {
             if let Some(command_type) =
                 component_list.serialization_option(ui, entity, &component_database.serialization_markers)
