@@ -61,7 +61,7 @@ impl Scene {
         if self.is_prefab {
             format!("{}/{}", PREFAB_DIRECTORY, DEFAULT_SINGLETONS_SUBPATH)
         } else {
-            format!("{}/{}/{}", SCENE_DIRECTORY, &self, SINGLETONS_SUBPATH)
+            format!("{}/{}/{}", SCENE_DIRECTORY, &self.name, SINGLETONS_SUBPATH)
         }
     }
 

@@ -8,7 +8,7 @@ use super::{
 )]
 #[serde(default)]
 pub struct GraphNode {
-    pub children: Option<NodeId>,
+    pub scene_graph_node_id: Option<NodeId>,
 }
 
 impl GraphNode {
@@ -80,7 +80,7 @@ impl ComponentBounds for GraphNode {
         _: super::Entity,
         serialization_markers: &super::ComponentList<super::SerializationMarker>,
     ) {
-        if let Some(children) = &mut self.children {
+        if let Some(children) = &mut self.scene_graph_node_id {
             // for child in children.iter_mut() {
             //     child.serialized_refs_to_entity_id(&serialization_markers);
             // }

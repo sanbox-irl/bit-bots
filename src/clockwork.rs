@@ -21,7 +21,7 @@ impl Clockwork {
         resources.initialize(&mut hardware_interfaces.renderer)?;
 
         let mut scene_graph = SceneGraph::default();
-        let ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
+        let mut ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
 
         // @jack @nocheckin
         scene_graph_system::flat_build_headass_code(&mut ecs.component_database, &mut scene_graph);
@@ -168,6 +168,8 @@ impl Clockwork {
         if should_change_scene {
             let ecs = Clockwork::start_scene(&mut self.resources, &mut self.hardware_interfaces)?;
             self.ecs = ecs;
+            // @jack @nocheckin
+            scene_graph_system::flat_build_headass_code(&mut self.ecs.component_database, &mut self.scene_graph);
 
             // Clear up the ImGui
             imgui.meta_data.entity_list_information.clear();

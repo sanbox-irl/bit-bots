@@ -1,4 +1,4 @@
-use super::{traverse::Siblings, Entity, Node, NodeId};
+use super::{Entity, Node, NodeId};
 use std::fmt;
 use std::ops::{Index, IndexMut};
 

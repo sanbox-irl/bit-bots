@@ -1,7 +1,4 @@
-use super::{
-    component_utils::RawComponent, ComponentBounds, ComponentList, Entity, GraphNode, InspectorParameters,
-    TransformParent, Vec2,
-};
+use super::{ComponentBounds, ComponentList, Entity, InspectorParameters, TransformParent, Vec2};
 
 #[derive(Debug, SerializableComponent, Clone, Default, Serialize, Deserialize, typename::TypeName)]
 #[serde(default)]
