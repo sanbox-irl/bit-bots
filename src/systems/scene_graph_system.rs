@@ -1,14 +1,6 @@
-use super::{scene_graph::*, ComponentDatabase, ComponentList, Entity, Transform, Vec2};
-
-/// This is code for dumbasses. Do not actually leave it in the game!
-pub fn flat_build_headass_code(component_database: &mut ComponentDatabase, scene_graph: &mut SceneGraph) {
-    for transform_c in component_database.transforms.iter_mut() {
-        let scene_graph_node_id = scene_graph.instantiate_node(transform_c.entity_id());
-        let transform: &mut Transform = transform_c.inner_mut();
-
-        transform.scene_graph_node_id = Some(scene_graph_node_id);
-    }
-}
+use super::{
+    scene_graph::*, Component, ComponentDatabase, ComponentList, Entity, SerializationMarker, Transform, Vec2,
+};
 
 /// This function walks the SceneGraph, updating each Transform/GraphNode
 /// which had previously been marked as "dirty" with a new WorldPosition.
@@ -51,31 +43,94 @@ pub fn update_transforms_via_scene_graph(
     }
 }
 
-pub fn walk_graph_inspect<T>(component_database: &mut ComponentDatabase, scene_graph: &SceneGraph, mut f: T)
+/// This function walks the SceneGraph and converts each reference to a
+/// serialized reference. Some important notes here: if any node does NOT
+/// have a serialized marker, its direct children will become root nodes. This
+/// can have weird behavior if you're not careful!
+pub fn create_serialized_graph(
+    scene_graph: &SceneGraph,
+    serialization_markers: &ComponentList<SerializationMarker>,
+) -> SerializedSceneGraph {
+    fn walk_serialized_graph(
+        node: &Node,
+        scene_graph: &SceneGraph,
+        parent: Option<NodeId>,
+        f: &mut impl FnMut(&Entity, Option<NodeId>) -> Option<NodeId>,
+    ) {
+        let our_entity: &Entity = node.inner();
+        let our_id = f(our_entity, parent);
+
+        for child in node.children(scene_graph) {
+            walk_serialized_graph(child, scene_graph, our_id, f);
+        }
+    }
+
+    let mut serialized_scene_graph = SerializedSceneGraph::new();
+
+    for parent in scene_graph.iter_roots() {
+        walk_serialized_graph(parent, scene_graph, None, &mut |entity, parent_id| {
+            serialization_markers.get(entity).map(|smc| {
+                let id = serialized_scene_graph.instantiate_node(smc.inner().id);
+
+                // Append if we can
+                if let Some(parent_id) = parent_id {
+                    parent_id.append(id, &mut serialized_scene_graph);
+                }
+
+                id
+            })
+        });
+    }
+
+    serialized_scene_graph
+}
+
+/// Walks the SceneGraph, giving supporting information. This is for the ImGui
+pub fn walk_tree_generically<T>(scene_graph: &SceneGraph, mut f: T)
 where
-    T: FnMut(&Entity, &mut ComponentDatabase, usize, bool) -> bool,
+    T: FnMut(&Entity, usize, bool) -> bool,
 {
     for root_node in scene_graph.iter_roots() {
-        walk_node_inspect(root_node, component_database, scene_graph, 0, &mut f);
+        walk_node_generically(root_node, scene_graph, 0, &mut f);
     }
 }
 
-fn walk_node_inspect<T>(
-    node: &Node,
-    component_database: &mut ComponentDatabase,
-    scene_graph: &SceneGraph,
-    depth: usize,
-    f: &mut T,
-) where
-    T: FnMut(&Entity, &mut ComponentDatabase, usize, bool) -> bool,
+fn walk_node_generically<T>(node: &Node, scene_graph: &SceneGraph, depth: usize, f: &mut T)
+where
+    T: FnMut(&Entity, usize, bool) -> bool,
 {
     let entity: &Entity = node.inner();
     let has_children = node.first_child().is_some();
-    let show_children = f(entity, component_database, depth, has_children);
+    let show_children = f(entity, depth, has_children);
 
     if show_children {
+        let children: Vec<_> = node.children(scene_graph).collect();
+        info!("Children are {:?}", children);
         for child in node.children(scene_graph) {
-            walk_node_inspect(child, component_database, scene_graph, depth + 1, f);
+            walk_node_generically(child, scene_graph, depth + 1, f);
         }
     }
+}
+
+/// This iterates over the `ComponentDatabase`, finding the `Component<SerializationMarker>`,
+/// if it exists, which the `SerializedNode` corresponds to. It then finds and returns
+/// the corresponding `Component<Transform>`, if it exists.
+pub fn find_transform_from_serialized_node<'a, 'b>(
+    component_database: &'a mut ComponentDatabase,
+    serialized_node: &'b SerializedNode,
+) -> Option<&'a mut Component<Transform>> {
+    let sm = &component_database.serialization_markers;
+    let tc = &mut component_database.transforms;
+
+    if let Some(entity) = sm.iter().find_map(|smc| {
+        if smc.inner().id == *serialized_node.inner() {
+            Some(smc.entity_id())
+        } else {
+            None
+        }
+    }) {
+        return tc.get_mut(&entity);
+    }
+
+    None
 }

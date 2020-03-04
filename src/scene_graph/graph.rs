@@ -2,7 +2,7 @@ use super::{node::GraphNode, node_id::NodeId};
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
-#[derive(PartialEq, Eq, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Default, Debug)]
 pub struct Graph<T> {
     nodes: Vec<GraphNode<T>>,
 }
@@ -11,6 +11,13 @@ impl<T> Graph<T> {
     /// Creates a new empty `SceneGraph`.
     pub fn new() -> Self {
         Self { nodes: Vec::new() }
+    }
+
+    /// Creates a new empty `SceneGraph`.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            nodes: Vec::with_capacity(capacity),
+        }
     }
 
     /// Create a new node on the scene graph. The new Node ID is not
@@ -55,6 +62,23 @@ impl<T> Graph<T> {
         self.nodes
             .iter()
             .filter(|n| n.is_removed() == false && n.parent().is_none())
+    }
+
+    /// Walks the SceneGraph, running this function on each member. This really
+    /// should be an iterator, but I'm not sure how to convert them without
+    /// just experimenting for awhile. I'd like to move to that soon!
+    pub fn walk_tree_generically(&self, mut f: impl FnMut(&GraphNode<T>)) {
+        for root_node in self.iter_roots() {
+            self.walk_node_generically(root_node, &mut f);
+        }
+    }
+
+    fn walk_node_generically(&self, node: &GraphNode<T>, f: &mut impl FnMut(&GraphNode<T>)) {
+        f(node);
+
+        for child in node.children(self) {
+            self.walk_node_generically(child, f);
+        }
     }
 }
 

@@ -14,4 +14,4 @@ pub type SceneGraph = graph::Graph<super::Entity>;
 pub type Node = node::GraphNode<super::Entity>;
 
 pub type SerializedSceneGraph = graph::Graph<uuid::Uuid>;
-pub type SerializedNode = node::GraphNode<uuid::Uuid>;
+pub type SerializedNode = node::GraphNode<uuid::Uuid>; 

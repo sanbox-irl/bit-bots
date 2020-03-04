@@ -75,10 +75,10 @@ pub fn instantiate_entity_from_prefab(
     // Instantiate the Prefab
     let success = ecs.component_database.load_serialized_prefab(
         &entity,
-        &prefab_id,
+        prefab_map.get(&prefab_id),
+        &mut ecs.scene_graph,
         &mut ecs.entity_allocator,
         &mut ecs.entities,
-        prefab_map,
         &mut ecs.singleton_database.associated_entities,
     );
 
@@ -144,11 +144,10 @@ pub fn post_prefab_serialization(
             .component_database
             .prefab_markers
             .get(entity)
-            .map(|pmc| {
+            .map_or(false, |pmc| {
                 let pm = pmc.inner();
                 pm.main_id() == main_id && pm.sub_id() == sub_id
             })
-            .unwrap_or_default()
         {
             // Load the Delta into each existing Prefab inheritor
             let new_post = ecs.component_database.load_yaml_delta_into_database(
@@ -157,6 +156,7 @@ pub fn post_prefab_serialization(
                 delta.clone(),
                 Default::default(),
                 &mut ecs.singleton_database.associated_entities,
+                &mut ecs.scene_graph,
             );
 
             // Reload the serialization after the fact

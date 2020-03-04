@@ -38,6 +38,11 @@ pub mod tilesets {
     pub use super::serialize_tilesets::*;
 }
 
+mod serialize_scene_graph;
+pub mod serialized_scene_graph {
+    pub use super::serialize_scene_graph::*;
+}
+
 pub(super) fn load_serialized_file<T: Default>(path: &str) -> Result<T, Error>
 where
     for<'de> T: serde::Deserialize<'de>,

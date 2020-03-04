@@ -1,10 +1,9 @@
-use super::{imgui_component_utils::*, scene_graph::SceneGraph, *};
+use super::{imgui_component_utils::*, *};
 use anyhow::Error;
 
 pub fn entity_list(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
-    scene_graph: &SceneGraph,
     ui_handler: &mut UiHandler<'_>,
 ) -> Result<Option<EntitySerializationCommand>, Error> {
     let mut open = true;
@@ -14,14 +13,7 @@ pub fn entity_list(
         ui_handler.flags.remove(ImGuiFlags::ENTITY_VIEWER);
     }
 
-    imgui_entity_list(
-        ecs,
-        resources,
-        scene_graph,
-        ui_handler,
-        &mut open,
-        &mut later_action_on_entity,
-    );
+    imgui_entity_list(ecs, resources, ui_handler, &mut open, &mut later_action_on_entity);
 
     if let Some((entity, later_action)) = later_action_on_entity {
         match later_action {
@@ -170,7 +162,6 @@ pub fn entity_list(
 fn imgui_entity_list(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
-    scene_graph: &SceneGraph,
     ui_handler: &mut UiHandler<'_>,
     open: &mut bool,
     later_action_on_entity: &mut Option<(Entity, NameRequestedAction)>,
@@ -185,43 +176,72 @@ fn imgui_entity_list(
         // Top menu bar!
         if let Some(menu_bar) = ui_handler.ui.begin_menu_bar() {
             let ui: &Ui<'_> = &ui_handler.ui;
-            // BLANK ENTITY
-            if imgui::MenuItem::new(im_str!("Create Blank Entity")).build(ui) {
-                ecs.create_entity();
-            }
 
-            // PREFABS
-            if let Some(prefab_submenu) = ui.begin_menu(im_str!("Instantiate Prefabs"), true) {
-                for (prefab_id, prefab) in resources.prefabs().iter() {
-                    let name = match &prefab.root_entity().name {
-                        Some(sc) => im_str!("{}##MenuItem", &sc.inner.name),
-                        None => im_str!("ID: {}##MenuItem", prefab.root_id()),
-                    };
+            if let Some(menu_token) = ui.begin_menu(
+                im_str!("Create Entity"),
+                scene_system::current_scene_mode() == SceneMode::Draft,
+            ) {
+                // BLANK ENTITY
+                if imgui::MenuItem::new(im_str!("Blank Entity")).build(ui) {
+                    let entity = ecs.create_entity();
 
-                    if imgui::MenuItem::new(&name).build(ui) {
-                        let entity = prefab_system::instantiate_entity_from_prefab(
-                            ecs,
-                            *prefab_id,
-                            resources.prefabs(),
-                        );
-                        if scene_system::current_scene_mode() == SceneMode::Draft {
+                    ecs.component_database
+                        .serialization_markers
+                        .set_component(&entity, SerializationMarker::new());
+                }
+
+                if let Some(prefab_submenu) = ui.begin_menu(im_str!("Prefab"), true) {
+                    for (prefab_id, prefab) in resources.prefabs().iter() {
+                        let name = match &prefab.root_entity().name {
+                            Some(sc) => im_str!("{}##MenuItem", &sc.inner.name),
+                            None => im_str!("ID: {}##MenuItem", prefab.root_id()),
+                        };
+
+                        if imgui::MenuItem::new(&name).build(ui) {
+                            let entity = prefab_system::instantiate_entity_from_prefab(
+                                ecs,
+                                *prefab_id,
+                                resources.prefabs(),
+                            );
+
                             ecs.component_database
                                 .serialization_markers
                                 .set_component(&entity, SerializationMarker::new());
                         }
                     }
+
+                    if resources.prefabs().is_empty() {
+                        imgui::MenuItem::new(imgui::im_str!("(None -- Get Crackin'!)"))
+                            .enabled(false)
+                            .build(ui);
+                    }
+
+                    prefab_submenu.end(ui);
                 }
 
-                if resources.prefabs().is_empty() {
-                    imgui::MenuItem::new(imgui::im_str!("(None -- Get Crackin'!)"))
-                        .enabled(false)
-                        .build(ui);
-                }
-
-                prefab_submenu.end(ui);
+                menu_token.end(ui);
             }
 
-            if imgui::MenuItem::new(im_str!("Serialize Scene")).build(ui) || ui_handler.can_save_scene() {
+            if let Some(menu_token) = ui.begin_menu(im_str!("Scene Graph"), true) {
+                if imgui::MenuItem::new(im_str!("Save")).build(ui) {
+                    let ssg = scene_graph_system::create_serialized_graph(
+                        &ecs.scene_graph,
+                        &ecs.component_database.serialization_markers,
+                    );
+                    match serialization_util::serialized_scene_graph::save_serialized_scene_graph(ssg) {
+                        Ok(()) => info!("Saved Serialized SceneGraph..."),
+                        Err(e) => error!("Couldn't save scene graph...{}", e),
+                    }
+                }
+
+                if imgui::MenuItem::new(im_str!("Log")).build(ui) {
+                    println!("{}", ecs.scene_graph);
+                }
+
+                menu_token.end(ui);
+            }
+
+            if imgui::MenuItem::new(im_str!("Save Scene")).build(ui) || ui_handler.save_requested() {
                 match serialization_util::entities::serialize_all_entities(
                     &ecs.entities,
                     &ecs.component_database,
@@ -242,59 +262,57 @@ fn imgui_entity_list(
 
         // SCENE GRAPH
         let singleton_database = &ecs.singleton_database;
-        scene_graph_system::walk_graph_inspect(
-            &mut ecs.component_database,
-            scene_graph,
-            |entity, component_database, depth, has_children| {
-                ui_handler.scene_graph_entities.push(*entity);
+        let component_database = &mut ecs.component_database;
 
-                let serialized_entity: Option<SerializedEntity> = component_database
-                    .serialization_markers
+        scene_graph_system::walk_tree_generically(&ecs.scene_graph, |entity, depth, has_children| {
+            ui_handler.scene_graph_entities.push(*entity);
+
+            let serialized_entity: Option<SerializedEntity> = component_database
+                .serialization_markers
+                .get(entity)
+                .and_then(|smc| {
+                    SerializedEntity::new(
+                        entity,
+                        smc.inner().id,
+                        component_database,
+                        singleton_database,
+                        resources,
+                    )
+                });
+
+            let name_inspector_params = NameInspectorParameters {
+                has_children,
+                depth,
+                prefab_status: component_database
+                    .prefab_markers
                     .get(entity)
-                    .and_then(|smc| {
-                        SerializedEntity::new(
-                            entity,
-                            smc.inner().id,
-                            component_database,
-                            singleton_database,
-                            resources,
-                        )
-                    });
+                    .map(|_| PrefabStatus::PrefabInstance)
+                    .unwrap_or_default(),
+                being_inspected: ui_handler.stored_ids.contains(entity),
+                serialization_status: component_database
+                    .serialization_markers
+                    .get_mut(entity)
+                    .map(|smc| {
+                        smc.inner_mut()
+                            .get_serialization_status(serialized_entity.as_ref())
+                    })
+                    .unwrap_or_default(),
+            };
 
-                let name_inspector_params = NameInspectorParameters {
-                    has_children,
-                    depth,
-                    prefab_status: component_database
-                        .prefab_markers
-                        .get(entity)
-                        .map(|_| PrefabStatus::PrefabInstance)
-                        .unwrap_or_default(),
-                    being_inspected: ui_handler.stored_ids.contains(entity),
-                    serialization_status: component_database
-                        .serialization_markers
-                        .get_mut(entity)
-                        .map(|smc| {
-                            smc.inner_mut()
-                                .get_serialization_status(serialized_entity.as_ref())
-                        })
-                        .unwrap_or_default(),
-                };
+            let (show_children, requested_action) = display_entity_id(
+                entity,
+                &name_inspector_params,
+                &mut component_database.names,
+                ui_handler,
+            );
 
-                let (show_children, requested_action) = display_entity_id(
-                    entity,
-                    &name_inspector_params,
-                    &mut component_database.names,
-                    ui_handler,
-                );
+            // Record the Requested Action
+            if let Some(requested_action) = requested_action {
+                *later_action_on_entity = Some((*entity, requested_action));
+            }
 
-                // Record the Requested Action
-                if let Some(requested_action) = requested_action {
-                    *later_action_on_entity = Some((*entity, requested_action));
-                }
-
-                show_children
-            },
-        );
+            show_children
+        });
 
         ui_handler.ui.separator();
 

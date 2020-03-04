@@ -1,6 +1,6 @@
 use super::{
     graph::Graph,
-    relations::insert_with_neighbors,
+    relations::{assert_triangle_nodes, insert_with_neighbors},
     siblings_range::SiblingsRange,
     traverse::{Ancestors, Children},
     NodeError,
@@ -141,5 +141,88 @@ impl NodeId {
         .expect("Should never fail: `new_child` is not `self` and they are not removed");
 
         Ok(())
+    }
+
+    /// Removes a node from the arena.
+    ///
+    /// Children of the removed node will be inserted to the place where the
+    /// removed node was.
+    ///
+    /// Please note that the node will not be removed from the internal arena
+    /// storage, but marked as `removed`. Traversing the arena returns a
+    /// plain iterator and contains removed elements too.
+    ///
+    /// To check if the node is removed or not, use [`Node::is_removed()`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use indextree::Arena;
+    /// # let mut arena = Arena::new();
+    /// # let n1 = arena.new_node("1");
+    /// # let n1_1 = arena.new_node("1_1");
+    /// # n1.append(n1_1, &mut arena);
+    /// # let n1_2 = arena.new_node("1_2");
+    /// # n1.append(n1_2, &mut arena);
+    /// # let n1_2_1 = arena.new_node("1_2_1");
+    /// # n1_2.append(n1_2_1, &mut arena);
+    /// # let n1_2_2 = arena.new_node("1_2_2");
+    /// # n1_2.append(n1_2_2, &mut arena);
+    /// # let n1_3 = arena.new_node("1_3");
+    /// # n1.append(n1_3, &mut arena);
+    /// #
+    /// // arena
+    /// // `-- 1
+    /// //     |-- 1_1
+    /// //     |-- 1_2
+    /// //     |   |-- 1_2_1
+    /// //     |   `-- 1_2_2
+    /// //     `-- 1_3
+    ///
+    /// n1_2.remove(&mut arena);
+    ///
+    /// let mut iter = n1.descendants(&arena);
+    /// assert_eq!(iter.next(), Some(n1));
+    /// assert_eq!(iter.next(), Some(n1_1));
+    /// assert_eq!(iter.next(), Some(n1_2_1));
+    /// assert_eq!(iter.next(), Some(n1_2_2));
+    /// assert_eq!(iter.next(), Some(n1_3));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    ///
+    /// [`Node::is_removed()`]: struct.Node.html#method.is_removed
+    pub fn remove<T>(self, arena: &mut Graph<T>) {
+        debug_assert_triangle_nodes!(
+            arena,
+            arena[self].parent,
+            arena[self].previous_sibling,
+            Some(self)
+        );
+        debug_assert_triangle_nodes!(arena, arena[self].parent, Some(self), arena[self].next_sibling);
+        debug_assert_triangle_nodes!(arena, Some(self), None, arena[self].first_child);
+        debug_assert_triangle_nodes!(arena, Some(self), arena[self].last_child, None);
+
+        // Retrieve needed values.
+        let (parent, previous_sibling, next_sibling, first_child, last_child) = {
+            let node = &arena[self];
+            (
+                node.parent,
+                node.previous_sibling,
+                node.next_sibling,
+                node.first_child,
+                node.last_child,
+            )
+        };
+
+        assert_eq!(first_child.is_some(), last_child.is_some());
+        self.detach(arena);
+        if let (Some(first_child), Some(last_child)) = (first_child, last_child) {
+            let range = SiblingsRange::new(first_child, last_child).detach_from_siblings(arena);
+            range
+                .transplant(arena, parent, previous_sibling, next_sibling)
+                .expect("Should never fail: neighbors and children must be consistent");
+        }
+        arena[self].removed = true;
+        debug_assert!(arena[self].is_detached());
     }
 }

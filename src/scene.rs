@@ -1,9 +1,11 @@
-pub const ENTITY_SUBPATH: &str = "entities_data.yaml";
 pub const SCENE_DIRECTORY: &str = "assets/serialized_data/scenes";
 pub const PREFAB_DIRECTORY: &str = "assets/serialized_data/prefabs";
-pub const SINGLETONS_SUBPATH: &str = "singleton_data.yaml";
 pub const DEFAULT_SINGLETONS_SUBPATH: &str = "default_singleton_data.yaml";
+
 pub const TILEMAP_SUBPATH: &str = "tilemap";
+pub const SCENE_SUBPATH: &str = "scene_graph.graph";
+pub const ENTITY_SUBPATH: &str = "entities_data.yaml";
+pub const SINGLETONS_SUBPATH: &str = "singleton_data.yaml";
 
 #[derive(Debug, Clone)]
 pub struct Scene {
@@ -73,6 +75,15 @@ impl Scene {
                 "{}/{}/{}/{}",
                 SCENE_DIRECTORY, &self.name, TILEMAP_SUBPATH, tilemap_path_end
             )
+        }
+    }
+
+    pub fn scene_graph_path(&self) -> String {
+        if self.is_prefab {
+            // loads the prefab
+            self.entity_path()
+        } else {
+            format!("{}/{}/{}", SCENE_DIRECTORY, &self.name, SCENE_SUBPATH)
         }
     }
 }

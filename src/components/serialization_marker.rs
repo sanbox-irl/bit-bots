@@ -97,7 +97,9 @@ impl SerializationMarker {
 
         if let Some(se_on_disk) = &self.cache.serialized_entity_on_disk {
             if let Some(serialized_entity) = current_serialized_entity {
-                if se_on_disk == serialized_entity {
+                if serde_yaml::to_value(se_on_disk).unwrap()
+                    == serde_yaml::to_value(serialized_entity).unwrap()
+                {
                     SyncStatus::Synced
                 } else {
                     SyncStatus::OutofSync

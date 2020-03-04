@@ -253,8 +253,9 @@ where
     T: ComponentBounds + Default + Clone + typename::TypeName + 'static,
 {
     /// Simply a wrapper around creating a new component
-    pub fn set_component(&mut self, entity_id: &Entity, new_component: T) {
+    pub fn set_component(&mut self, entity_id: &Entity, new_component: T) -> &mut Component<T> {
         self.set(&entity_id, Component::new(&entity_id, new_component));
+        self.get_mut(&entity_id).unwrap()
     }
 
     /// Simply a wrapper around creating a new component

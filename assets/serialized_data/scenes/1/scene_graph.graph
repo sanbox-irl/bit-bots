@@ -1,0 +1,9 @@
+---
+nodes:
+  - parent: ~
+    first_child: ~
+    last_child: ~
+    previous_sibling: ~
+    next_sibling: ~
+    removed: false
+    data: 0c2af0a5-7d99-4182-8aed-57bab959d996

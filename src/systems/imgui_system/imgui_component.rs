@@ -16,6 +16,7 @@ pub fn entity_inspector(
         component_database,
         singleton_database,
         entity_allocator: _,
+        scene_graph,
         entities,
     } = ecs;
 
@@ -189,10 +190,8 @@ pub fn entity_inspector(
 
                     if had_transform == false {
                         if let Some(new_transform) = component_database.transforms.get_mut(entity) {
-                            // scene_graph::add_to_scene_graph(
-                            //     new_transform,
-                            //     &component_database.serialization_markers,
-                            // );
+                            let entity = new_transform.entity_id();
+                            new_transform.inner_mut().attach_to_graph(entity, scene_graph);
                         }
                     }
 
@@ -265,20 +264,37 @@ pub fn entity_inspector(
                         )?;
 
                         if scene_is_prefab {
-                            // THIS IS A CRAZY PERSON WAY TO DO THIS. EVERYTHING CAN GO WRONG
-                            // LETS DO IT:
-                            // let root_entity_id: Entity =
-                            //     scene_graph::ROOT_NODES.lock().unwrap().children.as_ref().unwrap()[0]
-                            //         .target
-                            //         .unwrap();
-                            // let root_uuid = component_database
-                            //     .serialization_markers
-                            //     .get(&root_entity_id)
-                            //     .map(|pmc| pmc.inner().id)
-                            //     .unwrap();
+                            // We can have two kinds of Prefabs -- SceneGraph prefabs and
+                            // non SceneGraph prefabs. We need to support both.
+                            // In both cases, we assume that we only have one "root":
+                            // for SceneGraph types, we only have one RootNode
+                            // for NonSceneGraph types, we only have one entity at all!
 
-                            // let prefab = resources.prefabs_mut().unwrap().get_mut(&root_uuid).unwrap();
-                            // prefab.members.insert(uuid, new_serialized_entity);
+                            // Standard SceneGraph (has transform) prefabs:
+                            let prefab_id = if let Some(first_root) = ecs.scene_graph.iter_roots().nth(0) {
+                                component_database
+                                    .prefab_markers
+                                    .get(first_root.inner())
+                                    .map(|pmc| pmc.inner().main_id())
+                            } else {
+                                // We assume it's a non-SceneGraph Prefab, which means it's the only
+                                // entity in da game!
+                                ecs.component_database
+                                    .prefab_markers
+                                    .iter()
+                                    .nth(0)
+                                    .map(|only_prefab_marker| only_prefab_marker.inner().main_id())
+                            };
+
+                            if let Some(prefab_id) = prefab_id {
+                                let cached_prefab =
+                                    resources.prefabs_mut().unwrap().get_mut(&prefab_id).unwrap();
+                                cached_prefab.members.insert(uuid, new_serialized_entity);
+                            } else {
+                                // This is very unlikely!
+                                error!("We were in a Prefab Scene but we couldn't find our Prefab.");
+                                error!("The live game probably has a malformed Prefab cached right now!");
+                            }
                         }
                     }
                     ComponentSerializationCommandType::Revert
@@ -302,6 +318,7 @@ pub fn entity_inspector(
                             delta,
                             uuid,
                             &mut singleton_database.associated_entities,
+                            &mut ecs.scene_graph,
                         );
 
                         component_database.post_deserialization(post_deserialization, |component_list, sl| {

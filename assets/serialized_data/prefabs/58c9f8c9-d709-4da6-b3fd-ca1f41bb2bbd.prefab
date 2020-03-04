@@ -1,38 +1,31 @@
 ---
-root_id: 2b787f59-9759-4077-9642-4bec1468f75c
+root_id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
 valid: true
 members:
-  2b787f59-9759-4077-9642-4bec1468f75c:
+  58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd:
     name:
       inner:
-        name: Player
+        name: Tester
       active: true
     player: ~
     transform:
       inner:
         local_position:
-          x: 25.0
-          y: 40.0
+          x: 20.0
+          y: 16.0
         world_position:
-          x: 25.0
-          y: 40.0
-        parent:
-          target_serialized_id: ~
+          x: 20.0
+          y: 16.0
       active: true
-    grid_object: ~
     scene_switcher: ~
-    graph_node: ~
-    velocity:
-      inner:
-        intended_direction: ~
-      active: true
+    velocity: ~
     sprite:
       inner:
         sprite_name: PixelMainCharacterStanding
         running_data:
           draw_order:
             draw_layer: Instance
-            order: 0
+            order: 1
           facing_horizontal: Right
           facing_vertical: Up
           scale:
@@ -54,5 +47,14 @@ members:
     follow: ~
     conversant_npc: ~
     prefab_marker: ~
-    id: 2b787f59-9759-4077-9642-4bec1468f75c
+    id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
     marker: ~
+serialized_graph:
+  nodes:
+    - parent: ~
+      first_child: ~
+      last_child: ~
+      previous_sibling: ~
+      next_sibling: ~
+      removed: false
+      data: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd

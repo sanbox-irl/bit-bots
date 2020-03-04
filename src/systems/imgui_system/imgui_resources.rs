@@ -313,12 +313,9 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
                 NameRequestedAction::ChangeName(_)
                 | NameRequestedAction::EntitySerializationCommand(_)
                 | NameRequestedAction::LogSerializedEntity
-                | NameRequestedAction::UnpackPrefab => {
+                | NameRequestedAction::UnpackPrefab
+                | NameRequestedAction::Clone => {
                     error!("Unimplemented!");
-                }
-                NameRequestedAction::Clone => {
-                    let clone: Prefab = resources.prefabs().get(&id).unwrap().clone();
-                    resources.add_prefab(clone);
                 }
                 NameRequestedAction::Delete => {
                     // Invalidate our live prefab:

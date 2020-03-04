@@ -4,6 +4,7 @@ use super::{
     entities::EntityAllocator,
     hardware_interfaces::HardwareInterface,
     resources::{PrefabMap, ResourcesDatabase},
+    scene_graph::SceneGraph,
     systems::*,
     ActionMap, GameWorldDrawCommands,
 };
@@ -11,6 +12,7 @@ use anyhow::Error;
 
 pub struct Ecs {
     pub component_database: ComponentDatabase,
+    pub scene_graph: SceneGraph,
     pub singleton_database: SingletonDatabase,
     pub entities: Vec<Entity>,
     pub entity_allocator: EntityAllocator,
@@ -22,15 +24,22 @@ impl Ecs {
         let mut entity_allocator = EntityAllocator::new();
         let mut entities = Vec::new();
 
-        // Deserialize Entities and Singletons
+        // Deserialize Entities and Singletons and load in the SceneGraph
         let mut marker_map = std::collections::HashMap::new();
-        let component_database =
-            ComponentDatabase::new(&mut entity_allocator, &mut entities, &mut marker_map, prefabs)?;
+        let mut scene_graph = SceneGraph::new();
+        let component_database = ComponentDatabase::new(
+            &mut entity_allocator,
+            &mut entities,
+            &mut marker_map,
+            prefabs,
+            &mut scene_graph,
+        )?;
 
         let singleton_database = SingletonDatabase::new(marker_map)?;
 
         Ok(Ecs {
             entities,
+            scene_graph,
             entity_allocator,
             component_database,
             singleton_database,

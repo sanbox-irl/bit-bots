@@ -1,7 +1,7 @@
-use super::{graph::Graph, traverse::NodeChildren, node_id::NodeId};
+use super::{graph::Graph, node_id::NodeId, traverse::NodeChildren};
 use std::fmt;
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 pub struct GraphNode<T> {
     pub(super) parent: Option<NodeId>,
     pub(super) first_child: Option<NodeId>,

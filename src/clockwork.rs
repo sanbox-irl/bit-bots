@@ -1,12 +1,8 @@
-use super::{
-    scene_graph::SceneGraph, systems::*, Ecs, HardwareInterface, ImGui, ImGuiDrawCommands, ResourcesDatabase,
-    TimeKeeper,
-};
+use super::{systems::*, Ecs, HardwareInterface, ImGui, ImGuiDrawCommands, ResourcesDatabase, TimeKeeper};
 use anyhow::Error;
 
 pub struct Clockwork {
     pub ecs: Ecs,
-    pub scene_graph: SceneGraph,
     pub action_map: ActionMap,
     pub hardware_interfaces: HardwareInterface,
     pub resources: ResourcesDatabase,
@@ -20,17 +16,12 @@ impl Clockwork {
         let mut hardware_interfaces = HardwareInterface::new(&resources.config)?;
         resources.initialize(&mut hardware_interfaces.renderer)?;
 
-        let mut scene_graph = SceneGraph::new();
-        let mut ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
-
-        // @jack @nocheckin
-        scene_graph_system::flat_build_headass_code(&mut ecs.component_database, &mut scene_graph);
+        let ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
 
         Ok(Clockwork {
             ecs,
             hardware_interfaces,
             resources,
-            scene_graph,
             action_map: ActionMap::default(),
             time_keeper: TimeKeeper::default(),
         })
@@ -74,7 +65,6 @@ impl Clockwork {
                 &mut self.ecs,
                 &mut self.resources,
                 &mut self.hardware_interfaces,
-                &mut self.scene_graph,
                 &mut ui_handler,
                 &self.time_keeper,
             );
@@ -130,7 +120,7 @@ impl Clockwork {
         // Update transform by walking the scene graph...
         scene_graph_system::update_transforms_via_scene_graph(
             &mut self.ecs.component_database.transforms,
-            &self.scene_graph,
+            &self.ecs.scene_graph,
         );
 
         let mut draw_commands = DrawCommand::default();
@@ -166,13 +156,7 @@ impl Clockwork {
         };
 
         if should_change_scene {
-            let ecs = Clockwork::start_scene(&mut self.resources, &mut self.hardware_interfaces)?;
-            self.ecs = ecs;
-            // @jack @nocheckin
-            scene_graph_system::flat_build_headass_code(
-                &mut self.ecs.component_database,
-                &mut self.scene_graph,
-            );
+            self.ecs = Clockwork::start_scene(&mut self.resources, &mut self.hardware_interfaces)?;
 
             // Clear up the ImGui
             imgui.meta_data.entity_list_information.clear();
@@ -197,7 +181,7 @@ impl Clockwork {
             }
         }
 
-        // Initialize the ECS
+        // Initialize the ECS and Scene Graph
         let mut ecs = Ecs::new(&resources.prefabs())?;
         ecs.game_start(resources, hardware_interfaces)?;
 
