@@ -23,7 +23,7 @@ impl Name {
     pub fn inspect(
         name: &str,
         eli: &mut EntityListInformation,
-        nip: &NameInspectorParameters,
+        nip: &NameInspectorParameters<'_>,
         ui: &imgui::Ui<'_>,
         uid: &str,
     ) -> NameInspectorResult {
@@ -122,6 +122,18 @@ impl Name {
 
                     if MenuItem::new(&im_str!("Delete##{}", uid)).build(ui) {
                         res.requested_action = Some(NameRequestedAction::Delete);
+                    }
+
+                    ui.separator();
+
+                    if let Some(create_entity_subcommand) = imgui_system::create_entity_submenu(
+                        "Create Child",
+                        nip.on_scene_graph,
+                        nip.prefabs,
+                        ui,
+                    ) {
+                        res.requested_action =
+                            Some(NameRequestedAction::CreateEntityCommand(create_entity_subcommand));
                     }
 
                     ui.separator();

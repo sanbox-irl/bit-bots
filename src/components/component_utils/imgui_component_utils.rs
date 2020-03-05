@@ -1,7 +1,7 @@
-use super::{Color, ComponentBounds, Entity, SerializedEntity};
+use super::{scene_graph::NodeId, Color, ComponentBounds, Entity, PrefabMap, SerializedEntity};
 use uuid::Uuid;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum NameRequestedAction {
     ChangeName(String),
     ToggleInspect,
@@ -18,6 +18,19 @@ pub enum NameRequestedAction {
     LogPrefab,
 
     EntitySerializationCommand(EntitySerializationCommandType),
+    CreateEntityCommand(CreateEntityCommand),
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct CreateEntityCommand {
+    pub parent_id: Option<NodeId>,
+    pub command_type: CreateEntityCommandType,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum CreateEntityCommandType {
+    CreateBlank,
+    CreatePrefab(uuid::Uuid),
 }
 
 pub struct NameInspectorResult {
@@ -43,23 +56,15 @@ impl NameInspectorResult {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
-pub struct NameInspectorParameters {
+#[derive(Debug)]
+pub struct NameInspectorParameters<'a> {
+    pub on_scene_graph: Option<NodeId>,
     pub has_children: bool,
     pub depth: usize,
     pub prefab_status: PrefabStatus,
     pub being_inspected: bool,
     pub serialization_status: SyncStatus,
-}
-
-impl NameInspectorParameters {
-    pub fn with_scene_graph_data(has_children: bool, depth: usize) -> Self {
-        Self {
-            has_children,
-            depth,
-            ..Default::default()
-        }
-    }
+    pub prefabs: &'a PrefabMap,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]

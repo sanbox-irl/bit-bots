@@ -1,4 +1,4 @@
-use super::*;
+use super::{imgui_component_utils::*, scene_graph::NodeId, *};
 use imgui::*;
 
 pub const RIGHT_CHEVRON: char = '\u{f105}';
@@ -477,4 +477,69 @@ pub fn wrap_style_color_var(ui: &Ui<'_>, style_color: StyleColor, color: [f32; 4
 
 pub fn imgui_str(message: &str, uid: &str) -> ImString {
     im_str!("{}##{}", message, uid)
+}
+
+pub fn create_entity_submenu(
+    menu_name: &str,
+    top_level: bool,
+    parent_id: Option<NodeId>,
+    prefabs: &PrefabMap,
+    ui: &Ui<'_>,
+) -> Option<CreateEntityCommand> {
+    let mut out_entity = None;
+
+    if let Some(menu_token) = ui.begin_menu(&im_str!("{}", menu_name), top_level || parent_id.is_some()) {
+        // BLANK ENTITY
+        if imgui::MenuItem::new(im_str!("Blank Entity")).build(ui) {
+            out_entity = Some(CreateEntityCommand {
+                parent_id,
+                command_type: CreateEntityCommandType::CreateBlank,
+            });
+        }
+
+        if let Some(prefab_submenu) = ui.begin_menu(im_str!("Prefab"), true) {
+            for (prefab_id, prefab) in prefabs.iter() {
+                let name = match &prefab.root_entity().name {
+                    Some(sc) => im_str!("{}##MenuItem", &sc.inner.name),
+                    None => im_str!("ID: {}##MenuItem", prefab.root_id()),
+                };
+
+                if imgui::MenuItem::new(&name).build(ui) {
+                    out_entity = Some(CreateEntityCommand {
+                        parent_id,
+                        command_type: CreateEntityCommandType::CreatePrefab(*prefab_id),
+                    });
+                }
+            }
+
+            if prefabs.is_empty() {
+                imgui::MenuItem::new(imgui::im_str!("(None -- Get Crackin'!)"))
+                    .enabled(false)
+                    .build(ui);
+            }
+
+            prefab_submenu.end(ui);
+        }
+
+        menu_token.end(ui);
+    }
+
+    out_entity
+}
+
+pub fn process_entity_subcommand(create_entity: CreateEntityCommand, ecs: &mut Ecs, prefabs: &PrefabMap) {
+    let entity = match create_entity.command_type {
+        CreateEntityCommandType::CreateBlank => ecs.create_entity(),
+        CreateEntityCommandType::CreatePrefab(prefab_id) => {
+            prefab_system::instantiate_entity_from_prefab(ecs, prefab_id, prefabs)
+        }
+    };
+
+    if let Some(parent) = create_entity.parent_id {
+        // add the transform and to the scene graphy stuff...
+    }
+
+    ecs.component_database
+        .serialization_markers
+        .set_component(&entity, SerializationMarker::new());
 }

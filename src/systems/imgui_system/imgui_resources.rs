@@ -289,10 +289,12 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
         for (id, prefab) in resources.prefabs().iter() {
             let nip = NameInspectorParameters {
                 has_children: false,
+                on_scene_graph: None,
                 depth: 0,
                 prefab_status: PrefabStatus::Prefab,
                 being_inspected: false,
                 serialization_status: SyncStatus::Synced,
+                prefabs: resources.prefabs(),
             };
 
             // ENTITY ELEMENTS:
@@ -314,8 +316,9 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
                 | NameRequestedAction::EntitySerializationCommand(_)
                 | NameRequestedAction::LogSerializedEntity
                 | NameRequestedAction::UnpackPrefab
-                | NameRequestedAction::Clone => {
-                    error!("Unimplemented!");
+                | NameRequestedAction::Clone
+                | NameRequestedAction::CreateEntityCommand(_) => {
+                    error!("Unimplemented Action on Prefab: {:?}", action_on_prefab);
                 }
                 NameRequestedAction::Delete => {
                     // Invalidate our live prefab:
@@ -355,7 +358,7 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
 
 fn display_prefab_id(
     prefab: Uuid,
-    name_inspector_params: &NameInspectorParameters,
+    name_inspector_params: &NameInspectorParameters<'_>,
     name: Option<&Name>,
     ui_handler: &mut UiHandler<'_>,
 ) -> (bool, Option<NameRequestedAction>) {
