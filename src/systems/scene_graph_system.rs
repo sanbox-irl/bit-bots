@@ -104,8 +104,6 @@ where
     let show_children = f(entity, depth, has_children);
 
     if show_children {
-        let children: Vec<_> = node.children(scene_graph).collect();
-        info!("Children are {:?}", children);
         for child in node.children(scene_graph) {
             walk_node_generically(child, scene_graph, depth + 1, f);
         }

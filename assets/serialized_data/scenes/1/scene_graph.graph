@@ -1,9 +1,19 @@
 ---
 nodes:
   - parent: ~
+    first_child:
+      index: 1
+    last_child:
+      index: 1
+    previous_sibling: ~
+    next_sibling: ~
+    removed: false
+    data: 8fa043e3-40f6-4a5f-a7d9-bd758d76c169
+  - parent:
+      index: 0
     first_child: ~
     last_child: ~
     previous_sibling: ~
     next_sibling: ~
     removed: false
-    data: 0c2af0a5-7d99-4182-8aed-57bab959d996
+    data: 663324cd-e452-41d5-8f56-884b57f04627

@@ -295,6 +295,7 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
                 being_inspected: false,
                 serialization_status: SyncStatus::Synced,
                 prefabs: resources.prefabs(),
+                scene_mode: scene_system::current_scene_mode(),
             };
 
             // ENTITY ELEMENTS:

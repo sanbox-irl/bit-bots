@@ -1,5 +1,10 @@
-use super::{scene_graph::NodeId, Color, ComponentBounds, Entity, PrefabMap, SerializedEntity};
+use super::{
+    imgui_system, scene_graph::NodeId, Color, ComponentBounds, Entity, PrefabMap, SceneMode, SerializedEntity,
+};
 use uuid::Uuid;
+
+const WARNING_ICON: char = '\u{f071}';
+const SYNCED_ICON: char = '\u{f00c}';
 
 #[derive(Debug)]
 pub enum NameRequestedAction {
@@ -63,6 +68,7 @@ pub struct NameInspectorParameters<'a> {
     pub depth: usize,
     pub prefab_status: PrefabStatus,
     pub being_inspected: bool,
+    pub scene_mode: SceneMode,
     pub serialization_status: SyncStatus,
     pub prefabs: &'a PrefabMap,
 }
@@ -125,9 +131,20 @@ impl SyncStatus {
         } else {
             match self {
                 SyncStatus::Unsynced => Color::WHITE.into(),
-                SyncStatus::Headless => super::imgui_system::red_warning_color(),
-                SyncStatus::OutofSync => super::imgui_system::prefab_light_blue_color(),
-                SyncStatus::Synced => super::imgui_system::prefab_blue_color(),
+                SyncStatus::Headless => imgui_system::red_warning_color(),
+                SyncStatus::OutofSync => imgui_system::prefab_light_blue_color(),
+                SyncStatus::Synced => imgui_system::prefab_blue_color(),
+            }
+        }
+    }
+
+    pub fn imgui_symbol(&self, scene_mode: super::SceneMode) -> char {
+        if scene_mode != super::SceneMode::Draft {
+            '\u{200B}'
+        } else {
+            match self {
+                SyncStatus::Unsynced | SyncStatus::Headless | SyncStatus::OutofSync => WARNING_ICON,
+                SyncStatus::Synced => SYNCED_ICON,
             }
         }
     }

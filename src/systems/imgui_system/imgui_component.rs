@@ -503,7 +503,7 @@ where
                                 if scene_mode == SceneMode::Draft {
                                     imgui_utility::help_marker_generic(
                                         ui,
-                                        imgui_utility::WARNING_ICON,
+                                        serialization_sync_status.imgui_symbol(scene_mode),
                                         format!("{} is not committed to the Scene!", name),
                                     )
                                 }
@@ -518,7 +518,7 @@ where
                             || {
                                 imgui_utility::help_marker_generic(
                                     ui,
-                                    imgui_utility::WARNING_ICON,
+                                    serialization_sync_status.imgui_symbol(scene_mode),
                                     format!(
                                 "{} is Headless! It has a serialization marker, but no serialization found!",
                                 name
@@ -535,7 +535,7 @@ where
                             || {
                                 imgui_utility::help_marker_generic(
                                     ui,
-                                    imgui_utility::WARNING_ICON,
+                                    serialization_sync_status.imgui_symbol(scene_mode),
                                     format!("{} is out of Sync with its Serialization!", name),
                                 );
                             },
@@ -549,7 +549,7 @@ where
                             || {
                                 imgui_utility::help_marker_generic(
                                     ui,
-                                    imgui_utility::SYNCED_ICON,
+                                    serialization_sync_status.imgui_symbol(scene_mode),
                                     format!("{} is synced to its Serialization!", name),
                                 );
                             },

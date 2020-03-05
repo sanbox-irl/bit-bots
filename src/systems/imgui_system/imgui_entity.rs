@@ -170,6 +170,8 @@ fn imgui_entity_list(
     open: &mut bool,
     later_action_on_entity: &mut Option<(Entity, NameRequestedAction)>,
 ) {
+    let scene_mode = scene_system::current_scene_mode();
+
     // Top menu bar!
     let entity_window = imgui::Window::new(&im_str!("Entity List"))
         .size([200.0, 400.0], imgui::Condition::FirstUseEver)
@@ -182,12 +184,38 @@ fn imgui_entity_list(
             let ui: &Ui<'_> = &ui_handler.ui;
 
             // Create a Top Level Entity
-            if let Some(sub_command) = create_entity_submenu("Create Entity", true, resources.prefabs(), ui) {
+            if let Some(sub_command) =
+                create_entity_submenu("Create Entity", true, None, resources.prefabs(), ui)
+            {
                 process_entity_subcommand(sub_command, ecs, resources.prefabs());
             }
 
+            // Get Scene Graph Serialization Status:
+            let scene_graph_serialization_status =
+                match serialization_util::serialized_scene_graph::load_scene_graph() {
+                    Ok(sg) => {
+                        let serialized = scene_graph_system::create_serialized_graph(
+                            &ecs.scene_graph,
+                            &ecs.component_database.serialization_markers,
+                        );
+
+                        if sg == serialized {
+                            SyncStatus::Synced
+                        } else {
+                            SyncStatus::OutofSync
+                        }
+                    }
+                    Err(e) => {
+                        error!("Couldn't read the scene graph! {}", e);
+                        SyncStatus::Headless
+                    }
+                }
+                .imgui_symbol(scene_mode);
+
             // Debug the Scene Graph
-            if let Some(menu_token) = ui.begin_menu(im_str!("Scene Graph"), true) {
+            if let Some(menu_token) =
+                ui.begin_menu(&im_str!("Scene Graph {}", scene_graph_serialization_status), true)
+            {
                 if imgui::MenuItem::new(im_str!("Save")).build(ui) {
                     let ssg = scene_graph_system::create_serialized_graph(
                         &ecs.scene_graph,
@@ -200,7 +228,7 @@ fn imgui_entity_list(
                 }
 
                 if imgui::MenuItem::new(im_str!("Log")).build(ui) {
-                    println!("{}", ecs.scene_graph);
+                    ecs.scene_graph.pretty_print(&ecs.component_database.names);
                 }
 
                 menu_token.end(ui);
@@ -231,8 +259,6 @@ fn imgui_entity_list(
         let component_database = &mut ecs.component_database;
 
         scene_graph_system::walk_tree_generically(&ecs.scene_graph, |entity, depth, has_children| {
-            ui_handler.scene_graph_entities.push(*entity);
-
             let serialized_entity: Option<SerializedEntity> = component_database
                 .serialization_markers
                 .get(entity)
@@ -268,6 +294,7 @@ fn imgui_entity_list(
                     .get(entity)
                     .and_then(|tc| tc.inner().scene_graph_node_id()),
                 prefabs: resources.prefabs(),
+                scene_mode,
             };
 
             let (show_children, requested_action) = display_entity_id(
@@ -292,9 +319,14 @@ fn imgui_entity_list(
         let entities = &ecs.entities;
 
         for entity in entities.iter() {
-            if ui_handler.scene_graph_entities.contains(entity) {
+            if component_database
+                .transforms
+                .get(&entity)
+                .map_or(false, |smc| smc.inner().scene_graph_node_id().is_some())
+            {
                 continue;
             }
+
             let serialization_status: SyncStatus = {
                 let serialization_id = component_database
                     .serialization_markers
@@ -337,6 +369,7 @@ fn imgui_entity_list(
                 serialization_status,
                 on_scene_graph: None,
                 prefabs: resources.prefabs(),
+                scene_mode,
             };
 
             let (_, actions) = display_entity_id(entity, &nip, &mut component_database.names, ui_handler);

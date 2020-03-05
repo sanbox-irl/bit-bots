@@ -4,8 +4,6 @@ use imgui::*;
 pub const RIGHT_CHEVRON: char = '\u{f105}';
 pub const DOWN_CHEVRON: char = '\u{f107}';
 pub const ENTITY_ICON: char = '\u{f6d1}';
-pub const WARNING_ICON: char = '\u{f071}';
-pub const SYNCED_ICON: char = '\u{f00c}';
 
 pub type ImColor = [f32; 4];
 
@@ -536,7 +534,10 @@ pub fn process_entity_subcommand(create_entity: CreateEntityCommand, ecs: &mut E
     };
 
     if let Some(parent) = create_entity.parent_id {
-        // add the transform and to the scene graphy stuff...
+        let my_transform_c = ecs.component_database.transforms.set_component_default(&entity);
+        my_transform_c
+            .inner_mut()
+            .attach_to_graph_with_parent(entity, &parent, &mut ecs.scene_graph);
     }
 
     ecs.component_database

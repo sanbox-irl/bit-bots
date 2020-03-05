@@ -128,6 +128,7 @@ impl Name {
 
                     if let Some(create_entity_subcommand) = imgui_system::create_entity_submenu(
                         "Create Child",
+                        false,
                         nip.on_scene_graph,
                         nip.prefabs,
                         ui,
@@ -226,7 +227,7 @@ impl Name {
                         ui.same_line(0.0);
                         ui.text_colored(
                             imgui_system::red_warning_color(),
-                            im_str!("{}", imgui_system::WARNING_ICON),
+                            &format!("{}", nip.serialization_status.imgui_symbol(nip.scene_mode)),
                         );
                         if ui.is_item_hovered() {
                             ui.tooltip_text(
@@ -238,7 +239,7 @@ impl Name {
                         ui.same_line(0.0);
                         ui.text_colored(
                             imgui_system::yellow_warning_color(),
-                            im_str!("{}", imgui_system::WARNING_ICON),
+                            &format!("{}", nip.serialization_status.imgui_symbol(nip.scene_mode)),
                         );
                         if ui.is_item_hovered() {
                             ui.tooltip_text(

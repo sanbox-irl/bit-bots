@@ -99,58 +99,56 @@ impl<T> IndexMut<NodeId> for Graph<T> {
 const TREE_DELIMITER: char = '├';
 const TREE_DOWN: char = '└';
 const TREE_VERT: char = '|';
-impl<T: std::fmt::Display> fmt::Display for Graph<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Scene Graph Root")?;
+
+impl<T: fmt::Display> Graph<T> {
+    pub(super) fn print_tree(&self, format_node: impl Fn(&GraphNode<T>)) {
+        println!("Scene Graph Root");
 
         let mut top_level_iterator = self.iter_roots().peekable();
         while let Some(node) = top_level_iterator.next() {
+            let node: &GraphNode<T> = node;
             let top_level_last = top_level_iterator.peek().is_none();
 
-            writeln!(
-                f,
-                "{}── {}",
-                if top_level_last { TREE_DOWN } else { TREE_DELIMITER },
-                node_name = node
-            )?;
+            print!("{}── ", if top_level_last { TREE_DOWN } else { TREE_DELIMITER },);
+            format_node(node);
 
             let mut iterator = node.children(self).peekable();
             while let Some(child) = iterator.next() {
                 let local_last = iterator.peek().is_none();
-                pprint_tree(f, child, 3, top_level_last, local_last, self)?;
+                Graph::pprint_tree(child, 3, top_level_last, local_last, self, &format_node);
             }
         }
-        Ok(())
-    }
-}
-
-fn pprint_tree<T: std::fmt::Display>(
-    f: &mut fmt::Formatter<'_>,
-    node: &GraphNode<T>,
-    number_of_spaces: usize,
-    main_last: bool,
-    local_last: bool,
-    scene_graph: &Graph<T>,
-) -> fmt::Result {
-    // Line and Blank Space...
-    write!(f, "{}", if main_last { ' ' } else { TREE_VERT })?;
-    for _ in 0..number_of_spaces {
-        write!(f, " ")?;
     }
 
-    writeln!(
-        f,
-        "{}── {}",
-        if local_last { TREE_DOWN } else { TREE_DELIMITER },
-        node
-    )?;
+    fn pprint_tree(
+        node: &GraphNode<T>,
+        number_of_spaces: usize,
+        main_last: bool,
+        local_last: bool,
+        scene_graph: &Graph<T>,
+        format_node: &impl Fn(&GraphNode<T>),
+    ) {
+        // Line and Blank Space...
+        print!("{}", if main_last { ' ' } else { TREE_VERT });
+        for _ in 0..number_of_spaces {
+            print!(" ");
+        }
 
-    let mut iterator = node.children(scene_graph).peekable();
-    while let Some(child) = iterator.next() {
-        let is_last = iterator.peek().is_none();
+        print!("{}── ", if local_last { TREE_DOWN } else { TREE_DELIMITER });
+        format_node(node);
 
-        pprint_tree(f, child, number_of_spaces + 4, main_last, is_last, scene_graph)?;
+        let mut iterator = node.children(scene_graph).peekable();
+        while let Some(child) = iterator.next() {
+            let is_last = iterator.peek().is_none();
+
+            Graph::pprint_tree(
+                child,
+                number_of_spaces + 4,
+                main_last,
+                is_last,
+                scene_graph,
+                format_node,
+            );
+        }
     }
-
-    Ok(())
 }

@@ -1,13 +1,21 @@
 ---
-0c2af0a5-7d99-4182-8aed-57bab959d996:
-  name: ~
-  player: ~
-  transform: ~
-  scene_switcher: ~
-  velocity:
+8fa043e3-40f6-4a5f-a7d9-bd758d76c169:
+  name:
     inner:
-      intended_direction: ~
+      name: My Test
     active: true
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 0.0
+        y: 0.0
+      world_position:
+        x: 0.0
+        y: 0.0
+    active: true
+  scene_switcher: ~
+  velocity: ~
   sprite: ~
   sound_source: ~
   draw_rectangle: ~
@@ -15,10 +23,33 @@
   text_source: ~
   follow: ~
   conversant_npc: ~
-  prefab_marker:
+  prefab_marker: ~
+  id: 8fa043e3-40f6-4a5f-a7d9-bd758d76c169
+  marker: ~
+663324cd-e452-41d5-8f56-884b57f04627:
+  name:
     inner:
-      main_id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
-      sub_id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
+      name: "MyChild Jim, It's my Boy"
     active: true
-  id: 0c2af0a5-7d99-4182-8aed-57bab959d996
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 0.0
+        y: 0.0
+      world_position:
+        x: 0.0
+        y: 0.0
+    active: true
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 663324cd-e452-41d5-8f56-884b57f04627
   marker: ~
