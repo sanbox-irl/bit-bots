@@ -150,7 +150,7 @@ impl ComponentDatabase {
 
     pub fn deregister_entity(&mut self, entity: &Entity) {
         self.foreach_component_list_mut(NonInspectableEntities::all(), |list| {
-            list.unset(entity);
+            list.unset_component(entity);
         });
     }
 

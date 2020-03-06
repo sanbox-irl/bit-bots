@@ -86,7 +86,7 @@ pub fn entity_list(
                 }
 
                 if success {
-                    ecs.component_database.prefab_markers.unset(&entity);
+                    ecs.component_database.prefab_markers.unset_component(&entity);
                 } else {
                     error!(
                         "We couldn't unpack entity {}! It should still be safely serialized as a prefab.",

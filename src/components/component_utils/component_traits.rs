@@ -1,6 +1,5 @@
 use super::{
-    imgui_component_utils::*, Component, ComponentList, Entity, Name, PrefabMap, SerializationMarker,
-    SerializedEntity,
+    imgui_component_utils::*, ComponentList, Entity, Name, PrefabMap, SerializationMarker, SerializedEntity,
 };
 use imgui::Ui;
 
@@ -29,16 +28,18 @@ pub trait SerializableComponent:
     const SERIALIZATION_NAME: once_cell::sync::Lazy<serde_yaml::Value>;
 }
 
+pub trait NonSceneGraphComponent {}
+
 pub trait ComponentListBounds {
     fn expand_list(&mut self);
-    fn unset(&mut self, index: &Entity) -> bool;
+    fn unset_component(&mut self, index: &Entity) -> bool;
     fn get_mut(&mut self, index: &Entity) -> Option<(&mut dyn ComponentBounds, bool)>;
     fn dump_to_log(&self, index: &Entity);
     fn clone_entity(&mut self, index: &Entity, new_entity: &Entity);
 
     // IMGUI
     fn component_add_button(&mut self, index: &Entity, ui: &imgui::Ui<'_>);
-    #[must_use]
+
     fn component_inspector(
         &mut self,
         index: &Entity,
@@ -50,7 +51,6 @@ pub trait ComponentListBounds {
         is_open: bool,
     ) -> Option<ComponentSerializationCommandType>;
 
-    #[must_use]
     fn serialization_option(
         &self,
         ui: &Ui<'_>,
@@ -91,14 +91,14 @@ pub trait ComponentListBounds {
 
 impl<T> ComponentListBounds for ComponentList<T>
 where
-    T: ComponentBounds + SerializableComponent,
+    T: ComponentBounds + SerializableComponent + NonSceneGraphComponent,
 {
     fn expand_list(&mut self) {
         self.expand_list();
     }
 
-    fn unset(&mut self, index: &Entity) -> bool {
-        self.unset(index)
+    fn unset_component(&mut self, index: &Entity) -> bool {
+        self.unset_component(index)
     }
 
     fn dump_to_log(&self, index: &Entity) {
@@ -152,7 +152,7 @@ where
             );
 
             if delete {
-                self.unset(entity);
+                self.unset_component(entity);
             }
 
             serialization_command
@@ -236,53 +236,5 @@ where
 
     fn get_yaml_component_key(&self) -> serde_yaml::Value {
         T::SERIALIZATION_NAME.clone()
-    }
-}
-
-impl<T> ComponentList<T>
-where
-    T: ComponentBounds + Default + Clone + typename::TypeName + 'static,
-{
-    /// Simply a wrapper around creating a new component
-    pub fn set_component_default(&mut self, entity_id: &Entity) -> &mut Component<T> {
-        self.set(&entity_id, Component::new(&entity_id, T::default()));
-        self.get_mut(&entity_id).unwrap()
-    }
-
-    /// Simply a wrapper around creating a new component
-    pub fn set_component(&mut self, entity_id: &Entity, new_component: T) -> &mut Component<T> {
-        self.set(&entity_id, Component::new(&entity_id, new_component));
-        self.get_mut(&entity_id).unwrap()
-    }
-
-    /// Simply a wrapper around creating a new component
-    pub fn set_component_with_active(&mut self, entity_id: &Entity, new_component: T, active: bool) {
-        self.set(
-            &entity_id,
-            Component::with_active(&entity_id, new_component, active),
-        );
-    }
-
-    /// Gets a mutable reference to the contained if it exists.
-    /// Otherwise, it creates the contained using default and returns
-    /// a mutable reference to that.
-    pub fn get_mut_or_default(&mut self, index: &Entity) -> &mut Component<T> {
-        if self.get_mut(index).is_none() {
-            self.set_component(index, T::default());
-        }
-
-        self.get_mut(index).unwrap()
-    }
-
-    /// Gets an immutable reference to the contained if it exists.
-    /// Otherwise, it creates the contained using default and returns
-    /// an immutable reference to that. This is **slower** than just
-    /// `get`, so use that if you can help it.
-    pub fn get_or_default(&mut self, index: &Entity) -> &Component<T> {
-        if self.get(index).is_none() {
-            self.set_component(index, T::default());
-        }
-
-        self.get(index).unwrap()
     }
 }

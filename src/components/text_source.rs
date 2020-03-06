@@ -6,7 +6,15 @@ use super::{
 };
 
 #[derive(
-    Debug, SerializableComponent, Clone, Default, PartialEq, Serialize, Deserialize, typename::TypeName,
+    Debug,
+    SerializableComponent,
+    NonSceneGraphComponent,
+    Clone,
+    Default,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct TextSource {

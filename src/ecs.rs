@@ -66,7 +66,6 @@ impl Ecs {
     }
 
     pub fn update(&mut self, actions: &ActionMap) -> Result<(), Error> {
-        // // Player Stuff
         player_system::player_update(
             &mut self.component_database.players,
             &mut self.component_database.sprites,

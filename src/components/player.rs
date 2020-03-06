@@ -3,7 +3,15 @@ use super::{
 };
 
 #[derive(
-    Debug, SerializableComponent, Clone, Default, PartialEq, Serialize, Deserialize, typename::TypeName,
+    Debug,
+    NonSceneGraphComponent,
+    SerializableComponent,
+    Clone,
+    Default,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct Player {

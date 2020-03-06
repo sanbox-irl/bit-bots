@@ -4,7 +4,15 @@ use super::{
 };
 
 #[derive(
-    Debug, Clone, SerializableComponent, PartialEq, Default, Serialize, Deserialize, typename::TypeName,
+    Debug,
+    Clone,
+    NonSceneGraphComponent,
+    SerializableComponent,
+    PartialEq,
+    Default,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct GraphNode {

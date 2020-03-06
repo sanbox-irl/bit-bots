@@ -4,7 +4,16 @@ use super::{
     ComponentBounds, ComponentList, Entity, Vec2,
 };
 
-#[derive(Debug, SerializableComponent, Clone, Default, Serialize, Deserialize, typename::TypeName)]
+#[derive(
+    Debug,
+    SerializableComponent,
+    NonSceneGraphComponent,
+    Clone,
+    Default,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
+)]
 #[serde(default)]
 pub struct Transform {
     local_position: Vec2,

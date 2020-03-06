@@ -1,7 +1,15 @@
 use super::{imgui_component_utils::InspectorParameters, imgui_system, ComponentBounds, SoundResource};
 
 #[derive(
-    Debug, SerializableComponent, Clone, Default, PartialEq, Serialize, Deserialize, typename::TypeName,
+    Debug,
+    SerializableComponent,
+    NonSceneGraphComponent,
+    Clone,
+    Default,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct SoundSource {

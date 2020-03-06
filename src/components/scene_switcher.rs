@@ -1,7 +1,16 @@
 use super::{imgui_component_utils::InspectorParameters, ComponentBounds};
 
 #[derive(
-    Debug, SerializableComponent, Default, Clone, Serialize, Deserialize, PartialEq, Eq, typename::TypeName,
+    Debug,
+    SerializableComponent,
+    NonSceneGraphComponent,
+    Default,
+    Clone,
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    typename::TypeName,
 )]
 pub struct SceneSwitcher {
     pub target_scene: String,

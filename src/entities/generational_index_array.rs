@@ -41,7 +41,7 @@ impl<T: GenerationalIndexValue> GenerationalIndexArray<T> {
 
     /// Set the value for some generational index.  May overwrite past generation
     /// values.
-    pub fn set(&mut self, index: &GenerationalIndex, value: T) {
+    pub(super) fn set(&mut self, index: &GenerationalIndex, value: T) {
         self.0[index.index] = Some(ArrayEntry {
             value,
             generation: index.generation,
@@ -56,7 +56,7 @@ impl<T: GenerationalIndexValue> GenerationalIndexArray<T> {
 
     /// Unsets the value for some generational index. Returns true if succesfully
     /// unset.
-    pub fn unset(&mut self, index: &GenerationalIndex) -> bool {
+    pub(super) fn unset(&mut self, index: &GenerationalIndex) -> bool {
         let ret = &self.0[index.index];
         if let Some(ret) = ret {
             if ret.generation == index.generation {

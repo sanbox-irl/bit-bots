@@ -4,7 +4,15 @@ use super::{
 };
 
 #[derive(
-    Debug, Clone, SerializableComponent, PartialEq, Serialize, Deserialize, Default, typename::TypeName,
+    Debug,
+    Clone,
+    NonSceneGraphComponent,
+    SerializableComponent,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Default,
+    typename::TypeName,
 )]
 pub struct DrawRectangle {
     pub rect: Rect,

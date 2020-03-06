@@ -4,7 +4,15 @@ use super::{
 };
 
 #[derive(
-    Serialize, SerializableComponent, Deserialize, Debug, Clone, PartialEq, typename::TypeName, Default,
+    Serialize,
+    NonSceneGraphComponent,
+    SerializableComponent,
+    Deserialize,
+    Debug,
+    Clone,
+    PartialEq,
+    typename::TypeName,
+    Default,
 )]
 pub struct Sprite {
     pub sprite_name: Option<SpriteName>,
@@ -12,7 +20,6 @@ pub struct Sprite {
 }
 
 impl Sprite {
-    // // GETTERS AND SETTERS!
     pub fn ensure_sprite(&mut self, name: SpriteName) {
         match self.sprite_name {
             Some(sp) => {

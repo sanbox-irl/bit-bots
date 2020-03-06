@@ -4,7 +4,15 @@ use super::{
 };
 
 #[derive(
-    Debug, Clone, SerializableComponent, Default, PartialEq, Serialize, Deserialize, typename::TypeName,
+    Debug,
+    Clone,
+    NonSceneGraphComponent,
+    SerializableComponent,
+    Default,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct ConversantNPC {

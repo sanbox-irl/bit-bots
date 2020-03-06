@@ -255,6 +255,7 @@ pub struct ComponentSerializationCommand {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub enum ComponentSerializationCommandType {
     Serialize,
     StopSerializing,

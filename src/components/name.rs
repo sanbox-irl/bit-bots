@@ -6,7 +6,16 @@ use imgui::{im_str, MenuItem};
 use regex::Regex;
 
 #[derive(
-    Debug, Default, Clone, PartialEq, Serialize, Deserialize, SerializableComponent, Hash, typename::TypeName,
+    Debug,
+    Default,
+    NonSceneGraphComponent,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    SerializableComponent,
+    Hash,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct Name {

@@ -1,7 +1,15 @@
 use super::{cardinals::CardinalPrime, imgui_component_utils::InspectorParameters, ComponentBounds};
 
 #[derive(
-    Debug, SerializableComponent, Clone, PartialEq, Default, Serialize, Deserialize, typename::TypeName,
+    Debug,
+    SerializableComponent,
+    NonSceneGraphComponent,
+    Clone,
+    PartialEq,
+    Default,
+    Serialize,
+    Deserialize,
+    typename::TypeName,
 )]
 #[serde(default)]
 pub struct Velocity {
