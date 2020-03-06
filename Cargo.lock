@@ -216,6 +216,7 @@ dependencies = [
  "serde_yaml",
  "shaderc",
  "sheep",
+ "smallvec 1.2.0",
  "strum",
  "strum_macros",
  "thiserror",

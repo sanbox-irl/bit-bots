@@ -62,32 +62,6 @@ impl Transform {
         clist.get(entity_id).as_ref().map(|&t| t.inner().local_position)
     }
 
-    /// This ADDS to the scene graph -- it doesn't move it around!
-    pub fn attach_to_graph(&mut self, entity_id: Entity, scene_graph: &mut SceneGraph) {
-        debug_assert_eq!(
-            self.scene_graph_node_id, None,
-            "Only call this function when NodeID is None!"
-        );
-        self.scene_graph_node_id = Some(scene_graph.instantiate_node(entity_id));
-    }
-
-    /// This ADDS to the scene graph -- it doesn't move it around!
-    pub fn attach_to_graph_with_parent(
-        &mut self,
-        entity_id: Entity,
-        parent_id: &NodeId,
-        scene_graph: &mut SceneGraph,
-    ) {
-        debug_assert_eq!(
-            self.scene_graph_node_id, None,
-            "Only call this function when NodeID is None!"
-        );
-
-        let new_node = scene_graph.instantiate_node(entity_id);
-        parent_id.append(new_node, scene_graph);
-        self.scene_graph_node_id = Some(new_node);
-    }
-
     pub fn scene_graph_node_id(&self) -> Option<NodeId> {
         self.scene_graph_node_id
     }
@@ -137,16 +111,34 @@ impl ComponentBounds for Transform {
     /// Every *single* game component gets a scene_graph basically just for
     /// this line of code.
     fn on_set(&mut self, my_id: &Entity, scene_graph: &mut SceneGraph) {
-        self.attach_to_graph(*my_id, scene_graph);
+        debug_assert_eq!(
+            self.scene_graph_node_id, None,
+            "Only call this function when NodeID is None!"
+        );
+        self.scene_graph_node_id = Some(scene_graph.instantiate_node(*my_id));
     }
 
-    /// This gets called AFTER we've left the Ecs.
     fn on_unset(
         &mut self,
-        my_id: Entity,
+        _: Entity,
         my_list: &mut dyn super::ComponentListBounds,
         scene_graph: &mut SceneGraph,
     ) {
+        if let Some(id) = self.scene_graph_node_id {
+            // We do this to mess with the borrow checker, for fun
+            let scene_graph_raw: *mut SceneGraph = scene_graph;
+
+            for child in id.children(scene_graph) {
+                let child: NodeId = child;
+                let this_child_id: &Entity = scene_graph.get(child).unwrap().inner();
+
+                unsafe {
+                    my_list.unset_component(this_child_id, &mut *scene_graph_raw);
+                }
+            }
+
+            id.remove(scene_graph);
+        }
     }
 }
 

@@ -1,98 +1,4 @@
 ---
-8fa043e3-40f6-4a5f-a7d9-bd758d76c169:
-  name:
-    inner:
-      name: My Test
-    active: true
-  player: ~
-  transform:
-    inner:
-      local_position:
-        x: 16.0
-        y: 16.0
-      world_position:
-        x: 16.0
-        y: 16.0
-    active: true
-  scene_switcher: ~
-  velocity: ~
-  sprite:
-    inner:
-      sprite_name: PixelMainCharacterStanding
-      running_data:
-        draw_order:
-          draw_layer: Instance
-          order: 0
-        facing_horizontal: Right
-        facing_vertical: Up
-        scale:
-          x: 1.0
-          y: 1.0
-        tint:
-          r: 1.0
-          g: 1.0
-          b: 1.0
-          a: 1.0
-        current_frame: 0
-        frame_time: 0.0
-        is_animating: false
-    active: true
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: 8fa043e3-40f6-4a5f-a7d9-bd758d76c169
-  marker: ~
-663324cd-e452-41d5-8f56-884b57f04627:
-  name:
-    inner:
-      name: "MyChild Jim, It's my Boy"
-    active: true
-  player: ~
-  transform:
-    inner:
-      local_position:
-        x: 10.0
-        y: 10.0
-      world_position:
-        x: 26.0
-        y: 26.0
-    active: true
-  scene_switcher: ~
-  velocity: ~
-  sprite:
-    inner:
-      sprite_name: Fire
-      running_data:
-        draw_order:
-          draw_layer: Instance
-          order: 0
-        facing_horizontal: Right
-        facing_vertical: Up
-        scale:
-          x: 1.0
-          y: 1.0
-        tint:
-          r: 1.0
-          g: 1.0
-          b: 1.0
-          a: 1.0
-        current_frame: 0
-        frame_time: 0.0
-        is_animating: false
-    active: true
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: 663324cd-e452-41d5-8f56-884b57f04627
-  marker: ~
 87adb3bf-acd3-4ecd-87f7-bf182a9f62cc:
   name:
     inner:
@@ -137,4 +43,82 @@
   conversant_npc: ~
   prefab_marker: ~
   id: 87adb3bf-acd3-4ecd-87f7-bf182a9f62cc
+  marker: ~
+8fa043e3-40f6-4a5f-a7d9-bd758d76c169:
+  name:
+    inner:
+      name: My Test
+    active: true
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite:
+    inner:
+      sprite_name: PixelMainCharacterStanding
+      running_data:
+        draw_order:
+          draw_layer: Instance
+          order: 0
+        facing_horizontal: Right
+        facing_vertical: Up
+        scale:
+          x: 1.0
+          y: 1.0
+        tint:
+          r: 1.0
+          g: 1.0
+          b: 1.0
+          a: 1.0
+        current_frame: 0
+        frame_time: 0.0
+        is_animating: false
+    active: true
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 8fa043e3-40f6-4a5f-a7d9-bd758d76c169
+  marker: ~
+663324cd-e452-41d5-8f56-884b57f04627:
+  name:
+    inner:
+      name: "MyChild Jim, It's my Boy"
+    active: true
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite:
+    inner:
+      sprite_name: Fire
+      running_data:
+        draw_order:
+          draw_layer: Instance
+          order: 0
+        facing_horizontal: Right
+        facing_vertical: Up
+        scale:
+          x: 1.0
+          y: 1.0
+        tint:
+          r: 1.0
+          g: 1.0
+          b: 1.0
+          a: 1.0
+        current_frame: 0
+        frame_time: 0.0
+        is_animating: false
+    active: true
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 663324cd-e452-41d5-8f56-884b57f04627
   marker: ~

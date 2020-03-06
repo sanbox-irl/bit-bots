@@ -99,7 +99,7 @@ pub fn entity_inspector(
                         should_have_prefab,
                     );
 
-                    if let Some(command_type) = component_list.component_inspector(
+                    let (deferred_serialization_command, delete) = component_list.component_inspector(
                         entity,
                         possible_sync_statuses,
                         entities,
@@ -107,10 +107,16 @@ pub fn entity_inspector(
                         resources.prefabs(),
                         ui,
                         window_is_open,
-                    ) {
+                    );
+
+                    if delete {
+                        component_list.unset_component(entity, scene_graph);
+                    }
+
+                    if let Some(deferred) = deferred_serialization_command {
                         final_post_action = Some(handle_serialization_command(
                             *entity,
-                            command_type,
+                            deferred,
                             serialized_entity.as_ref(),
                             serialized_prefab.as_ref(),
                             component_list,
@@ -179,21 +185,11 @@ pub fn entity_inspector(
                     ),
                     true,
                 ) {
-                    // @update_components exception
-                    let had_transform = component_database.transforms.get(entity).is_some();
-
                     // Prefab Marker, Name, Graph Node is omitted
                     component_database.foreach_component_list_mut(
                         NonInspectableEntities::SERIALIZATION,
                         |component_list| component_list.component_add_button(entity, ui, scene_graph),
                     );
-
-                    if had_transform == false {
-                        if let Some(new_transform) = component_database.transforms.get_mut(entity) {
-                            let entity = new_transform.entity_id();
-                            new_transform.inner_mut().attach_to_graph(entity, scene_graph);
-                        }
-                    }
 
                     add_component_submenu.end(ui);
                 }

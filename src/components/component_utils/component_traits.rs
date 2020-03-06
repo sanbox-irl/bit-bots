@@ -60,7 +60,7 @@ pub trait ComponentListBounds {
         prefab_hashmap: &PrefabMap,
         ui: &imgui::Ui<'_>,
         is_open: bool,
-    ) -> Option<ComponentSerializationCommandType>;
+    ) -> (Option<ComponentSerializationCommandType>, bool);
 
     fn serialization_option(
         &self,
@@ -145,11 +145,11 @@ where
         prefab_hashmap: &PrefabMap,
         ui: &Ui<'_>,
         is_open: bool,
-    ) -> Option<ComponentSerializationCommandType> {
+    ) -> (Option<ComponentSerializationCommandType>, bool) {
         if let Some(comp) = self.get_mut(entity) {
             let ParentSyncStatus { serialized, prefab } = parent_sync_status.unwrap();
 
-            let (serialization_command, delete) = super::imgui_system::component_inspector_raw(
+            super::imgui_system::component_inspector_raw(
                 comp,
                 serialized,
                 prefab,
@@ -160,15 +160,9 @@ where
                 is_open,
                 true,
                 |inner, ip| inner.entity_inspector(ip),
-            );
-
-            if delete {
-                self.unset_component(entity, unimplemented!());
-            }
-
-            serialization_command
+            )
         } else {
-            None
+            (None, false)
         }
     }
 

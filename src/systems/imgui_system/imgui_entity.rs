@@ -240,8 +240,9 @@ fn imgui_entity_list(
                 menu_token.end(ui);
             }
 
-            // Just a good button
+            // Save Button!
             if imgui::MenuItem::new(im_str!("\u{f0c7}")).build(ui) || ui_handler.save_requested() {
+                compile_error!("Here's where we are!");
                 match serialization_util::entities::serialize_all_entities(
                     &ecs.entities,
                     &ecs.component_database,

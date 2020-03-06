@@ -538,10 +538,10 @@ pub fn process_entity_subcommand(create_entity: CreateEntityCommand, ecs: &mut E
             .component_database
             .transforms
             .set_component_default(&entity, &mut ecs.scene_graph);
-            
-        my_transform_c
-            .inner_mut()
-            .attach_to_graph_with_parent(entity, &parent, &mut ecs.scene_graph);
+
+        if let Some(node_id) = my_transform_c.inner().scene_graph_node_id() {
+            parent.append(node_id, &mut ecs.scene_graph);
+        }
     }
 
     ecs.component_database

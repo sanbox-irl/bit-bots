@@ -357,12 +357,10 @@ impl ComponentDatabase {
                         };
 
                         // And then add it all in!
-                        if let Some(transform) = self.transforms.get_mut(&new_id) {
-                            transform.inner_mut().attach_to_graph_with_parent(
-                                new_id,
-                                &parent_id,
-                                scene_graph,
-                            );
+                        if let Some(transform_c) = self.transforms.get_mut(&new_id) {
+                            if let Some(node_id) = transform_c.inner().scene_graph_node_id() {
+                                parent_id.append(node_id, scene_graph);
+                            }
                         }
 
                         self.prefab_markers
