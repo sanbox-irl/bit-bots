@@ -5,13 +5,6 @@ pub struct GenerationalIndex {
 }
 
 impl GenerationalIndex {
-    /// This is made available *only* for debugging purposes. You should
-    /// never load an entity using this ID!
-    #[cfg(debug_assertions)]
-    pub fn debug_stub(index: usize) -> GenerationalIndex {
-        Self { index, generation: 0 }
-    }
-
     pub fn index(&self) -> usize {
         self.index
     }
