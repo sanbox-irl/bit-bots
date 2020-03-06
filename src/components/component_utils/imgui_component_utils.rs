@@ -1,10 +1,20 @@
 use super::{
-    imgui_system, scene_graph::NodeId, Color, ComponentBounds, Entity, PrefabMap, SceneMode, SerializedEntity,
+    imgui_system, scene_graph::NodeId, Color, ComponentBounds, ComponentList, Entity, Name, PrefabMap,
+    SceneMode, SerializedEntity,
 };
 use uuid::Uuid;
 
 const WARNING_ICON: char = '\u{f071}';
 const SYNCED_ICON: char = '\u{f00c}';
+
+pub struct InspectorParameters<'a, 'b> {
+    pub ui: &'b imgui::Ui<'a>,
+    pub entities: &'b [Entity],
+    pub entity_names: &'b ComponentList<Name>,
+    pub prefabs: &'b PrefabMap,
+    pub uid: &'b str,
+    pub is_open: bool,
+}
 
 #[derive(Debug)]
 pub enum NameRequestedAction {

@@ -1,7 +1,8 @@
 use super::{
     component_utils::{TextHorizontalAlign, TextVerticalAlign},
     fonts::FontName,
-    imgui_system, Color, ComponentBounds, DrawOrder, InspectorParameters, StandardQuad, Vec2,
+    imgui_component_utils::InspectorParameters,
+    imgui_system, Color, ComponentBounds, DrawOrder, StandardQuad, Vec2,
 };
 
 #[derive(

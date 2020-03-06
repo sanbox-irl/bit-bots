@@ -1,9 +1,11 @@
 use super::{
-    Color, ComponentBounds, DrawOrder, InspectorParameters, Rect, StandardQuad, StandardQuadFactory,
-    TextureDescription, Vec2,
+    imgui_component_utils::InspectorParameters, Color, ComponentBounds, DrawOrder, Rect, StandardQuad,
+    StandardQuadFactory, TextureDescription, Vec2,
 };
 
-#[derive(Debug, Clone,SerializableComponent, PartialEq, Serialize, Deserialize, Default, typename::TypeName)]
+#[derive(
+    Debug, Clone, SerializableComponent, PartialEq, Serialize, Deserialize, Default, typename::TypeName,
+)]
 pub struct DrawRectangle {
     pub rect: Rect,
     pub draw_order: DrawOrder,

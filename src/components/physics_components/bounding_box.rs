@@ -1,4 +1,4 @@
-use super::{ComponentBounds, InspectorParameters, Rect, Vec2};
+use super::{ComponentBounds, imgui_component_utils::InspectorParameters, Rect, Vec2};
 
 #[derive(
     Debug, Clone, SerializableComponent, Copy, Default, PartialEq, Serialize, Deserialize, typename::TypeName,

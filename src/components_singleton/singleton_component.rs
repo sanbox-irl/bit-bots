@@ -1,4 +1,4 @@
-use super::{InspectorParameters, Marker};
+use super::{imgui_component_utils::InspectorParameters, Marker};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SingletonComponent<T: SingletonBounds> {

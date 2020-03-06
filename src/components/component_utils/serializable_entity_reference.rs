@@ -1,4 +1,4 @@
-use super::{imgui_system, ComponentList, Entity, InspectorParameters, SerializationMarker};
+use super::{imgui_system, ComponentList, Entity, imgui_component_utils::InspectorParameters, SerializationMarker};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Hash, PartialEq, Eq)]

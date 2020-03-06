@@ -1,9 +1,12 @@
 use super::{
     component_utils::{Approach, SerializableEntityReference},
-    imgui_system, ComponentBounds, InspectorParameters, Vec2,
+    imgui_component_utils::InspectorParameters,
+    imgui_system, ComponentBounds, Vec2,
 };
 
-#[derive(Debug, Clone,SerializableComponent, PartialEq, Default, Serialize, Deserialize, typename::TypeName)]
+#[derive(
+    Debug, Clone, SerializableComponent, PartialEq, Default, Serialize, Deserialize, typename::TypeName,
+)]
 #[serde(default)]
 pub struct Follow {
     pub approach: Approach,

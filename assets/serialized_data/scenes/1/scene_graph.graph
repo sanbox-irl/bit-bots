@@ -17,3 +17,10 @@ nodes:
     next_sibling: ~
     removed: false
     data: 663324cd-e452-41d5-8f56-884b57f04627
+  - parent: ~
+    first_child: ~
+    last_child: ~
+    previous_sibling: ~
+    next_sibling: ~
+    removed: false
+    data: 87adb3bf-acd3-4ecd-87f7-bf182a9f62cc

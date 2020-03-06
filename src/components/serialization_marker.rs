@@ -1,6 +1,6 @@
 use super::{
-    imgui_component_utils::SyncStatus, serialization_util, ComponentBounds, InspectorParameters,
-    SerializedEntity,
+    imgui_component_utils::InspectorParameters, imgui_component_utils::SyncStatus, serialization_util,
+    ComponentBounds, SerializedEntity,
 };
 use imgui::*;
 use std::time::{Duration, Instant};

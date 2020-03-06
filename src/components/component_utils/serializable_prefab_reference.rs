@@ -1,4 +1,4 @@
-use super::{imgui_system, InspectorParameters};
+use super::{imgui_system, imgui_component_utils::InspectorParameters};
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SerializablePrefabReference {

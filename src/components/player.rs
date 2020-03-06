@@ -1,6 +1,10 @@
-use super::{imgui_system, sprite_resources::SpriteName, ComponentBounds, InspectorParameters};
+use super::{
+    imgui_component_utils::InspectorParameters, imgui_system, sprite_resources::SpriteName, ComponentBounds,
+};
 
-#[derive(Debug,SerializableComponent, Clone, Default, PartialEq, Serialize, Deserialize, typename::TypeName)]
+#[derive(
+    Debug, SerializableComponent, Clone, Default, PartialEq, Serialize, Deserialize, typename::TypeName,
+)]
 #[serde(default)]
 pub struct Player {
     pub standing_sprite: Option<SpriteName>,

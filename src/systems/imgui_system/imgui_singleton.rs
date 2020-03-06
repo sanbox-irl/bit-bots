@@ -1,4 +1,4 @@
-use super::*;
+use super::{imgui_component_utils::InspectorParameters, *};
 use std::collections::HashMap;
 
 pub fn singleton_inspector(

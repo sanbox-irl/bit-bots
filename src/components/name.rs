@@ -1,6 +1,6 @@
 use super::{
-    imgui_component_utils::*, imgui_system, Color, ComponentBounds, ComponentList, Entity,
-    InspectorParameters,
+    imgui_component_utils::InspectorParameters, imgui_component_utils::*, imgui_system, Color,
+    ComponentBounds, ComponentList, Entity,
 };
 use imgui::{im_str, MenuItem};
 use regex::Regex;

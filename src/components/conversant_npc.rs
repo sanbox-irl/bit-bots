@@ -1,6 +1,6 @@
 use super::{
-    component_utils::SerializableEntityReference, Color, ComponentBounds, Entity, InspectorParameters,
-    SerializablePrefabReference,
+    component_utils::SerializableEntityReference, imgui_component_utils::InspectorParameters, Color,
+    ComponentBounds, Entity, SerializablePrefabReference,
 };
 
 #[derive(

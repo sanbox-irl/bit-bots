@@ -1,4 +1,4 @@
-use super::{ComponentBounds, InspectorParameters};
+use super::{imgui_component_utils::InspectorParameters, ComponentBounds};
 use uuid::Uuid;
 
 #[derive(

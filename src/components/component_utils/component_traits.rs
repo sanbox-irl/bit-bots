@@ -29,15 +29,6 @@ pub trait SerializableComponent:
     const SERIALIZATION_NAME: once_cell::sync::Lazy<serde_yaml::Value>;
 }
 
-pub struct InspectorParameters<'a, 'b> {
-    pub ui: &'b imgui::Ui<'a>,
-    pub entities: &'b [Entity],
-    pub entity_names: &'b ComponentList<Name>,
-    pub prefabs: &'b PrefabMap,
-    pub uid: &'b str,
-    pub is_open: bool,
-}
-
 pub trait ComponentListBounds {
     fn expand_list(&mut self);
     fn unset(&mut self, index: &Entity) -> bool;

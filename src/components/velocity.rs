@@ -1,4 +1,4 @@
-use super::{cardinals::CardinalPrime, ComponentBounds, InspectorParameters};
+use super::{cardinals::CardinalPrime, imgui_component_utils::InspectorParameters, ComponentBounds};
 
 #[derive(
     Debug, SerializableComponent, Clone, PartialEq, Default, Serialize, Deserialize, typename::TypeName,

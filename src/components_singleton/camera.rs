@@ -1,4 +1,6 @@
-use super::{imgui_system, HardwareInterface, InspectorParameters, SingletonBounds, Vec2};
+use super::{
+    imgui_component_utils::InspectorParameters, imgui_system, HardwareInterface, SingletonBounds, Vec2,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Camera {

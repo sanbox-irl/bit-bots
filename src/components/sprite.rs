@@ -1,6 +1,6 @@
 use super::{
-    component_utils::SpriteRunningData, imgui_system, sprite_resources::*, ComponentBounds,
-    InspectorParameters,
+    component_utils::SpriteRunningData, imgui_component_utils::InspectorParameters, imgui_system,
+    sprite_resources::*, ComponentBounds,
 };
 
 #[derive(

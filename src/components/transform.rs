@@ -1,6 +1,7 @@
 use super::{
+    imgui_component_utils::InspectorParameters,
     scene_graph::{NodeId, SceneGraph},
-    ComponentBounds, ComponentList, Entity, InspectorParameters, Vec2,
+    ComponentBounds, ComponentList, Entity, Vec2,
 };
 
 #[derive(Debug, SerializableComponent, Clone, Default, Serialize, Deserialize, typename::TypeName)]
