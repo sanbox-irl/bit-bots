@@ -6,7 +6,7 @@ use super::{
 #[derive(
     Debug,
     Clone,
-    NonSceneGraphComponent,
+    SceneGraphUnaware,
     SerializableComponent,
     PartialEq,
     Default,

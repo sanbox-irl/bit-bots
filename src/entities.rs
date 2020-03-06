@@ -10,7 +10,7 @@ pub type Entity = generational_index::GenerationalIndex;
 pub type EntityAllocator = GenerationalIndexAllocator;
 pub type ComponentList<T> = generational_index_array::GenerationalIndexArray<super::Component<T>>;
 
-use super::{Component, ComponentBounds, NonSceneGraphComponent};
+use super::{Component, ComponentBounds, SceneGraphUnaware};
 
 impl<T> ComponentList<T>
 where
@@ -24,7 +24,7 @@ where
 
 impl<T> ComponentList<T>
 where
-    T: ComponentBounds + NonSceneGraphComponent + Clone + Default + typename::TypeName + 'static,
+    T: ComponentBounds + SceneGraphUnaware + Clone + Default + typename::TypeName + 'static,
 {
     /// Simply a wrapper around creating a new component
     pub fn set_component_default(&mut self, entity_id: &Entity) -> &mut Component<T> {

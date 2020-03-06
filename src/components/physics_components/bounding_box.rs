@@ -4,7 +4,7 @@ use super::{imgui_component_utils::InspectorParameters, ComponentBounds, Rect, V
     Debug,
     Clone,
     SerializableComponent,
-    NonSceneGraphComponent,
+    SceneGraphUnaware,
     Copy,
     Default,
     PartialEq,

@@ -6,7 +6,7 @@ use imgui::*;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
 
-#[derive(Debug, NonSceneGraphComponent, Serialize, Deserialize, PartialEq, typename::TypeName)]
+#[derive(Debug, SceneGraphUnaware, Serialize, Deserialize, PartialEq, typename::TypeName)]
 pub struct SerializationMarker {
     pub id: Uuid,
     #[serde(skip)]

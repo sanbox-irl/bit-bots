@@ -4,9 +4,7 @@ use super::{
 };
 use failure::Error;
 
-#[derive(
-    Debug, Clone, Default, NonSceneGraphComponent, PartialEq, Serialize, Deserialize, typename::TypeName,
-)]
+#[derive(Debug, Clone, Default, SceneGraphUnaware, PartialEq, Serialize, Deserialize, typename::TypeName)]
 #[serde(rename = "Tilemap", default)]
 pub struct TilemapSerialized {
     pub tiles: FragmentedData<Vec<Option<usize>>>,

@@ -3,7 +3,7 @@ use super::{imgui_component_utils::InspectorParameters, ComponentBounds};
 #[derive(
     Debug,
     SerializableComponent,
-    NonSceneGraphComponent,
+    SceneGraphUnaware,
     Default,
     Clone,
     Serialize,

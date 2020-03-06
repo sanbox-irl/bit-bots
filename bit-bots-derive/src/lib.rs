@@ -22,7 +22,7 @@ pub fn serializable_component_derive(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-#[proc_macro_derive(NonSceneGraphComponent)]
+#[proc_macro_derive(SceneGraphUnaware)]
 pub fn non_scene_graph_component_derive(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as DeriveInput);
 
@@ -30,7 +30,7 @@ pub fn non_scene_graph_component_derive(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     let expanded = quote! {
-        impl crate::components::NonSceneGraphComponent for #name {}
+        impl crate::components::SceneGraphUnaware for #name {}
     };
 
     TokenStream::from(expanded)

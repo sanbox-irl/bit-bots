@@ -3,7 +3,7 @@ use super::{imgui_component_utils::InspectorParameters, imgui_system, ComponentB
 #[derive(
     Debug,
     SerializableComponent,
-    NonSceneGraphComponent,
+    SceneGraphUnaware,
     Clone,
     Default,
     PartialEq,

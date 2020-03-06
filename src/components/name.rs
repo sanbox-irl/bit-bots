@@ -8,7 +8,7 @@ use regex::Regex;
 #[derive(
     Debug,
     Default,
-    NonSceneGraphComponent,
+    SceneGraphUnaware,
     Clone,
     PartialEq,
     Serialize,

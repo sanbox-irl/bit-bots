@@ -28,7 +28,8 @@ pub trait SerializableComponent:
     const SERIALIZATION_NAME: once_cell::sync::Lazy<serde_yaml::Value>;
 }
 
-pub trait NonSceneGraphComponent {}
+pub trait SceneGraphUnaware {}
+pub trait SceneGraphAware {}
 
 pub trait ComponentListBounds {
     fn expand_list(&mut self);
@@ -91,7 +92,7 @@ pub trait ComponentListBounds {
 
 impl<T> ComponentListBounds for ComponentList<T>
 where
-    T: ComponentBounds + SerializableComponent + NonSceneGraphComponent,
+    T: ComponentBounds + SerializableComponent + SceneGraphUnaware,
 {
     fn expand_list(&mut self) {
         self.expand_list();
