@@ -5,15 +5,7 @@ use super::{
 };
 
 #[derive(
-    Debug,
-    Clone,
-    SceneGraphUnaware,
-    SerializableComponent,
-    PartialEq,
-    Default,
-    Serialize,
-    Deserialize,
-    typename::TypeName,
+    Debug, Clone, SerializableComponent, PartialEq, Default, Serialize, Deserialize, typename::TypeName,
 )]
 #[serde(default)]
 pub struct Follow {
@@ -76,7 +68,9 @@ impl ComponentBounds for Follow {
     fn uncommit_to_scene(&self, se: &mut super::SerializedEntity) {
         se.follow = None;
     }
+}
 
+impl super::ComponentPostDeserialization for Follow {
     fn post_deserialization(
         &mut self,
         _: super::Entity,

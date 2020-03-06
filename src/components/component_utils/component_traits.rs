@@ -1,5 +1,6 @@
 use super::{
-    imgui_component_utils::*, ComponentList, Entity, Name, PrefabMap, SerializationMarker, SerializedEntity,
+    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, Name, PrefabMap,
+    SerializationMarker, SerializedEntity,
 };
 use imgui::Ui;
 
@@ -13,6 +14,16 @@ pub trait ComponentBounds {
         serialization_marker: &super::ComponentList<super::SerializationMarker>,
     );
     fn uncommit_to_scene(&self, serialized_entity: &mut SerializedEntity);
+
+    #[inline]
+    fn on_set(&mut self, _: &Entity, _: &mut SceneGraph) {}
+
+    #[inline]
+    fn on_unset(&mut self, _: Entity, _: &mut dyn ComponentListBounds, _: &mut SceneGraph) {}
+}
+
+pub trait ComponentPostDeserialization {
+    #[inline]
     fn post_deserialization(&mut self, _: Entity, _: &ComponentList<SerializationMarker>) {}
 }
 
@@ -28,19 +39,18 @@ pub trait SerializableComponent:
     const SERIALIZATION_NAME: once_cell::sync::Lazy<serde_yaml::Value>;
 }
 
-pub trait SceneGraphUnaware {}
-pub trait SceneGraphAware {}
-
 pub trait ComponentListBounds {
     fn expand_list(&mut self);
-    fn unset_component(&mut self, index: &Entity) -> bool;
-    fn get_mut(&mut self, index: &Entity) -> Option<(&mut dyn ComponentBounds, bool)>;
+    fn unset_component(&mut self, index: &Entity, scene_graph: &mut SceneGraph) -> bool;
+    fn get_for_post_deserialization(
+        &mut self,
+        index: &Entity,
+    ) -> Option<(&mut dyn ComponentPostDeserialization, bool)>;
     fn dump_to_log(&self, index: &Entity);
-    fn clone_entity(&mut self, index: &Entity, new_entity: &Entity);
+    fn clone_entity(&mut self, index: &Entity, new_entity: &Entity, scene_graph: &mut SceneGraph);
 
     // IMGUI
-    fn component_add_button(&mut self, index: &Entity, ui: &imgui::Ui<'_>);
-
+    fn component_add_button(&mut self, index: &Entity, ui: &imgui::Ui<'_>, scene_graph: &mut SceneGraph);
     fn component_inspector(
         &mut self,
         index: &Entity,
@@ -92,14 +102,14 @@ pub trait ComponentListBounds {
 
 impl<T> ComponentListBounds for ComponentList<T>
 where
-    T: ComponentBounds + SerializableComponent + SceneGraphUnaware,
+    T: ComponentBounds + ComponentPostDeserialization + SerializableComponent,
 {
     fn expand_list(&mut self) {
         self.expand_list();
     }
 
-    fn unset_component(&mut self, index: &Entity) -> bool {
-        self.unset_component(index)
+    fn unset_component(&mut self, index: &Entity, scene_graph: &mut SceneGraph) -> bool {
+        self.unset_component(index, scene_graph)
     }
 
     fn dump_to_log(&self, index: &Entity) {
@@ -111,18 +121,18 @@ where
         }
     }
 
-    fn clone_entity(&mut self, original: &Entity, new_entity: &Entity) {
+    fn clone_entity(&mut self, original: &Entity, new_entity: &Entity, scene_graph: &mut SceneGraph) {
         if self.get(original).is_some() {
             let new_component = self.get(original).unwrap().inner().clone();
-            self.set_component(new_entity, new_component);
+            self.set_component(new_entity, new_component, scene_graph);
         }
     }
-    fn component_add_button(&mut self, index: &Entity, ui: &imgui::Ui<'_>) {
+    fn component_add_button(&mut self, index: &Entity, ui: &imgui::Ui<'_>, scene_graph: &mut SceneGraph) {
         if imgui::MenuItem::new(&imgui::ImString::new(super::imgui_system::typed_text_ui::<T>()))
             .enabled(self.get(index).is_none())
             .build(ui)
         {
-            self.set_component(index, T::default());
+            self.set_component_default(index, scene_graph);
         }
     }
 
@@ -153,7 +163,7 @@ where
             );
 
             if delete {
-                self.unset_component(entity);
+                self.unset_component(entity, unimplemented!());
             }
 
             serialization_command
@@ -199,7 +209,10 @@ where
         }
     }
 
-    fn get_mut(&mut self, index: &Entity) -> Option<(&mut dyn ComponentBounds, bool)> {
+    fn get_for_post_deserialization(
+        &mut self,
+        index: &Entity,
+    ) -> Option<(&mut dyn ComponentPostDeserialization, bool)> {
         self.get_mut(index).map(|component| {
             let is_active = component.is_active;
             (component.inner_mut() as _, is_active)

@@ -185,7 +185,7 @@ pub fn entity_inspector(
                     // Prefab Marker, Name, Graph Node is omitted
                     component_database.foreach_component_list_mut(
                         NonInspectableEntities::SERIALIZATION,
-                        |component_list| component_list.component_add_button(entity, ui),
+                        |component_list| component_list.component_add_button(entity, ui, scene_graph),
                     );
 
                     if had_transform == false {
@@ -322,7 +322,7 @@ pub fn entity_inspector(
                         );
 
                         component_database.post_deserialization(post_deserialization, |component_list, sl| {
-                            if let Some((inner, _)) = component_list.get_mut(&entity) {
+                            if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
                                 inner.post_deserialization(entity, sl);
                             }
                         })

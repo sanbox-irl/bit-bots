@@ -148,21 +148,18 @@ impl ComponentDatabase {
         }
     }
 
-    pub fn deregister_entity(&mut self, entity: &Entity) {
+    pub fn deregister_entity(&mut self, entity: &Entity, scene_graph: &mut SceneGraph) {
         self.foreach_component_list_mut(NonInspectableEntities::all(), |list| {
-            list.unset_component(entity);
+            list.unset_component(entity, scene_graph);
         });
     }
 
-    pub fn clone_components(&mut self, original: &Entity, new_entity: &Entity) {
+    pub fn clone_components(&mut self, original: &Entity, new_entity: &Entity, scene_graph: &mut SceneGraph) {
         self.foreach_component_list_mut(NonInspectableEntities::all(), |component_list| {
-            component_list.clone_entity(original, new_entity);
+            component_list.clone_entity(original, new_entity, scene_graph);
         });
 
         // @update_components exceptions
-        // if let Some(transformc_c) = self.transforms.get_mut(new_entity) {
-        //     scene_graph::add_to_scene_graph(transformc_c, &self.serialization_markers);
-        // }
     }
 
     // @update_components
@@ -269,6 +266,7 @@ impl ComponentDatabase {
         self.serialization_markers.set_component(
             &entity,
             SerializationMarker::with_id(serialized_entity.id.clone()),
+            scene_graph,
         );
 
         // If it's got a prefab, load the prefab. Otherwise,
@@ -285,7 +283,7 @@ impl ComponentDatabase {
             );
 
             if success.is_none() {
-                if Ecs::remove_entity_raw(entity_allocator, entities, self, entity) == false {
+                if Ecs::remove_entity_raw(entity_allocator, entities, self, scene_graph, entity) == false {
                     error!(
                         "We couldn't remove the entity either! Watch out -- weird stuff might happen there."
                     );
@@ -322,8 +320,11 @@ impl ComponentDatabase {
                 marker_map,
             );
 
-            self.prefab_markers
-                .set_component(entity_to_load_into, PrefabMarker::new_main(prefab.root_id()));
+            self.prefab_markers.set_component(
+                entity_to_load_into,
+                PrefabMarker::new_main(prefab.root_id()),
+                scene_graph,
+            );
 
             prefab.serialized_graph.walk_tree_generically(|s_node| {
                 // Don't handle the Root. Is this elegant? Nope!
@@ -365,7 +366,7 @@ impl ComponentDatabase {
                         }
 
                         self.prefab_markers
-                            .set_component(&new_id, PrefabMarker::new(prefab.root_id(), *s_node.inner()));
+                            .set_component(&new_id, PrefabMarker::new(prefab.root_id(), *s_node.inner()), scene_graph);
                     }
 
                     None => {
@@ -459,8 +460,9 @@ impl ComponentDatabase {
                 if let Some(serialized_component) = $component_name {
                     self.$component_database_name.set_component_with_active(
                         &entity,
-                        serialized_component.inner,
                         serialized_component.active,
+                        serialized_component.inner,
+                        scene_graph,
                     );
                 }
             };
@@ -469,13 +471,14 @@ impl ComponentDatabase {
         // @update_components
         transfer_serialized_components!(prefab_marker, prefab_markers);
         transfer_serialized_components!(name, names);
-        if let Some(transform) = transform {
-            self.transforms
-                .set_component_with_active(&entity, transform.inner, transform.active);
+        transfer_serialized_components!(transform, transforms);
+        // if let Some(transform) = transform {
+        //     self.transforms
+        //         .set_component_with_active(&entity, transform.inner, transform.active);
 
-            let new_transform = self.transforms.get_mut(&entity).unwrap();
-            new_transform.inner_mut().attach_to_graph(*entity, scene_graph);
-        }
+        //     let new_transform = self.transforms.get_mut(&entity).unwrap();
+        //     new_transform.inner_mut().attach_to_graph(*entity, scene_graph);
+        // }
         transfer_serialized_components!(scene_switcher, scene_switchers);
         transfer_serialized_components!(player, players);
         transfer_serialized_components!(sound_source, sound_sources);

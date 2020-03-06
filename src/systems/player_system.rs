@@ -1,9 +1,13 @@
-use super::{cardinals::FacingHorizontal, ActionMap, Component, ComponentList, Player, Sprite, Velocity};
+use super::{
+    cardinals::FacingHorizontal, scene_graph::SceneGraph, ActionMap, Component, ComponentList, Player,
+    Sprite, Velocity,
+};
 
 pub fn player_update(
     players: &mut ComponentList<Player>,
     sprites: &mut ComponentList<Sprite>,
     velocities: &mut ComponentList<Velocity>,
+    scene_graph: &mut SceneGraph,
     action_map: &ActionMap,
 ) {
     let mut active_player: Option<isize> = None;
@@ -12,7 +16,7 @@ pub fn player_update(
         let id = player.entity_id();
         let player: &mut Player = player.inner_mut();
 
-        let velocity = velocities.get_mut_or_default(&id);
+        let velocity = velocities.get_mut_or_default(&id, scene_graph);
         let player_veloc: &mut Velocity = velocity.inner_mut();
 
         if player.active {

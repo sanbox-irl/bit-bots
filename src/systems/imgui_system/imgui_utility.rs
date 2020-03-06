@@ -534,7 +534,11 @@ pub fn process_entity_subcommand(create_entity: CreateEntityCommand, ecs: &mut E
     };
 
     if let Some(parent) = create_entity.parent_id {
-        let my_transform_c = ecs.component_database.transforms.set_component_default(&entity);
+        let my_transform_c = ecs
+            .component_database
+            .transforms
+            .set_component_default(&entity, &mut ecs.scene_graph);
+            
         my_transform_c
             .inner_mut()
             .attach_to_graph_with_parent(entity, &parent, &mut ecs.scene_graph);
@@ -542,5 +546,5 @@ pub fn process_entity_subcommand(create_entity: CreateEntityCommand, ecs: &mut E
 
     ecs.component_database
         .serialization_markers
-        .set_component(&entity, SerializationMarker::new());
+        .set_component_default(&entity, &mut ecs.scene_graph);
 }

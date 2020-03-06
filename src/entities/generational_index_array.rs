@@ -56,17 +56,17 @@ impl<T: GenerationalIndexValue> GenerationalIndexArray<T> {
 
     /// Unsets the value for some generational index. Returns true if succesfully
     /// unset.
-    pub(super) fn unset(&mut self, index: &GenerationalIndex) -> bool {
+    pub(super) fn unset(&mut self, index: &GenerationalIndex) -> Option<T> {
         let ret = &self.0[index.index];
         if let Some(ret) = ret {
             if ret.generation == index.generation {
-                self.0[index.index] = None;
-                true
+                let inner = &mut self.0[index.index];
+                inner.take().map(|ae| ae.value)
             } else {
-                false
+                None
             }
         } else {
-            false
+            None
         }
     }
 

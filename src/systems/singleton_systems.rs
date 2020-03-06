@@ -1,4 +1,6 @@
-use super::{Camera, CameraMode, ComponentList, Entity, Follow, Input, MouseButton, Transform};
+use super::{
+    scene_graph::SceneGraph, Camera, CameraMode, ComponentList, Entity, Follow, Input, MouseButton, Transform,
+};
 use winit::event::VirtualKeyCode as VK;
 
 pub fn update_camera(
@@ -6,6 +8,7 @@ pub fn update_camera(
     camera_entity: &Entity,
     transforms: &mut ComponentList<Transform>,
     follows: &mut ComponentList<Follow>,
+    scene_graph: &mut SceneGraph,
     input: &Input,
 ) {
     match camera.current_mode {
@@ -16,7 +19,7 @@ pub fn update_camera(
 
             // Pixel correction here @techdebt
             transforms
-                .get_mut_or_default(camera_entity)
+                .get_mut_or_default(camera_entity, scene_graph)
                 .inner_mut()
                 .edit_local_position(|pos| (pos * 32.0).floor() / 32.0);
         }
@@ -38,7 +41,7 @@ pub fn update_camera(
                 || input.kb_input.is_held(VK::RAlt)
             {
                 transforms
-                    .get_mut_or_default(camera_entity)
+                    .get_mut_or_default(camera_entity, scene_graph)
                     .inner_mut()
                     .edit_local_position(|associated_position| {
                         let old_pos = camera.display_to_world_position(

@@ -22,15 +22,14 @@ pub fn serializable_component_derive(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-#[proc_macro_derive(SceneGraphUnaware)]
-pub fn non_scene_graph_component_derive(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(ComponentPostDeserialization)]
+pub fn component_post_deserialization(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as DeriveInput);
 
     // get the name of the type we want to implement the trait for
     let name = &input.ident;
-
     let expanded = quote! {
-        impl crate::components::SceneGraphUnaware for #name {}
+        impl crate::components::ComponentPostDeserialization for #name {}
     };
 
     TokenStream::from(expanded)

@@ -5,8 +5,8 @@ use super::{
 
 #[derive(
     Serialize,
-    SceneGraphUnaware,
     SerializableComponent,
+    ComponentPostDeserialization,
     Deserialize,
     Debug,
     Clone,

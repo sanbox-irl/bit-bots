@@ -1,18 +1,10 @@
 use super::{
     component_utils::SerializableEntityReference, imgui_component_utils::InspectorParameters, Color,
-    ComponentBounds, Entity, SerializablePrefabReference,
+    ComponentBounds, ComponentPostDeserialization, Entity, SerializablePrefabReference,
 };
 
 #[derive(
-    Debug,
-    Clone,
-    SceneGraphUnaware,
-    SerializableComponent,
-    Default,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    typename::TypeName,
+    Debug, Clone, SerializableComponent, Default, PartialEq, Serialize, Deserialize, typename::TypeName,
 )]
 #[serde(default)]
 pub struct ConversantNPC {
@@ -83,7 +75,9 @@ impl ComponentBounds for ConversantNPC {
     fn uncommit_to_scene(&self, se: &mut super::SerializedEntity) {
         se.conversant_npc = None;
     }
+}
 
+impl ComponentPostDeserialization for ConversantNPC {
     fn post_deserialization(
         &mut self,
         _: super::Entity,

@@ -1,6 +1,7 @@
 use super::{
-    serialization_util, Component, ComponentDatabase, Ecs, Entity, Name, Prefab, PrefabLoadRequired,
-    PrefabMap, PrefabMarker, ResourcesDatabase, SerializedComponent, SerializedEntity, SingletonDatabase,
+    scene_graph::SceneGraph, serialization_util, Component, ComponentDatabase, Ecs, Entity, Name, Prefab,
+    PrefabLoadRequired, PrefabMap, PrefabMarker, ResourcesDatabase, SerializedComponent, SerializedEntity,
+    SingletonDatabase,
 };
 use anyhow::{Context, Result};
 use serde_yaml::Value as YamlValue;
@@ -20,6 +21,7 @@ pub fn commit_new_prefab(
     entity: &Entity,
     component_database: &mut ComponentDatabase,
     singleton_database: &SingletonDatabase,
+    scene_graph: &mut SceneGraph,
     resources: &mut ResourcesDatabase,
 ) -> Result<()> {
     let new_prefab = commit_blank_prefab(resources).with_context(|| {
@@ -45,9 +47,11 @@ pub fn commit_new_prefab(
         let _ = serialize_and_cache_prefab(prefab, prefab_id, resources);
 
         // Add our Prefab Marker back to the Original entity we made into a prefab...
-        component_database
-            .prefab_markers
-            .set_component(entity, PrefabMarker::new_main(prefab_id));
+        component_database.prefab_markers.set_component(
+            entity,
+            PrefabMarker::new_main(prefab_id),
+            scene_graph,
+        );
 
         // And if it's serialized, let's cycle our Serialization too!
         // We do this to remove the "Overrides" that would otherwise appear
@@ -85,15 +89,17 @@ pub fn instantiate_entity_from_prefab(
     if let Some(post) = success {
         ecs.component_database
             .post_deserialization(post, |component_list, sl| {
-                if let Some((inner, _)) = component_list.get_mut(&entity) {
+                if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
                     inner.post_deserialization(entity, sl);
                 }
             });
 
         // Set our Prefab Marker
-        ecs.component_database
-            .prefab_markers
-            .set_component(&entity, PrefabMarker::new_main(prefab_id));
+        ecs.component_database.prefab_markers.set_component(
+            &entity,
+            PrefabMarker::new_main(prefab_id),
+            &mut ecs.scene_graph,
+        );
     } else {
         if ecs.remove_entity(&entity) == false {
             error!("We couldn't remove the Entity either, so we have a dangler!");
@@ -175,7 +181,7 @@ pub fn post_prefab_serialization(
         ecs.component_database
             .post_deserialization(pd, |component_list, sl| {
                 for (entity, _) in entities_to_post_deserialize.iter_mut() {
-                    if let Some((inner, _)) = component_list.get_mut(&entity) {
+                    if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
                         inner.post_deserialization(*entity, sl);
                     }
                 }

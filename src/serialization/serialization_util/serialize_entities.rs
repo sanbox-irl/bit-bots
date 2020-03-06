@@ -59,7 +59,7 @@ pub fn process_serialized_command(
             if let Some(post) = post {
                 ecs.component_database
                     .post_deserialization(post, |component_list, sl| {
-                        if let Some((inner, _)) = component_list.get_mut(&command.entity) {
+                        if let Some((inner, _)) = component_list.get_for_post_deserialization(&command.entity) {
                             inner.post_deserialization(command.entity, sl);
                         }
                     });

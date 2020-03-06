@@ -4,7 +4,7 @@ use uuid::Uuid;
 #[derive(
     Debug,
     SerializableComponent,
-    SceneGraphUnaware,
+    ComponentPostDeserialization,
     Default,
     Clone,
     Serialize,

@@ -7,7 +7,7 @@ use super::{
 #[derive(
     Debug,
     SerializableComponent,
-    SceneGraphUnaware,
+    ComponentPostDeserialization,
     Clone,
     Default,
     Serialize,
@@ -129,6 +129,24 @@ impl ComponentBounds for Transform {
 
     fn uncommit_to_scene(&self, se: &mut super::SerializedEntity) {
         se.transform = None;
+    }
+
+    /// It is a strange fate that we should suffer so much fear and doubt
+    /// over so small a thing. Such a little thing.
+    ///
+    /// Every *single* game component gets a scene_graph basically just for
+    /// this line of code.
+    fn on_set(&mut self, my_id: &Entity, scene_graph: &mut SceneGraph) {
+        self.attach_to_graph(*my_id, scene_graph);
+    }
+
+    /// This gets called AFTER we've left the Ecs.
+    fn on_unset(
+        &mut self,
+        my_id: Entity,
+        my_list: &mut dyn super::ComponentListBounds,
+        scene_graph: &mut SceneGraph,
+    ) {
     }
 }
 

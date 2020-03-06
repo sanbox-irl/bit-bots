@@ -3,7 +3,7 @@ use super::{cardinals::CardinalPrime, imgui_component_utils::InspectorParameters
 #[derive(
     Debug,
     SerializableComponent,
-    SceneGraphUnaware,
+    ComponentPostDeserialization,
     Clone,
     PartialEq,
     Default,

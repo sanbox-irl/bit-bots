@@ -70,6 +70,7 @@ impl Ecs {
             &mut self.component_database.players,
             &mut self.component_database.sprites,
             &mut self.component_database.velocities,
+            &mut self.scene_graph,
             actions,
         );
 
@@ -121,11 +122,12 @@ impl Ecs {
         entity_allocator: &mut EntityAllocator,
         entities: &mut Vec<Entity>,
         component_database: &mut ComponentDatabase,
+        scene_graph: &mut SceneGraph,
         entity_to_delete: &Entity,
     ) -> bool {
         let is_dealloc = entity_allocator.deallocate(entity_to_delete);
         if is_dealloc {
-            component_database.deregister_entity(&entity_to_delete);
+            component_database.deregister_entity(&entity_to_delete, scene_graph);
             entities
                 .iter()
                 .position(|i| i == entity_to_delete)
@@ -153,13 +155,15 @@ impl Ecs {
             &mut self.entity_allocator,
             &mut self.entities,
             &mut self.component_database,
+            &mut self.scene_graph,
             entity_to_delete,
         )
     }
 
     pub fn clone_entity(&mut self, original: &Entity) -> Entity {
         let new_entity = self.create_entity();
-        self.component_database.clone_components(original, &new_entity);
+        self.component_database
+            .clone_components(original, &new_entity, &mut self.scene_graph);
 
         new_entity
     }

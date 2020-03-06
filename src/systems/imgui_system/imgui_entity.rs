@@ -18,7 +18,10 @@ pub fn entity_list(
     if let Some((entity, later_action)) = later_action_on_entity {
         match later_action {
             NameRequestedAction::ChangeName(new_name) => {
-                let name_component = ecs.component_database.names.get_mut_or_default(&entity);
+                let name_component = ecs
+                    .component_database
+                    .names
+                    .get_mut_or_default(&entity, &mut ecs.scene_graph);
                 name_component.inner_mut().name = new_name;
             }
             NameRequestedAction::ToggleInspect => {
@@ -59,6 +62,7 @@ pub fn entity_list(
                     &entity,
                     &mut ecs.component_database,
                     &ecs.singleton_database,
+                    &mut ecs.scene_graph,
                     resources,
                 )?;
             }
@@ -86,7 +90,9 @@ pub fn entity_list(
                 }
 
                 if success {
-                    ecs.component_database.prefab_markers.unset_component(&entity);
+                    ecs.component_database
+                        .prefab_markers
+                        .unset_component(&entity, &mut ecs.scene_graph);
                 } else {
                     error!(
                         "We couldn't unpack entity {}! It should still be safely serialized as a prefab.",

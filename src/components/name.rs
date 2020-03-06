@@ -8,8 +8,8 @@ use regex::Regex;
 #[derive(
     Debug,
     Default,
-    SceneGraphUnaware,
     Clone,
+    ComponentPostDeserialization,
     PartialEq,
     Serialize,
     Deserialize,
