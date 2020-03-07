@@ -414,11 +414,12 @@ impl ComponentDatabase {
         entity: &Entity,
         key: serde_yaml::Value,
         delta: serde_yaml::Value,
-        uuid: Uuid,
+        serialization_id: SerializationId,
         associated_entities: &mut AssociatedEntityMap,
         scene_graph: &mut SceneGraph,
     ) -> PostDeserializationRequired {
-        let mut base_serialized_entity = serde_yaml::to_value(SerializedEntity::with_uuid(uuid)).unwrap();
+        let mut base_serialized_entity =
+            serde_yaml::to_value(SerializedEntity::with_serialization_id(serialization_id)).unwrap();
 
         base_serialized_entity
             .as_mapping_mut()

@@ -1,19 +1,19 @@
 use super::{
     scene_graph::SceneGraph, serialization_util, Component, ComponentDatabase, Ecs, Entity, Name, Prefab,
-    PrefabLoadRequired, PrefabMap, PrefabMarker, ResourcesDatabase, SerializedComponent, SerializedEntity,
-    SingletonDatabase,
+    PrefabId, PrefabLoadRequired, PrefabMap, PrefabMarker, ResourcesDatabase, SerializationId,
+    SerializedComponent, SerializedEntity, SingletonDatabase,
 };
 use anyhow::{Context, Result};
 use serde_yaml::Value as YamlValue;
 use std::collections::HashMap;
-use uuid::Uuid;
 
-pub fn commit_blank_prefab(resources: &mut ResourcesDatabase) -> Result<uuid::Uuid> {
+pub fn commit_blank_prefab(resources: &mut ResourcesDatabase) -> Result<PrefabId> {
     let blank_prefab = Prefab::new_blank();
 
     serialization_util::prefabs::serialize_prefab(&blank_prefab)?;
-    let id = blank_prefab.root_id();
+    let id = *blank_prefab.prefab_id();
     resources.add_prefab(blank_prefab);
+
     Ok(id)
 }
 
@@ -44,7 +44,7 @@ pub fn commit_new_prefab(
 
         // We can do this because we know no one else shares our prefab,
         // and we're sorting out fixing our own overrides below.
-        let _ = serialize_and_cache_prefab(prefab, prefab_id, resources);
+        let _ = serialize_and_cache_prefab(prefab, resources);
 
         // Add our Prefab Marker back to the Original entity we made into a prefab...
         component_database.prefab_markers.set_component(
@@ -68,11 +68,7 @@ pub fn commit_new_prefab(
     Ok(())
 }
 
-pub fn instantiate_entity_from_prefab(
-    ecs: &mut Ecs,
-    prefab_id: uuid::Uuid,
-    prefab_map: &PrefabMap,
-) -> Entity {
+pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab_map: &PrefabMap) -> Entity {
     // Make an entity
     let entity = ecs.create_entity();
 
@@ -93,13 +89,6 @@ pub fn instantiate_entity_from_prefab(
                     inner.post_deserialization(entity, sl);
                 }
             });
-
-        // Set our Prefab Marker
-        ecs.component_database.prefab_markers.set_component(
-            &entity,
-            PrefabMarker::new(prefab_id, prefab_id),
-            &mut ecs.scene_graph,
-        );
     } else {
         if ecs.remove_entity(&entity) == false {
             error!("We couldn't remove the Entity either, so we have a dangler!");
@@ -112,16 +101,12 @@ pub fn instantiate_entity_from_prefab(
 /// Serializes and caches a prefab, but it doesn't perform anything more complicated
 /// than that. Use the returned `PrefabLoadRequired` with `post_prefab_serialization`
 /// to finish the operation up.
-pub fn serialize_and_cache_prefab(
-    prefab: Prefab,
-    sub_id: Uuid,
-    resources: &mut ResourcesDatabase,
-) -> PrefabLoadRequired {
+pub fn serialize_and_cache_prefab(prefab: Prefab, resources: &mut ResourcesDatabase) -> PrefabLoadRequired {
     if let Err(e) = serialization_util::prefabs::serialize_prefab(&prefab) {
         error!("Error Creating Prefab: {}", e);
     }
 
-    let main_id = prefab.root_id();
+    let prefab_id = prefab.root_id();
 
     match serialization_util::prefabs::cycle_prefab(prefab) {
         Ok(prefab) => {
@@ -130,7 +115,7 @@ pub fn serialize_and_cache_prefab(
         Err(e) => error!("We couldn't cycle the Prefab! It wasn't saved! {}", e),
     }
 
-    PrefabLoadRequired { main_id, sub_id }
+    PrefabLoadRequired { prefab_id }
 }
 
 /// Use this to finish a prefab serialization. This is a fairly huge operation,
@@ -141,81 +126,81 @@ pub fn post_prefab_serialization(
     delta: serde_yaml::Value,
     prefab_load: PrefabLoadRequired,
 ) -> Result<()> {
-    let PrefabLoadRequired { main_id, sub_id } = prefab_load;
-    let mut post_deserialization = None;
-    let mut entities_to_post_deserialize = vec![];
+    let PrefabLoadRequired { prefab_id } = prefab_load;
+    // let mut post_deserialization = None;
+    // let mut entities_to_post_deserialize = vec![];
 
-    for entity in ecs.entities.iter() {
-        if ecs
-            .component_database
-            .prefab_markers
-            .get(entity)
-            .map_or(false, |pmc| {
-                let pm = pmc.inner();
-                pm.main_id() == main_id && pm.sub_id() == sub_id
-            })
-        {
-            // Load the Delta into each existing Prefab inheritor
-            let new_post = ecs.component_database.load_yaml_delta_into_database(
-                entity,
-                key.clone(),
-                delta.clone(),
-                Default::default(),
-                &mut ecs.singleton_database.associated_entities,
-                &mut ecs.scene_graph,
-            );
+    // for entity in ecs.entities.iter() {
+    //     if ecs
+    //         .component_database
+    //         .prefab_markers
+    //         .get(entity)
+    //         .map_or(false, |pmc| {
+    //             let pm = pmc.inner();
+    //             pm.main_id() == prefab_id && pm.sub_id() == member_id
+    //         })
+    //     {
+    //         // Load the Delta into each existing Prefab inheritor
+    //         let new_post = ecs.component_database.load_yaml_delta_into_database(
+    //             entity,
+    //             key.clone(),
+    //             delta.clone(),
+    //             Default::default(),
+    //             &mut ecs.singleton_database.associated_entities,
+    //             &mut ecs.scene_graph,
+    //         );
 
-            // Reload the serialization after the fact
-            post_deserialization = Some(new_post);
-            entities_to_post_deserialize.push((
-                *entity,
-                ecs.component_database
-                    .serialization_markers
-                    .get(entity)
-                    .map(|se| se.inner().id),
-            ));
-        }
-    }
+    //         // Reload the serialization after the fact
+    //         post_deserialization = Some(new_post);
+    //         entities_to_post_deserialize.push((
+    //             *entity,
+    //             ecs.component_database
+    //                 .serialization_markers
+    //                 .get(entity)
+    //                 .map(|se| se.inner().id),
+    //         ));
+    //     }
+    // }
 
-    if let Some(pd) = post_deserialization {
-        ecs.component_database
-            .post_deserialization(pd, |component_list, sl| {
-                for (entity, _) in entities_to_post_deserialize.iter_mut() {
-                    if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                        inner.post_deserialization(*entity, sl);
-                    }
-                }
-            });
-        let serialized_entities: HashMap<Uuid, SerializedEntity> =
-            serialization_util::entities::load_all_entities().with_context(|| {
-                format!(
-                    "We couldn't load Scene {}.",
-                    super::scene_system::current_scene_name()
-                )
-            })?;
+    // if let Some(pd) = post_deserialization {
+    //     ecs.component_database
+    //         .post_deserialization(pd, |component_list, sl| {
+    //             for (entity, _) in entities_to_post_deserialize.iter_mut() {
+    //                 if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
+    //                     inner.post_deserialization(*entity, sl);
+    //                 }
+    //             }
+    //         });
+    //     let serialized_entities: HashMap<Uuid, SerializedEntity> =
+    //         serialization_util::entities::load_all_entities().with_context(|| {
+    //             format!(
+    //                 "We couldn't load Scene {}.",
+    //                 super::scene_system::current_scene_name()
+    //             )
+    //         })?;
 
-        let new_serialized_entities: HashMap<Uuid, SerializedEntity> = {
-            let mut serialized_entities_value: YamlValue = serde_yaml::to_value(serialized_entities).unwrap();
+    //     let new_serialized_entities: HashMap<Uuid, SerializedEntity> = {
+    //         let mut serialized_entities_value: YamlValue = serde_yaml::to_value(serialized_entities).unwrap();
 
-            let serialized_entities_map = serialized_entities_value.as_mapping_mut().unwrap();
-            for (_, id) in entities_to_post_deserialize {
-                // find the entity in the Hashmap
-                let id_key = serde_yaml::to_value(id).unwrap();
+    //         let serialized_entities_map = serialized_entities_value.as_mapping_mut().unwrap();
+    //         for (_, id) in entities_to_post_deserialize {
+    //             // find the entity in the Hashmap
+    //             let id_key = serde_yaml::to_value(id).unwrap();
 
-                // Find the key...
-                if let Some(serialized_entity) = serialized_entities_map.get_mut(&id_key) {
-                    let entity_as_map = serialized_entity.as_mapping_mut().unwrap();
-                    // And put a null in it! in the future, we'll be removing it, but for now
-                    // we can do that until we switch over to purely dynamic typed saves
-                    entity_as_map.insert(key.clone(), YamlValue::Null);
-                }
-            }
+    //             // Find the key...
+    //             if let Some(serialized_entity) = serialized_entities_map.get_mut(&id_key) {
+    //                 let entity_as_map = serialized_entity.as_mapping_mut().unwrap();
+    //                 // And put a null in it! in the future, we'll be removing it, but for now
+    //                 // we can do that until we switch over to purely dynamic typed saves
+    //                 entity_as_map.insert(key.clone(), YamlValue::Null);
+    //             }
+    //         }
 
-            serde_yaml::from_value(serialized_entities_value).unwrap()
-        };
+    //         serde_yaml::from_value(serialized_entities_value).unwrap()
+    //     };
 
-        serialization_util::entities::commit_all_entities(&new_serialized_entities)?;
-    }
+    //     serialization_util::entities::commit_all_entities(&new_serialized_entities)?;
+    // }
 
     Ok(())
 }

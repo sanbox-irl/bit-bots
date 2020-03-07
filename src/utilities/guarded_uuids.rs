@@ -13,14 +13,17 @@ macro_rules! create_guarded_uuid {
         }
 
         impl $this_val {
+            /// Creates a new and blank Id based on Uuid::v4.
             pub fn new() -> Self {
                 Self(Uuid::new_v4())
             }
 
+            /// Creates a new Id with the provided Uuid.
             pub fn with_id(id: Uuid) -> Self {
                 Self(id)
             }
 
+            /// Gives access to the inner ID. Try to not use this one too much!
             pub fn inner(&self) -> Uuid {
                 self.0
             }

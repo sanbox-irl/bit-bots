@@ -1,8 +1,8 @@
-use super::{imgui_system, imgui_component_utils::InspectorParameters};
+use super::{imgui_component_utils::InspectorParameters, imgui_system, PrefabId};
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SerializablePrefabReference {
-    pub target: Option<uuid::Uuid>,
+    pub target: Option<PrefabId>,
 }
 
 impl SerializablePrefabReference {

@@ -201,7 +201,7 @@ impl ResourcesDatabase {
     /// You'll have to do that on your own. As always, the file is the definitive prefab list,
     /// and this just exists as a cache.
     pub fn add_prefab(&mut self, prefab: Prefab) {
-        self.prefabs.insert(prefab.root_id(), prefab);
+        self.prefabs.insert(*prefab.prefab_id(), prefab);
     }
 
     /// This action removes a prefab from the prefab cache. Note: it does not serialize the prefab.

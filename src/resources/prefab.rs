@@ -1,6 +1,7 @@
 use super::{
-    scene_graph::SerializedSceneGraph, serialization_util::entities::SerializedHashMap, PrefabId,
-    SerializationId, SerializedEntity,
+    scene_graph::{SerializedNode, SerializedSceneGraph},
+    serialization_util::entities::SerializedHashMap,
+    PrefabId, SerializationId, SerializedEntity,
 };
 use std::collections::HashMap;
 
@@ -9,7 +10,7 @@ pub type PrefabMap = HashMap<PrefabId, Prefab>;
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Prefab {
-    root_id: PrefabId,
+    prefab_id: PrefabId,
     valid: bool,
     pub members: SerializedHashMap,
     pub serialized_graph: SerializedSceneGraph,
@@ -28,7 +29,7 @@ impl Prefab {
         serialized_graph.instantiate_node(root_serialized_id);
 
         Prefab {
-            root_id: PrefabId(root_serialized_id.inner()),
+            prefab_id: PrefabId(root_serialized_id.inner()),
             members,
             serialized_graph,
             valid: true,
@@ -49,27 +50,27 @@ impl Prefab {
         serialized_graph.instantiate_node(serialized_id);
 
         Prefab {
-            root_id: PrefabId(serialized_id.inner()),
+            prefab_id: PrefabId(serialized_id.inner()),
             members,
             serialized_graph,
             valid: true,
         }
     }
 
+    pub fn prefab_id(&self) -> &PrefabId {
+        &self.prefab_id
+    }
+
+    pub fn root_id(&self) -> &SerializationId {
+        self.serialized_graph.iter_roots().nth(0).unwrap().inner()
+    }
+
     pub fn root_entity(&self) -> &SerializedEntity {
-        &self.members[&self.root_serialization_id()]
+        &self.members.get(self.root_id()).unwrap()
     }
 
     pub fn root_entity_mut(&mut self) -> &mut SerializedEntity {
-        self.members.get_mut(&self.root_serialization_id()).unwrap()
-    }
-
-    pub fn root_id(&self) -> PrefabId {
-        self.root_id
-    }
-
-    pub fn root_serialization_id(&self) -> SerializationId {
-        SerializationId(self.root_id.inner())
+        self.members.get_mut(self.root_id()).unwrap()
     }
 
     pub fn invalidate(&mut self) {
@@ -77,7 +78,7 @@ impl Prefab {
     }
 
     pub fn log_to_console(&self) {
-        println!("---Console Log for {}---", self.root_id);
+        println!("---Console Log for {}---", self.prefab_id);
         println!("{:#?}", self);
         println!("------------------------");
     }

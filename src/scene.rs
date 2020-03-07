@@ -1,3 +1,5 @@
+use super::PrefabId;
+
 pub const SCENE_DIRECTORY: &str = "assets/serialized_data/scenes";
 pub const PREFAB_DIRECTORY: &str = "assets/serialized_data/prefabs";
 pub const DEFAULT_SINGLETONS_SUBPATH: &str = "default_singleton_data.yaml";
@@ -23,9 +25,9 @@ impl Scene {
         }
     }
 
-    pub fn new_prefab(prefab_id: uuid::Uuid) -> Self {
+    pub fn new_prefab(prefab_id: PrefabId) -> Self {
         Scene {
-            name: prefab_id.to_string(),
+            name: prefab_id.inner().to_string(),
             is_prefab: true,
             mode: SceneMode::Draft,
         }

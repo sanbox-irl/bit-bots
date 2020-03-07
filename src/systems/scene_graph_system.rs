@@ -140,18 +140,18 @@ pub fn find_transform_from_prefab_node<'a, 'b>(
     component_database: &'a mut ComponentDatabase,
     serialized_node: &'b SerializedNode,
 ) -> Option<&'a mut Component<Transform>> {
-    let prefab_markers = &component_database.prefab_markers;
-    let tc = &mut component_database.transforms;
+    // let prefab_markers = &component_database.prefab_markers;
+    // let tc = &mut component_database.transforms;
 
-    if let Some(entity) = prefab_markers.iter().find_map(|prefab_marker_c| {
-        if prefab_marker_c.inner().sub_id() == *serialized_node.inner() {
-            Some(prefab_marker_c.entity_id())
-        } else {
-            None
-        }
-    }) {
-        return tc.get_mut(&entity);
-    }
+    // if let Some(entity) = prefab_markers.iter().find_map(|prefab_marker_c| {
+    //     if prefab_marker_c.inner().sub_id() == *serialized_node.inner() {
+    //         Some(prefab_marker_c.entity_id())
+    //     } else {
+    //         None
+    //     }
+    // }) {
+    //     return tc.get_mut(&entity);
+    // }
 
     None
 }

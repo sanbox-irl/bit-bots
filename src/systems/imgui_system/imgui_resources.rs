@@ -1,6 +1,5 @@
 use super::{imgui_component_utils::*, *};
 use sprite_resources::*;
-use uuid::Uuid;
 
 pub fn create_resources_windows(resources: &mut ResourcesDatabase, ui_handler: &mut UiHandler<'_>) {
     imgui_utility::create_window(
@@ -278,7 +277,7 @@ pub fn game_config_editor(config: &mut game_config::Config, ui_handler: &mut UiH
 pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut UiHandler<'_>) -> bool {
     let mut open = true;
 
-    let mut action_on_prefab: Option<(Uuid, NameRequestedAction)> = None;
+    let mut action_on_prefab: Option<(PrefabId, NameRequestedAction)> = None;
 
     let prefab_list = imgui::Window::new(&im_str!("Prefab List"))
         .size([200.0, 400.0], imgui::Condition::FirstUseEver)
@@ -358,7 +357,7 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
 }
 
 fn display_prefab_id(
-    prefab: Uuid,
+    prefab: PrefabId,
     name_inspector_params: &NameInspectorParameters<'_>,
     name: Option<&Name>,
     ui_handler: &mut UiHandler<'_>,

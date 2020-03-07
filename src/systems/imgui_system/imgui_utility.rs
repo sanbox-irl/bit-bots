@@ -271,11 +271,11 @@ pub fn select_entity(
 
 pub fn select_prefab_entity(
     label: &str,
-    current_value: &Option<uuid::Uuid>,
+    current_value: &Option<PrefabId>,
     uid: &str,
     ui: &Ui<'_>,
     serialized_prefabs: &PrefabMap,
-) -> Option<Option<uuid::Uuid>> {
+) -> Option<Option<PrefabId>> {
     let popup = im_str!("{}## Popup {}", label, uid);
 
     let name_str: ImString = match current_value {
@@ -300,7 +300,7 @@ pub fn select_prefab_entity(
         ui.open_popup(&popup);
     }
 
-    let mut ret: Option<Option<uuid::Uuid>> = None;
+    let mut ret = None;
 
     // Select a new Associated Entity:
     ui.popup(&popup, || {
@@ -314,7 +314,7 @@ pub fn select_prefab_entity(
             };
 
             if ui.button(&name_imstr, [0.0, 0.0]) {
-                ret = Some(Some(prefab.root_id()));
+                ret = Some(Some(*prefab.prefab_id()));
                 close_popup = true;
             }
         }

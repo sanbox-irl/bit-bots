@@ -1,11 +1,10 @@
 use super::{
     physics_components::*, prefab_system, ComponentBounds, ComponentDatabase, ConversantNPC, DrawRectangle,
     Entity, Follow, Marker, Name, NonInspectableEntities, Player, PrefabMarker, ResourcesDatabase,
-    SceneSwitcher, SerializableComponent, SingletonDatabase, SoundSource, Sprite, TextSource, Transform,
-    Velocity, SerializationId
+    SceneSwitcher, SerializableComponent, SerializationId, SingletonDatabase, SoundSource, Sprite,
+    TextSource, Transform, Velocity,
 };
 use serde_yaml::Value as YamlValue;
-use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(default)]
@@ -76,7 +75,7 @@ pub struct SerializedEntity {
 impl SerializedEntity {
     pub fn new(
         entity_id: &Entity,
-        serialization_id: Uuid,
+        serialization_id: SerializationId,
         component_database: &ComponentDatabase,
         singleton_database: &SingletonDatabase,
         resources: &ResourcesDatabase,
@@ -105,7 +104,7 @@ impl SerializedEntity {
     /// the same as what is currently *live* (as far as SE == live entities goes, that is)
     pub fn with_prefab_components(
         entity_id: &Entity,
-        serialization_id: Uuid,
+        serialization_id: SerializationId,
         component_database: &ComponentDatabase,
         singleton_database: &SingletonDatabase,
         resources: &ResourcesDatabase,
@@ -145,14 +144,14 @@ impl SerializedEntity {
 
     pub fn new_blank() -> Self {
         SerializedEntity {
-            id: Uuid::new_v4(),
+            id: SerializationId::new(),
             ..Default::default()
         }
     }
 
-    pub fn with_uuid(uuid: Uuid) -> Self {
+    pub fn with_serialization_id(serialization_id: SerializationId) -> Self {
         SerializedEntity {
-            id: uuid,
+            id: serialization_id,
             ..Default::default()
         }
     }
@@ -161,7 +160,7 @@ impl SerializedEntity {
         &mut self,
         entity_bitmask: NonInspectableEntities,
         mut f: impl FnMut(&dyn ComponentBounds, &bool),
-        f_util: Option<impl FnMut(&mut Uuid, &mut Option<Marker>)>,
+        f_util: Option<impl FnMut(&mut SerializationId, &mut Option<Marker>)>,
     ) {
         let SerializedEntity {
             name,

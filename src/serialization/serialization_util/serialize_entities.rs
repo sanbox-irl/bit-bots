@@ -97,8 +97,6 @@ pub fn process_serialized_command(
     Ok(())
 }
 
-/// This serializes all entities provided in a given scene. This probably corresponds to
-/// Control + S while in Draft Mode.
 pub fn serialize_all_entities(
     entities: &[Entity],
     component_database: &ComponentDatabase,
@@ -109,10 +107,10 @@ pub fn serialize_all_entities(
 
     // FIND THE OLD SERIALIZED ENTITY
     for entity in entities {
-        if let Some(serialization_thing) = component_database.serialization_markers.get(entity) {
+        if let Some(serialization_marker_c) = component_database.serialization_markers.get(entity) {
             if let Some(se) = SerializedEntity::new(
                 entity,
-                serialization_thing.inner().id,
+                serialization_marker_c.inner().id,
                 component_database,
                 singleton_database,
                 resources,
@@ -129,7 +127,7 @@ pub fn serialize_all_entities(
 /// entire entity, essentially creating a new Serialized Entity and then comitting that to the scene.
 pub fn serialize_entity_full(
     entity_id: &Entity,
-    serialized_id: uuid::Uuid,
+    serialized_id: SerializationId,
     component_database: &ComponentDatabase,
     singleton_database: &SingletonDatabase,
     resources: &ResourcesDatabase,
@@ -154,11 +152,11 @@ pub fn serialize_entity_full(
 }
 
 // @techdebt Use it or lose it!
-pub fn unserialize_entity(serialized_id: &uuid::Uuid) -> Result<bool, Error> {
+pub fn unserialize_entity(serialization_id: &SerializationId) -> Result<bool, Error> {
     let mut entities = load_all_entities()?;
 
     // FIND THE OLD PREFAB
-    let succeeded = entities.remove(serialized_id).is_some();
+    let succeeded = entities.remove(serialization_id).is_some();
     commit_all_entities(&entities)?;
 
     Ok(succeeded)
@@ -186,7 +184,7 @@ pub fn load_committed_entity(
 }
 
 /// Gets an Entity from the SerializedHashMap by ID.
-pub fn load_entity_by_id(id: &uuid::Uuid) -> Result<Option<SerializedEntity>, Error> {
+pub fn load_entity_by_id(id: &SerializationId) -> Result<Option<SerializedEntity>, Error> {
     let mut entities: SerializedHashMap = load_all_entities()?;
     Ok(entities.remove(id))
 }

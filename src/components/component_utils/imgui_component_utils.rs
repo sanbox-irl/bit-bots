@@ -1,8 +1,7 @@
 use super::{
-    imgui_system, scene_graph::NodeId, Color, ComponentBounds, ComponentList, Entity, Name, PrefabMap,
-    SceneMode, SerializedEntity,
+    imgui_system, scene_graph::NodeId, Color, ComponentBounds, ComponentList, Entity, Name, PrefabId,
+    PrefabMap, SceneMode, SerializationId, SerializedEntity,
 };
-use uuid::Uuid;
 
 const WARNING_ICON: char = '\u{f071}';
 const SYNCED_ICON: char = '\u{f00c}';
@@ -45,7 +44,7 @@ pub struct CreateEntityCommand {
 #[derive(Debug, Copy, Clone)]
 pub enum CreateEntityCommandType {
     CreateBlank,
-    CreatePrefab(uuid::Uuid),
+    CreatePrefab(PrefabId),
 }
 
 pub struct NameInspectorResult {
@@ -266,7 +265,7 @@ pub enum ComponentSerializationCommandType {
 
 #[derive(Debug, Copy, Clone)]
 pub struct EntitySerializationCommand {
-    pub id: Uuid,
+    pub id: SerializationId,
     pub entity: Entity,
     pub command_type: EntitySerializationCommandType,
 }

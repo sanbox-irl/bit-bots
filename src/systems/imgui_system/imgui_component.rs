@@ -347,7 +347,7 @@ pub fn entity_inspector(
                         prefab.members.insert(new_member.id, new_member);
 
                         let prefab_reload_required =
-                            prefab_system::serialize_and_cache_prefab(prefab, sub_id, resources);
+                            prefab_system::serialize_and_cache_prefab(prefab, resources);
 
                         prefab_system::post_prefab_serialization(
                             ecs,
