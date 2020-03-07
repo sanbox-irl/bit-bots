@@ -1,6 +1,6 @@
 use super::{
     imgui_component_utils::InspectorParameters, imgui_component_utils::SyncStatus, serialization_util,
-    ComponentBounds, SerializedEntity,
+    ComponentBounds, SerializationId, SerializedEntity,
 };
 use imgui::*;
 use std::time::{Duration, Instant};
@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Serialize, ComponentPostDeserialization, Deserialize, PartialEq, typename::TypeName)]
 pub struct SerializationMarker {
-    pub id: Uuid,
+    pub id: SerializationId,
     #[serde(skip)]
     cache: SerializedEntityCache,
 }
@@ -44,7 +44,7 @@ impl SerializationMarker {
 
     /// Use this when you're making a new SerializationMarker when loading
     /// data from disk or some other buffer.
-    pub fn with_id(id: Uuid) -> Self {
+    pub fn with_id(id: SerializationId) -> Self {
         let mut me = Self::default();
         me.id = id;
         me
@@ -140,7 +140,7 @@ impl SerializationMarker {
 impl Default for SerializationMarker {
     fn default() -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: SerializationId(Uuid::new_v4()),
             cache: Default::default(),
         }
     }

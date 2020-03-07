@@ -1,11 +1,13 @@
-use super::{imgui_system, ComponentList, Entity, imgui_component_utils::InspectorParameters, SerializationMarker};
-use uuid::Uuid;
+use super::{
+    imgui_component_utils::InspectorParameters, imgui_system, ComponentList, Entity, SerializationId,
+    SerializationMarker,
+};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct SerializableEntityReference {
     #[serde(skip)]
     pub target: Option<Entity>,
-    target_serialized_id: Option<Uuid>,
+    target_serialized_id: Option<SerializationId>,
 }
 
 impl SerializableEntityReference {
@@ -40,7 +42,7 @@ impl SerializableEntityReference {
         }
     }
 
-    pub fn target_serialized_id(&self) -> Option<Uuid> {
+    pub fn target_serialized_id(&self) -> Option<SerializationId> {
         self.target_serialized_id
     }
 

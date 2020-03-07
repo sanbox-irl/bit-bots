@@ -1,64 +1,34 @@
-use super::{scene_graph::SerializedSceneGraph, SerializedEntity};
+use super::{
+    scene_graph::SerializedSceneGraph, serialization_util::entities::SerializedHashMap, PrefabId,
+    SerializationId, SerializedEntity,
+};
 use std::collections::HashMap;
-use uuid::Uuid;
 
 /// Where the Key in the HashMap is the same as the MainID in the Prefab.
-pub type PrefabMap = HashMap<Uuid, Prefab>;
+pub type PrefabMap = HashMap<PrefabId, Prefab>;
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Prefab {
-    root_id: Uuid,
+    root_id: PrefabId,
     valid: bool,
-    pub members: HashMap<Uuid, SerializedEntity>,
+    pub members: SerializedHashMap,
     pub serialized_graph: SerializedSceneGraph,
 }
-
-// impl Clone for Prefab {
-//     fn clone(&self) -> Self {
-//         // Make a new ID
-//         let new_root_id = Uuid::new_v4();
-
-//         // Find our Old Main and give it the new ID:
-//         let mut members = HashMap::with_capacity(self.members.len());
-
-//         for (old_id, old_member) in self.members.iter() {
-//             let new_key = if old_id == &self.root_id {
-//                 new_root_id
-//             } else {
-//                 Uuid::new_v4()
-//             };
-
-//             let mut new_member = old_member.clone();
-//             new_member.id = new_key;
-
-//             members.insert(new_key, new_member);
-//         }
-
-//         // Recreate a new Scene Graph thing...
-//         let mut new_serialized_graph = SerializedSceneGraph::new();
-
-//         Prefab {
-//             root_id: new_root_id,
-//             members,
-//             valid: true,
-//         }
-//     }
-// }
 
 impl Prefab {
     /// Creates a new Prefab with only a single member, which will
     /// also be the RootEntity
     pub fn new(root_entity: SerializedEntity) -> Prefab {
-        let root_id = root_entity.id;
+        let root_serialized_id = root_entity.id;
         let members = maplit::hashmap! {
-            root_id => root_entity
+            root_serialized_id => root_entity
         };
 
         let mut serialized_graph = SerializedSceneGraph::new();
-        serialized_graph.instantiate_node(root_id);
+        serialized_graph.instantiate_node(root_serialized_id);
 
         Prefab {
-            root_id,
+            root_id: PrefabId(root_serialized_id.inner()),
             members,
             serialized_graph,
             valid: true,
@@ -66,19 +36,20 @@ impl Prefab {
     }
 
     pub fn new_blank() -> Prefab {
-        let root_id = Uuid::new_v4();
+        let serialized_id = SerializationId::new();
+
         let members = maplit::hashmap! {
-            root_id => SerializedEntity {
-                id: root_id,
+            serialized_id => SerializedEntity {
+                id: serialized_id,
                 ..Default::default()
             }
         };
 
         let mut serialized_graph = SerializedSceneGraph::new();
-        serialized_graph.instantiate_node(root_id);
+        serialized_graph.instantiate_node(serialized_id);
 
         Prefab {
-            root_id,
+            root_id: PrefabId(serialized_id.inner()),
             members,
             serialized_graph,
             valid: true,
@@ -86,15 +57,19 @@ impl Prefab {
     }
 
     pub fn root_entity(&self) -> &SerializedEntity {
-        &self.members[&self.root_id]
+        &self.members[&self.root_serialization_id()]
     }
 
     pub fn root_entity_mut(&mut self) -> &mut SerializedEntity {
-        self.members.get_mut(&self.root_id).unwrap()
+        self.members.get_mut(&self.root_serialization_id()).unwrap()
     }
 
-    pub fn root_id(&self) -> Uuid {
+    pub fn root_id(&self) -> PrefabId {
         self.root_id
+    }
+
+    pub fn root_serialization_id(&self) -> SerializationId {
+        SerializationId(self.root_id.inner())
     }
 
     pub fn invalidate(&mut self) {

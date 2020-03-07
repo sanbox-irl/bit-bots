@@ -268,7 +268,7 @@ impl ComponentDatabase {
         // Make a serialization data thingee on it...
         self.serialization_markers.set_component(
             &entity,
-            SerializationMarker::with_id(serialized_entity.id.clone()),
+            SerializationMarker::with_id(serialized_entity.id),
             scene_graph,
         );
 

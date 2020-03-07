@@ -2,7 +2,7 @@ use super::{
     physics_components::*, prefab_system, ComponentBounds, ComponentDatabase, ConversantNPC, DrawRectangle,
     Entity, Follow, Marker, Name, NonInspectableEntities, Player, PrefabMarker, ResourcesDatabase,
     SceneSwitcher, SerializableComponent, SingletonDatabase, SoundSource, Sprite, TextSource, Transform,
-    Velocity,
+    Velocity, SerializationId
 };
 use serde_yaml::Value as YamlValue;
 use uuid::Uuid;
@@ -69,7 +69,7 @@ pub struct SerializedEntity {
     pub conversant_npc: SerializedComponentWrapper<ConversantNPC>,
     pub prefab_marker: SerializedComponentWrapper<PrefabMarker>,
 
-    pub id: Uuid,
+    pub id: SerializationId,
     pub marker: Option<Marker>,
 }
 

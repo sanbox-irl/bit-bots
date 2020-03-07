@@ -207,7 +207,7 @@ impl ResourcesDatabase {
     /// This action removes a prefab from the prefab cache. Note: it does not serialize the prefab.
     /// You'll have to do that on your own. As always, the file is the definitive prefab list,
     /// and this just exists as a cache.
-    pub fn remove_prefab(&mut self, prefab_id: &uuid::Uuid) -> Option<Prefab> {
+    pub fn remove_prefab(&mut self, prefab_id: &super::PrefabId) -> Option<Prefab> {
         self.prefabs.remove(prefab_id)
     }
 }

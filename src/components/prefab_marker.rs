@@ -1,5 +1,4 @@
-use super::{imgui_component_utils::InspectorParameters, ComponentBounds};
-use uuid::Uuid;
+use super::{imgui_component_utils::InspectorParameters, ComponentBounds, PrefabId};
 
 #[derive(
     Debug,
@@ -15,20 +14,20 @@ use uuid::Uuid;
     Hash,
 )]
 pub struct PrefabMarker {
-    main_id: Uuid,
-    sub_id: Uuid,
+    main_id: PrefabId,
+    sub_id: PrefabId,
 }
 
 impl PrefabMarker {
-    pub fn new(main_id: Uuid, sub_id: Uuid) -> Self {
+    pub fn new(main_id: PrefabId, sub_id: PrefabId) -> Self {
         Self { main_id, sub_id }
     }
 
-    pub fn main_id(&self) -> Uuid {
+    pub fn main_id(&self) -> PrefabId {
         self.main_id
     }
 
-    pub fn sub_id(&self) -> Uuid {
+    pub fn sub_id(&self) -> PrefabId {
         self.sub_id
     }
 }
@@ -72,6 +71,6 @@ impl ComponentBounds for PrefabMarker {
 /// To do that, feed it into `prefab_system::update_prefab_inheritors();
 #[must_use]
 pub struct PrefabLoadRequired {
-    pub main_id: Uuid,
-    pub sub_id: Uuid,
+    pub main_id: PrefabId,
+    pub sub_id: PrefabId,
 }

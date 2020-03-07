@@ -1,9 +1,8 @@
 use super::{
     imgui_component_utils::{EntitySerializationCommand, EntitySerializationCommandType},
-    *,
+    PrefabId, SerializationId, *,
 };
-use uuid::Uuid;
-pub type SerializedHashMap = std::collections::HashMap<Uuid, SerializedEntity>;
+pub type SerializedHashMap = std::collections::HashMap<SerializationId, SerializedEntity>;
 
 /// Loads all the entities as a SerializedHashMap. If this is a Prefab Scene, it will
 /// load `Prefab.Members`, or the `entities_data.yaml` otherwise.
@@ -59,7 +58,8 @@ pub fn process_serialized_command(
             if let Some(post) = post {
                 ecs.component_database
                     .post_deserialization(post, |component_list, sl| {
-                        if let Some((inner, _)) = component_list.get_for_post_deserialization(&command.entity) {
+                        if let Some((inner, _)) = component_list.get_for_post_deserialization(&command.entity)
+                        {
                             inner.post_deserialization(command.entity, sl);
                         }
                     });
