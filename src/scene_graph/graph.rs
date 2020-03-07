@@ -1,4 +1,4 @@
-use super::{node::GraphNode, node_id::NodeId};
+use super::{node::GraphNode, graph_id::GraphId};
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
@@ -22,11 +22,11 @@ impl<T> Graph<T> {
 
     /// Create a new node on the scene graph. The new Node ID is not
     /// connected to anything and is therefore a "root" node.
-    pub fn instantiate_node(&mut self, data: T) -> NodeId {
+    pub fn instantiate_node(&mut self, data: T) -> GraphId<T> {
         let index = self.nodes.len();
         self.nodes.push(GraphNode::new(data));
 
-        NodeId::new(index)
+        GraphId::new(index)
     }
 
     pub fn count(&self) -> usize {
@@ -38,13 +38,13 @@ impl<T> Graph<T> {
     }
 
     /// Returns a reference to the node with the given id if in the arena.
-    pub fn get(&self, id: NodeId) -> Option<&GraphNode<T>> {
+    pub fn get(&self, id: GraphId<T>) -> Option<&GraphNode<T>> {
         self.nodes.get(id.index())
     }
 
     /// Returns a mutable reference to the node with the given id if in the
     /// arena.
-    pub fn get_mut(&mut self, id: NodeId) -> Option<&mut GraphNode<T>> {
+    pub fn get_mut(&mut self, id: GraphId<T>) -> Option<&mut GraphNode<T>> {
         self.nodes.get_mut(id.index())
     }
 
@@ -82,16 +82,16 @@ impl<T> Graph<T> {
     }
 }
 
-impl<T> Index<NodeId> for Graph<T> {
+impl<T> Index<GraphId<T>> for Graph<T> {
     type Output = GraphNode<T>;
 
-    fn index(&self, index: NodeId) -> &GraphNode<T> {
+    fn index(&self, index: GraphId<T>) -> &GraphNode<T> {
         &self.nodes[index.index()]
     }
 }
 
-impl<T> IndexMut<NodeId> for Graph<T> {
-    fn index_mut(&mut self, index: NodeId) -> &mut Self::Output {
+impl<T> IndexMut<GraphId<T>> for Graph<T> {
+    fn index_mut(&mut self, index: GraphId<T>) -> &mut Self::Output {
         &mut self.nodes[index.index()]
     }
 }

@@ -1,14 +1,14 @@
-use super::{graph::Graph, node::GraphNode, node_id::NodeId};
+use super::{graph::Graph, graph_id::GraphId, node::GraphNode};
 
 #[derive(Clone)]
 /// An iterator of references to the ancestors a given node.
 pub struct Ancestors<'a, T> {
     scene_graph: &'a Graph<T>,
-    node: Option<NodeId>,
+    node: Option<GraphId<T>>,
 }
 
 impl<'a, T> Ancestors<'a, T> {
-    pub(crate) fn new(scene_graph: &'a Graph<T>, current: NodeId) -> Self {
+    pub(crate) fn new(scene_graph: &'a Graph<T>, current: GraphId<T>) -> Self {
         Self {
             scene_graph,
             node: Some(current),
@@ -17,9 +17,9 @@ impl<'a, T> Ancestors<'a, T> {
 }
 
 impl<'a, T> Iterator for Ancestors<'a, T> {
-    type Item = NodeId;
+    type Item = GraphId<T>;
 
-    fn next(&mut self) -> Option<NodeId> {
+    fn next(&mut self) -> Option<GraphId<T>> {
         let node = self.node.take()?;
         self.node = self.scene_graph[node].parent;
         Some(node)
@@ -30,11 +30,11 @@ impl<'a, T> Iterator for Ancestors<'a, T> {
 /// An iterator of references to the children of a given node.
 pub struct Children<'a, T> {
     scene_graph: &'a Graph<T>,
-    node: Option<NodeId>,
+    node: Option<GraphId<T>>,
 }
 
 impl<'a, T> Children<'a, T> {
-    pub(super) fn new(scene_graph: &'a Graph<T>, current: NodeId) -> Self {
+    pub(super) fn new(scene_graph: &'a Graph<T>, current: GraphId<T>) -> Self {
         Self {
             scene_graph,
             node: scene_graph[current].first_child,
@@ -43,9 +43,9 @@ impl<'a, T> Children<'a, T> {
 }
 
 impl<'a, T> Iterator for Children<'a, T> {
-    type Item = NodeId;
+    type Item = GraphId<T>;
 
-    fn next(&mut self) -> Option<NodeId> {
+    fn next(&mut self) -> Option<GraphId<T>> {
         let node = self.node.take()?;
         self.node = self.scene_graph[node].next_sibling;
         Some(node)
@@ -56,7 +56,7 @@ impl<'a, T> Iterator for Children<'a, T> {
 /// An iterator of references to the children of a given node.
 pub struct NodeChildren<'a, T> {
     scene_graph: &'a Graph<T>,
-    node_id: Option<NodeId>,
+    node_id: Option<GraphId<T>>,
 }
 
 impl<'a, T> NodeChildren<'a, T> {

@@ -1,4 +1,4 @@
-use super::{siblings_range::SiblingsRange, ConsistencyError, node_id::NodeId, graph::Graph};
+use super::{siblings_range::SiblingsRange, ConsistencyError, graph_id::GraphId, graph::Graph};
 
 /// Ensures the given parent, previous, and next nodes are consistent.
 ///
@@ -19,9 +19,9 @@ macro_rules! debug_assert_triangle_nodes {
 /// Panics if the given nodes are inconsistent.
 pub(super) fn assert_triangle_nodes<T>(
     scene_graph: &Graph<T>,
-    parent: Option<NodeId>,
-    previous: Option<NodeId>,
-    next: Option<NodeId>,
+    parent: Option<GraphId<T>>,
+    previous: Option<GraphId<T>>,
+    next: Option<GraphId<T>>,
 ) {
     if let Some(previous_node) = previous.map(|id| &scene_graph[id]) {
         assert_eq!(
@@ -55,9 +55,9 @@ pub(super) fn assert_triangle_nodes<T>(
 /// ```
 pub(super) fn connect_neighbors<T>(
     scene_graph: &mut Graph<T>,
-    parent: Option<NodeId>,
-    previous: Option<NodeId>,
-    next: Option<NodeId>,
+    parent: Option<GraphId<T>>,
+    previous: Option<GraphId<T>>,
+    next: Option<GraphId<T>>,
 ) {
     if cfg!(debug_assertions) {
         if let Some(parent_node) = parent.map(|id| &scene_graph[id]) {
@@ -119,10 +119,10 @@ pub(super) fn connect_neighbors<T>(
 /// ```
 pub(super) fn insert_with_neighbors<T>(
     scene_graph: &mut Graph<T>,
-    new: NodeId,
-    parent: Option<NodeId>,
-    previous_sibling: Option<NodeId>,
-    next_sibling: Option<NodeId>,
+    new: GraphId<T>,
+    parent: Option<GraphId<T>>,
+    previous_sibling: Option<GraphId<T>>,
+    next_sibling: Option<GraphId<T>>,
 ) -> Result<(), ConsistencyError> {
     debug_assert_triangle_nodes!(scene_graph, parent, previous_sibling, next_sibling);
     if previous_sibling == Some(new) || next_sibling == Some(new) {

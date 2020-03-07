@@ -5,22 +5,40 @@ use super::{
     traverse::{Ancestors, Children},
     NodeError,
 };
-use std::fmt;
+use std::{fmt, marker::PhantomData};
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash, Serialize, Deserialize)]
-pub struct NodeId {
+#[derive(PartialOrd, Ord, Copy, Clone, Hash, Serialize, Deserialize)]
+pub struct GraphId<T> {
     index: usize,
+    data: PhantomData<T>,
 }
 
-impl fmt::Display for NodeId {
+impl<T> fmt::Display for GraphId<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.index)
     }
 }
 
-impl NodeId {
+impl<T> std::cmp::PartialEq for GraphId<T> {
+    fn eq(&self, other: &GraphId<T>) -> bool {
+        self.index == other.index
+    }
+}
+
+impl<T> std::cmp::Eq for GraphId<T> {}
+
+impl<T> fmt::Debug for GraphId<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "GraphId {{ index: {}}}", self.index)
+    }
+}
+
+impl<T> GraphId<T> {
     pub fn new(index: usize) -> Self {
-        Self { index }
+        Self {
+            index,
+            data: std::marker::PhantomData,
+        }
     }
 
     pub fn index(self) -> usize {
@@ -31,17 +49,17 @@ impl NodeId {
     ///
     /// Use [`.skip(1)`][`skip`] or call `.next()` once on the iterator to skip
     /// the node itself.
-    pub fn ancestors<T>(self, scene_graph: &Graph<T>) -> Ancestors<'_, T> {
+    pub fn ancestors(self, scene_graph: &Graph<T>) -> Ancestors<'_, T> {
         Ancestors::new(scene_graph, self)
     }
 
     /// Returns an iterator of references to this node’s children.
-    pub fn children<T>(self, scene_graph: &Graph<T>) -> Children<'_, T> {
+    pub fn children(self, scene_graph: &Graph<T>) -> Children<'_, T> {
         Children::new(scene_graph, self)
     }
 
     /// Detaches a node from its parent. Children are not affected.
-    pub fn detach<T>(self, scene_graph: &mut Graph<T>) {
+    pub fn detach(self, scene_graph: &mut Graph<T>) {
         let range = SiblingsRange::new(self, self).detach_from_siblings(scene_graph);
         range
             .rewrite_parents(scene_graph, None)
@@ -64,7 +82,7 @@ impl NodeId {
     /// * the current node or the given new child was already [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn append<T>(self, new_child: Self, scene_graph: &mut Graph<T>) {
+    pub fn append(self, new_child: Self, scene_graph: &mut Graph<T>) {
         self.checked_append(new_child, scene_graph)
             .expect("Preconditions not met: invalid argument");
     }
@@ -79,7 +97,7 @@ impl NodeId {
     ///   is [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn checked_append<T>(self, new_child: Self, scene_graph: &mut Graph<T>) -> Result<(), NodeError> {
+    pub fn checked_append(self, new_child: GraphId<T>, scene_graph: &mut Graph<T>) -> Result<(), NodeError> {
         if new_child == self {
             return Err(NodeError::AppendSelf);
         }
@@ -87,6 +105,7 @@ impl NodeId {
             return Err(NodeError::Removed);
         }
         new_child.detach(scene_graph);
+
         insert_with_neighbors(
             scene_graph,
             new_child,
@@ -109,7 +128,7 @@ impl NodeId {
     /// * the current node or the given new child was already [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn prepend<T>(self, new_child: Self, scene_graph: &mut Graph<T>) {
+    pub fn prepend(self, new_child: Self, scene_graph: &mut Graph<T>) {
         self.checked_prepend(new_child, scene_graph)
             .expect("Preconditions not met: invalid argument");
     }
@@ -124,7 +143,7 @@ impl NodeId {
     ///   is [`remove`]d.
     ///
     /// To check if the node is removed or not, use [`Node::is_removed()`].
-    pub fn checked_prepend<T>(self, new_child: Self, scene_graph: &mut Graph<T>) -> Result<(), NodeError> {
+    pub fn checked_prepend(self, new_child: Self, scene_graph: &mut Graph<T>) -> Result<(), NodeError> {
         if new_child == self {
             return Err(NodeError::PrependSelf);
         }
@@ -191,7 +210,7 @@ impl NodeId {
     /// ```
     ///
     /// [`Node::is_removed()`]: struct.Node.html#method.is_removed
-    pub fn remove<T>(self, arena: &mut Graph<T>) {
+    pub fn remove(self, arena: &mut Graph<T>) {
         debug_assert_triangle_nodes!(
             arena,
             arena[self].parent,

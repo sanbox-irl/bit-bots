@@ -1,23 +1,23 @@
-use super::{graph::Graph, node_id::NodeId, relations::*, ConsistencyError};
+use super::{graph::Graph, graph_id::GraphId, relations::*, ConsistencyError};
 
 #[derive(Debug, Clone, Copy)]
-pub(super) struct SiblingsRange {
-    first: NodeId,
-    last: NodeId,
+pub(super) struct SiblingsRange<T> {
+    first: GraphId<T>,
+    last: GraphId<T>,
 }
 
-impl SiblingsRange {
+impl<T> SiblingsRange<T> {
     /// Creates a new range.
     ///
     /// It is user's responsibility to guarantee that `first` to `last` is a
     /// correct range.
-    pub(super) fn new(first: NodeId, last: NodeId) -> Self {
+    pub(super) fn new(first: GraphId<T>, last: GraphId<T>) -> Self {
         Self { first, last }
     }
 
     /// Detaches the range from the siblings out of the range, preserving
     /// sibling relations inside the range.
-    pub(super) fn detach_from_siblings<T>(self, arena: &mut Graph<T>) -> DetachedSiblingsRange {
+    pub(super) fn detach_from_siblings(self, arena: &mut Graph<T>) -> DetachedSiblingsRange<T> {
         // Update children's parents, siblings relations outside the range, and
         // old parent's first and last child nodes.
         let parent = arena[self.first].parent;
@@ -56,23 +56,23 @@ impl SiblingsRange {
 /// `rewrite_parents()`.
 #[derive(Debug, Clone, Copy)]
 #[must_use = "This range can have outdated parent information and they should be updated"]
-pub(super) struct DetachedSiblingsRange {
+pub(super) struct DetachedSiblingsRange<T> {
     /// First node.
-    first: NodeId,
+    first: GraphId<T>,
     /// Last node.
-    last: NodeId,
+    last: GraphId<T>,
 }
 
-impl DetachedSiblingsRange {
+impl<T> DetachedSiblingsRange<T> {
     /// Rewrites the parents.
     ///
     /// # Failures
     ///
     /// Returns an error if the given parent is a node in the range.
-    pub(super) fn rewrite_parents<T>(
+    pub(super) fn rewrite_parents(
         &self,
         arena: &mut Graph<T>,
-        new_parent: Option<NodeId>,
+        new_parent: Option<GraphId<T>>,
     ) -> Result<(), ConsistencyError> {
         // Update parents of children in the range.
         let mut child_opt = Some(self.first);
@@ -98,12 +98,12 @@ impl DetachedSiblingsRange {
     /// # Failures
     ///
     /// Returns an error if the given parent is a node in the range.
-    pub(super) fn transplant<T>(
+    pub(super) fn transplant(
         self,
         scene_grpah: &mut Graph<T>,
-        parent: Option<NodeId>,
-        previous_sibling: Option<NodeId>,
-        next_sibling: Option<NodeId>,
+        parent: Option<GraphId<T>>,
+        previous_sibling: Option<GraphId<T>>,
+        next_sibling: Option<GraphId<T>>,
     ) -> Result<(), ConsistencyError> {
         // Check that the given arguments are consistent.
         if cfg!(debug_assertions) {

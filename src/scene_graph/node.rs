@@ -1,13 +1,13 @@
-use super::{graph::Graph, node_id::NodeId, traverse::NodeChildren};
+use super::{graph::Graph, graph_id::GraphId, traverse::NodeChildren};
 use std::fmt;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 pub struct GraphNode<T> {
-    pub(super) parent: Option<NodeId>,
-    pub(super) first_child: Option<NodeId>,
-    pub(super) last_child: Option<NodeId>,
-    pub(super) previous_sibling: Option<NodeId>,
-    pub(super) next_sibling: Option<NodeId>,
+    pub(super) parent: Option<GraphId<T>>,
+    pub(super) first_child: Option<GraphId<T>>,
+    pub(super) last_child: Option<GraphId<T>>,
+    pub(super) previous_sibling: Option<GraphId<T>>,
+    pub(super) next_sibling: Option<GraphId<T>>,
     pub(super) removed: bool,
     pub(super) data: T,
 }
@@ -38,17 +38,17 @@ impl<T> GraphNode<T> {
 
     /// Returns the ID of the parent node, unless this node is the root of the
     /// tree.
-    pub fn parent(&self) -> Option<NodeId> {
+    pub fn parent(&self) -> Option<GraphId<T>> {
         self.parent
     }
 
     /// Returns the ID of the first child of this node, unless it has no child.
-    pub fn first_child(&self) -> Option<NodeId> {
+    pub fn first_child(&self) -> Option<GraphId<T>> {
         self.first_child
     }
 
     /// Returns the ID of the last child of this node, unless it has no child.
-    pub fn last_child(&self) -> Option<NodeId> {
+    pub fn last_child(&self) -> Option<GraphId<T>> {
         self.last_child
     }
 
