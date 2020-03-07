@@ -7,7 +7,7 @@ use super::{
 };
 use std::{fmt, marker::PhantomData};
 
-#[derive(PartialOrd, Ord, Copy, Clone, Hash, Serialize, Deserialize)]
+#[derive(Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct GraphId<T> {
     index: usize,
     data: PhantomData<T>,
@@ -25,7 +25,16 @@ impl<T> std::cmp::PartialEq for GraphId<T> {
     }
 }
 
-impl<T> std::cmp::Eq for GraphId<T> {}
+impl<T> std::clone::Clone for GraphId<T> {
+    fn clone(&self) -> Self {
+        GraphId {
+            index: self.index,
+            data: PhantomData,
+        }
+    }
+}
+
+impl<T> std::marker::Copy for GraphId<T> {}
 
 impl<T> fmt::Debug for GraphId<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

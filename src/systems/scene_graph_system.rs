@@ -54,8 +54,8 @@ pub fn create_serialized_graph(
     fn walk_serialized_graph(
         node: &Node,
         scene_graph: &SceneGraph,
-        parent: Option<NodeId>,
-        f: &mut impl FnMut(&Entity, Option<NodeId>) -> Option<NodeId>,
+        parent: Option<SerializedNodeId>,
+        f: &mut impl FnMut(&Entity, Option<SerializedNodeId>) -> Option<SerializedNodeId>,
     ) {
         let our_entity: &Entity = node.inner();
         let our_id = f(our_entity, parent);
