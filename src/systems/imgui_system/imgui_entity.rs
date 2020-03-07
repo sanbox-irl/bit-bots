@@ -222,17 +222,6 @@ fn imgui_entity_list(
             if let Some(menu_token) =
                 ui.begin_menu(&im_str!("Scene Graph {}", scene_graph_serialization_status), true)
             {
-                if imgui::MenuItem::new(im_str!("Save")).build(ui) {
-                    let ssg = scene_graph_system::create_serialized_graph(
-                        &ecs.scene_graph,
-                        &ecs.component_database.serialization_markers,
-                    );
-                    match serialization_util::serialized_scene_graph::save_serialized_scene_graph(ssg) {
-                        Ok(()) => info!("Saved Serialized SceneGraph..."),
-                        Err(e) => error!("Couldn't save scene graph...{}", e),
-                    }
-                }
-
                 if imgui::MenuItem::new(im_str!("Log")).build(ui) {
                     ecs.scene_graph.pretty_print(&ecs.component_database.names);
                 }
@@ -242,7 +231,6 @@ fn imgui_entity_list(
 
             // Save Button!
             if imgui::MenuItem::new(im_str!("\u{f0c7}")).build(ui) || ui_handler.save_requested() {
-                compile_error!("Here's where we are!");
                 match serialization_util::entities::serialize_all_entities(
                     &ecs.entities,
                     &ecs.component_database,
@@ -253,6 +241,15 @@ fn imgui_entity_list(
                     Err(e) => {
                         error!("Error on Serialization: {}", e);
                     }
+                }
+
+                let ssg = scene_graph_system::create_serialized_graph(
+                    &ecs.scene_graph,
+                    &ecs.component_database.serialization_markers,
+                );
+                match serialization_util::serialized_scene_graph::save_serialized_scene_graph(ssg) {
+                    Ok(()) => info!("Saved Serialized SceneGraph..."),
+                    Err(e) => error!("Couldn't save scene graph...{}", e),
                 }
             }
 

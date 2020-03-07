@@ -262,6 +262,7 @@ impl ComponentDatabase {
         marker_map: &mut AssociatedEntityMap,
         prefabs: &PrefabMap,
     ) -> Option<PostDeserializationRequired> {
+        println!("First SE: {:#?}", serialized_entity);
         // Make a serialization data thingee on it...
         self.serialization_markers.set_component(
             &entity,
@@ -275,7 +276,7 @@ impl ComponentDatabase {
             // Base Prefab
             let success = self.load_serialized_prefab(
                 entity,
-                prefabs.get(&serialized_prefab_marker.inner.main_id()),
+                prefabs.get(&serialized_prefab_marker.inner.main_id()).cloned(),
                 scene_graph,
                 entity_allocator,
                 entities,
@@ -305,13 +306,13 @@ impl ComponentDatabase {
     pub fn load_serialized_prefab(
         &mut self,
         entity_to_load_into: &Entity,
-        prefab_maybe: Option<&Prefab>,
+        prefab_maybe: Option<Prefab>,
         scene_graph: &mut SceneGraph,
         entity_allocator: &mut EntityAllocator,
         entities: &mut Vec<Entity>,
         marker_map: &mut AssociatedEntityMap,
     ) -> Option<PostDeserializationRequired> {
-        if let Some(mut prefab) = prefab_maybe.cloned() {
+        if let Some(mut prefab) = prefab_maybe {
             // Load the Main
             let post_marker = self.load_serialized_entity_into_database(
                 entity_to_load_into,
@@ -326,13 +327,24 @@ impl ComponentDatabase {
                 scene_graph,
             );
 
-            prefab.serialized_graph.walk_tree_generically(|s_node| {
+            println!("---Console Dump for {}---", entity_to_load_into);
+            self.foreach_component_list_mut(NonInspectableEntities::all(), |comp_list| {
+                comp_list.dump_to_log(entity_to_load_into);
+            });
+            println!("-------------------------");
+
+            let prefab_id = prefab.root_id();
+            let members = &mut prefab.members;
+            let serialized_graph = &prefab.serialized_graph;
+
+            serialized_graph.walk_tree_generically(|s_node| {
                 // Don't handle the Root. Is this elegant? Nope!
-                if s_node.inner() == &prefab.root_id() {
+                if s_node.inner() == &prefab_id {
                     return;
                 }
-                match prefab.members.get(s_node.inner()).cloned() {
+                match members.remove(s_node.inner()) {
                     Some(serialized_entity) => {
+                        println!("SE: {:#?}", serialized_entity);
                         let new_id = Ecs::create_entity_raw(self, entity_allocator, entities);
 
                         // Load in the Prefab Bebe.
@@ -349,8 +361,8 @@ impl ComponentDatabase {
                         // Load in our Prefab Parent Transform. We know they will have one because
                         // they have us, their child!
                         let parent_id = {
-                            let parent = s_node.parent().unwrap();
-                            let p_uuid = prefab.serialized_graph.get(parent).unwrap();
+                            let p_uuid = serialized_graph.get(s_node.parent().unwrap()).unwrap();
+                            println!("Parent UUID is {}", p_uuid);
                             let pt = scene_graph_system::find_transform_from_serialized_node(self, &p_uuid)
                                 .unwrap();
                             pt.inner().scene_graph_node_id().unwrap()
@@ -363,14 +375,17 @@ impl ComponentDatabase {
                             }
                         }
 
-                        self.prefab_markers
-                            .set_component(&new_id, PrefabMarker::new(prefab.root_id(), *s_node.inner()), scene_graph);
+                        self.prefab_markers.set_component(
+                            &new_id,
+                            PrefabMarker::new(prefab_id, *s_node.inner()),
+                            scene_graph,
+                        );
                     }
 
                     None => {
                         error!(
-                            "Our Root ID for Prefab {} had a child {} but we couldn't find it in the prefab list! Are you sure it's there?",
-                            Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
+                            "Our Root ID for Prefab {} had a lost child {}",
+                            Name::get_name_quick(&self.names, entity_to_load_into),
                             s_node.inner()
                         );
                     }
@@ -380,12 +395,7 @@ impl ComponentDatabase {
             #[cfg(debug_assertions)]
             {
                 // Check here that all the Members within the Prefab were placed into the Scene!
-                if prefab
-                    .members
-                    .iter()
-                    .all(|(uuid, _)| self.serialization_markers.iter().any(|sd| sd.inner().id == *uuid))
-                    == false
-                {
+                if prefab.members.is_empty() {
                     error!(
                         "Not all members of Prefab {prefab_name} were assigned into the Scene! Prefab {prefab_name} does not make a true Scene Graph!",
                         prefab_name = Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
@@ -470,13 +480,6 @@ impl ComponentDatabase {
         transfer_serialized_components!(prefab_marker, prefab_markers);
         transfer_serialized_components!(name, names);
         transfer_serialized_components!(transform, transforms);
-        // if let Some(transform) = transform {
-        //     self.transforms
-        //         .set_component_with_active(&entity, transform.inner, transform.active);
-
-        //     let new_transform = self.transforms.get_mut(&entity).unwrap();
-        //     new_transform.inner_mut().attach_to_graph(*entity, scene_graph);
-        // }
         transfer_serialized_components!(scene_switcher, scene_switchers);
         transfer_serialized_components!(player, players);
         transfer_serialized_components!(sound_source, sound_sources);
@@ -540,3 +543,82 @@ bitflags! {
         const SERIALIZATION         =   0b0000_0100;
     }
 }
+
+// fn do_thing(
+//     entity_allocator: &mut EntityAllocator,
+//     entities: &mut Vec<Entity>,
+//     marker_map: &mut AssociatedEntityMap,
+//     prefabs: &PrefabMap,
+//     scene_graph: &mut SceneGraph,
+//     mut component_database: ComponentDatabase,
+//     serialized_scene_graph: SerializedSceneGraph,
+//     mut saved_entities: std::collections::HashMap<Uuid, SerializedEntity>,
+// ) {
+//     serialized_scene_graph.walk_tree_generically(|s_node| {
+//         match saved_entities.remove(s_node.inner()) {
+//             Some(serialized_entity) => {
+//                 let new_id = Ecs::create_entity_raw(&mut component_database, entity_allocator, entities);
+
+//                 // Load the SE. Note: if it's in the SceneGraph, then it'll almost certainly have a transform
+//                 let _ = component_database.load_serialized_entity(
+//                     &new_id,
+//                     serialized_entity,
+//                     scene_graph,
+//                     entity_allocator,
+//                     entities,
+//                     marker_map,
+//                     prefabs,
+//                 );
+
+//                 // Load in our Prefab Parent NodeID.
+//                 let parent_id: Option<NodeId> = {
+//                     s_node.parent().and_then(|s_node_id| {
+//                         serialized_scene_graph.get(s_node_id).and_then(|parent_uuid| {
+//                             scene_graph_system::find_transform_from_serialized_node(
+//                                 &mut component_database,
+//                                 &parent_uuid,
+//                             )
+//                             .and_then(|parent_transform| parent_transform.inner().scene_graph_node_id())
+//                         })
+//                     })
+//                 };
+
+//                 // Did we find a PrefabParentNodeID?
+//                 if let Some(parent_id) = parent_id {
+//                     // Assuming *we* have a transform...
+//                     if let Some(transform) = component_database.transforms.get_mut(&new_id) {
+//                         if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
+//                             parent_id.append(node_id, scene_graph);
+//                         }
+//                     }
+//                 }
+//             }
+
+//             None => {
+//                 error!(
+//                     "Our SceneGraph for {} had a child {} but we couldn't find it in the EntityList?",
+//                     scene_system::current_scene_name(),
+//                     s_node.inner()
+//                 );
+//             }
+//         }
+//     });
+
+//     #[cfg(debug_assertions)]
+//     {
+//         if serialized_scene_graph.iter().all(|s_node| {
+//             let id = s_node.inner();
+
+//             component_database
+//                 .serialization_markers
+//                 .iter()
+//                 .any(|smc| smc.inner().id == *id)
+//         }) == false
+//         {
+//             error!(
+//                 "Not all members of the SerializedGraph for {} have been placed into the scene.",
+//                 scene_system::current_scene_name()
+//             )
+//         }
+//     }
+// }

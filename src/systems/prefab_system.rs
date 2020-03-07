@@ -79,7 +79,7 @@ pub fn instantiate_entity_from_prefab(
     // Instantiate the Prefab
     let success = ecs.component_database.load_serialized_prefab(
         &entity,
-        prefab_map.get(&prefab_id),
+        prefab_map.get(&prefab_id).cloned(),
         &mut ecs.scene_graph,
         &mut ecs.entity_allocator,
         &mut ecs.entities,

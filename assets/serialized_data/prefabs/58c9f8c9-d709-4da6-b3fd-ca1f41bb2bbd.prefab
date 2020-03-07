@@ -49,12 +49,49 @@ members:
     prefab_marker: ~
     id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
     marker: ~
+  9e9c2227-b644-4238-8fef-a648a47b66dc:
+    name:
+      inner:
+        name: Normal Sub Human
+      active: true
+    player: ~
+    transform:
+      inner:
+        local_position:
+          x: 0.0
+          y: 0.0
+        world_position:
+          x: 20.0
+          y: 16.0
+      active: true
+    scene_switcher: ~
+    velocity: ~
+    sprite: ~
+    sound_source: ~
+    draw_rectangle: ~
+    bounding_box: ~
+    text_source: ~
+    follow: ~
+    conversant_npc: ~
+    prefab_marker: ~
+    id: 9e9c2227-b644-4238-8fef-a648a47b66dc
+    marker: ~
 serialized_graph:
   nodes:
     - parent: ~
+      first_child:
+        index: 1
+      last_child:
+        index: 1
+      previous_sibling: ~
+      next_sibling: ~
+      removed: false
+      data: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
+    - parent:
+        index: 0
       first_child: ~
       last_child: ~
       previous_sibling: ~
       next_sibling: ~
       removed: false
-      data: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
+      data: 9e9c2227-b644-4238-8fef-a648a47b66dc
