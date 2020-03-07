@@ -49,7 +49,7 @@ pub fn commit_new_prefab(
         // Add our Prefab Marker back to the Original entity we made into a prefab...
         component_database.prefab_markers.set_component(
             entity,
-            PrefabMarker::new_main(prefab_id),
+            PrefabMarker::new(prefab_id, prefab_id),
             scene_graph,
         );
 
@@ -97,7 +97,7 @@ pub fn instantiate_entity_from_prefab(
         // Set our Prefab Marker
         ecs.component_database.prefab_markers.set_component(
             &entity,
-            PrefabMarker::new_main(prefab_id),
+            PrefabMarker::new(prefab_id, prefab_id),
             &mut ecs.scene_graph,
         );
     } else {

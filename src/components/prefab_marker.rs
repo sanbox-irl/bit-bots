@@ -24,13 +24,6 @@ impl PrefabMarker {
         Self { main_id, sub_id }
     }
 
-    pub fn new_main(main_id: Uuid) -> Self {
-        Self {
-            main_id,
-            sub_id: main_id,
-        }
-    }
-
     pub fn main_id(&self) -> Uuid {
         self.main_id
     }

@@ -321,19 +321,14 @@ impl ComponentDatabase {
                 marker_map,
             );
 
+            let prefab_id = prefab.root_id();
+
             self.prefab_markers.set_component(
                 entity_to_load_into,
-                PrefabMarker::new_main(prefab.root_id()),
+                PrefabMarker::new(prefab_id, prefab_id),
                 scene_graph,
             );
 
-            println!("---Console Dump for {}---", entity_to_load_into);
-            self.foreach_component_list_mut(NonInspectableEntities::all(), |comp_list| {
-                comp_list.dump_to_log(entity_to_load_into);
-            });
-            println!("-------------------------");
-
-            let prefab_id = prefab.root_id();
             let members = &mut prefab.members;
             let serialized_graph = &prefab.serialized_graph;
 
@@ -344,7 +339,6 @@ impl ComponentDatabase {
                 }
                 match members.remove(s_node.inner()) {
                     Some(serialized_entity) => {
-                        println!("SE: {:#?}", serialized_entity);
                         let new_id = Ecs::create_entity_raw(self, entity_allocator, entities);
 
                         // Load in the Prefab Bebe.
@@ -362,7 +356,6 @@ impl ComponentDatabase {
                         // they have us, their child!
                         let parent_id = {
                             let p_uuid = serialized_graph.get(s_node.parent().unwrap()).unwrap();
-                            println!("Parent UUID is {}", p_uuid);
                             let pt = scene_graph_system::find_transform_from_serialized_node(self, &p_uuid)
                                 .unwrap();
                             pt.inner().scene_graph_node_id().unwrap()
