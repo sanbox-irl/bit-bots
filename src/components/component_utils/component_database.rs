@@ -41,6 +41,8 @@ impl ComponentDatabase {
             }
         }
 
+        println!("Prefabs are {:#?}", prefabs);
+
         let mut saved_entities = serialization_util::entities::load_all_entities()?;
         let serialized_scene_graph = serialization_util::serialized_scene_graph::load_scene_graph()?;
         let mut component_database = ComponentDatabase::default();

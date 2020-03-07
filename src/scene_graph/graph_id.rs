@@ -10,6 +10,7 @@ use std::{fmt, marker::PhantomData};
 #[derive(Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct GraphId<T> {
     index: usize,
+    #[serde(skip)]
     data: PhantomData<T>,
 }
 
