@@ -1,5 +1,6 @@
 use super::{scene_graph::*, *};
 use anyhow::Error;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Default)]
@@ -264,7 +265,6 @@ impl ComponentDatabase {
         marker_map: &mut AssociatedEntityMap,
         prefabs: &PrefabMap,
     ) -> Option<PostDeserializationRequired> {
-        println!("First SE: {:#?}", serialized_entity);
         // Make a serialization data thingee on it...
         self.serialization_markers.set_component(
             &entity,
@@ -278,7 +278,8 @@ impl ComponentDatabase {
             // Base Prefab
             let success = self.load_serialized_prefab(
                 entity,
-                prefabs.get(&serialized_prefab_marker.inner.main_id()).cloned(),
+                serialized_prefab_marker.inner.child_map(),
+                prefabs.get(&serialized_prefab_marker.inner.prefab_id()).cloned(),
                 scene_graph,
                 entity_allocator,
                 entities,
@@ -307,7 +308,8 @@ impl ComponentDatabase {
     #[must_use]
     pub fn load_serialized_prefab(
         &mut self,
-        entity_to_load_into: &Entity,
+        main_entity_id: &Entity,
+        child_map: &Option<HashMap<SerializationId, SerializationId>>,
         prefab_maybe: Option<Prefab>,
         scene_graph: &mut SceneGraph,
         entity_allocator: &mut EntityAllocator,
@@ -315,17 +317,37 @@ impl ComponentDatabase {
         marker_map: &mut AssociatedEntityMap,
     ) -> Option<PostDeserializationRequired> {
         if let Some(mut prefab) = prefab_maybe {
+            // Load in the Top Level
+            if let Some(se) = prefab.members.remove(prefab.root_id()) {
+                let _ =
+                    self.load_serialized_entity_into_database(main_entity_id, se, scene_graph, marker_map);
+
+                self.prefab_markers.set_component(
+                    &main_entity_id,
+                    PrefabMarker::new(*prefab.prefab_id(), se.id, child_map.clone()),
+                    scene_graph,
+                );
+            } else {
+                error!("We couldn't find our main entity in our Prefab. That's weird!");
+                return None;
+            }
+
             let members = &mut prefab.members;
             let serialized_graph = &prefab.serialized_graph;
 
+            // Load in the Children
             serialized_graph.walk_tree_generically(|s_node| {
+                // A bit crude
+                if s_node.inner() == prefab.root_id() {
+                    return;
+                }
+
                 match members.remove(s_node.inner()) {
                     Some(serialized_entity) => {
+                        let serialized_id = serialized_entity.id;
                         let new_id = Ecs::create_entity_raw(self, entity_allocator, entities);
 
-                        // Load in the Prefab Bebe.
-                        // Note: Right here is where we'll need to figure out how to support
-                        // nested prefabs in the future.
+                        // Load in the Prefab
                         let _ = self.load_serialized_entity_into_database(
                             &new_id,
                             serialized_entity,
@@ -339,6 +361,9 @@ impl ComponentDatabase {
                             s_node.parent().and_then(|serialized_node_id| {
                                 // Probably never None -- indicates graph issue
                                 serialized_graph.get(serialized_node_id).and_then(|parent_snode| {
+                                    // This won't work right there, because our Serialization is unrelated
+                                    // to the node in the real world!
+                                    compile_error!("Guah!");
                                     scene_graph_system::find_transform_from_serialized_node(
                                         self,
                                         &parent_snode,
@@ -352,7 +377,6 @@ impl ComponentDatabase {
 
                         // Did we find a PrefabParentNodeID?
                         if let Some(parent_id) = parent_id {
-                            // Assuming *we* have a transform...
                             if let Some(transform) = self.transforms.get_mut(&new_id) {
                                 if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
                                     parent_id.append(node_id, scene_graph);
@@ -361,9 +385,20 @@ impl ComponentDatabase {
                         }
 
                         // Set our Prefab
-                        self.prefab_markers.set_component(
+                        let prefab_marker = self.prefab_markers.set_component(
                             &new_id,
-                            PrefabMarker::new(prefab.prefab_id(), *s_node.inner()),
+                            PrefabMarker::new(*prefab.prefab_id(), serialized_id, None),
+                            scene_graph,
+                        );
+
+                        // Set our Serialization Marker here...
+                        let our_id = child_map
+                            .and_then(|child_map| child_map.get(s_node.inner()).cloned())
+                            .unwrap_or_else(|| SerializationId::new());
+
+                        self.serialization_markers.set_component(
+                            &new_id,
+                            SerializationMarker::with_id(our_id),
                             scene_graph,
                         );
                     }
@@ -371,7 +406,7 @@ impl ComponentDatabase {
                     None => {
                         error!(
                             "Our Root ID for Prefab {} had a lost child {}",
-                            Name::get_name_quick(&self.names, entity_to_load_into),
+                            Name::get_name_quick(&self.names, main_entity_id),
                             s_node.inner()
                         );
                     }
@@ -393,7 +428,7 @@ impl ComponentDatabase {
         } else {
             error!(
                 "Prefab does not exist, but we tried to load it into entity {}. We cannot complete this operation.",
-                Name::get_name_quick(&self.names, entity_to_load_into)
+                Name::get_name_quick(&self.names, main_entity_id)
             );
 
             None

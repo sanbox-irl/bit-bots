@@ -45,7 +45,7 @@ pub fn entity_list(
             }
             NameRequestedAction::GoToPrefab => {
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
-                    let id = prefab_marker.inner().main_id();
+                    let id = prefab_marker.inner().prefab_id();
                     if scene_system::set_next_scene(Scene::new_prefab(id)) == false {
                         error!("Couldn't switch to Prefab {}", id);
                         error!("Does a Prefab by that name exist?");
@@ -103,7 +103,7 @@ pub fn entity_list(
 
             NameRequestedAction::LogPrefab => {
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
-                    if let Some(prefab) = resources.prefabs().get(&prefab_marker.inner().main_id()) {
+                    if let Some(prefab) = resources.prefabs().get(&prefab_marker.inner().prefab_id()) {
                         prefab.log_to_console();
                     } else {
                         info!(

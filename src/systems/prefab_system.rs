@@ -218,12 +218,12 @@ pub fn get_serialized_parent_prefab_from_inheritor(
     serialized_entity: &mut SerializedEntity,
 ) -> bool {
     if let Some(prefab_component) = maybe_prefab_marker {
-        let prefab = match resources.prefabs().get(&prefab_component.inner().main_id()) {
+        let prefab = match resources.prefabs().get(&prefab_component.inner().prefab_id()) {
             Some(i) => i,
             None => return false,
         };
 
-        let mut serialized_prefab = match prefab.members.get(&prefab_component.inner().sub_id()) {
+        let mut serialized_prefab = match prefab.members.get(&prefab_component.inner().member_id()) {
             Some(sp) => sp.clone(),
             None => return false,
         };

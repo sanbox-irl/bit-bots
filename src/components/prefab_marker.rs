@@ -14,36 +14,48 @@ use std::collections::HashMap;
     typename::TypeName,
 )]
 pub struct PrefabMarker {
-    main_id: PrefabId,
-    sub_id: SerializationId,
-    child_list: Option<HashMap<SerializationId, SerializationId>>,
+    prefab_id: PrefabId,
+    member_id: SerializationId,
+    child_map: Option<HashMap<SerializationId, SerializationId>>,
 }
 
 impl PrefabMarker {
-    pub fn new(main_id: PrefabId, sub_id: SerializationId) -> Self {
+    pub fn new(
+        prefab_id: PrefabId,
+        member_id: SerializationId,
+        child_map: Option<HashMap<SerializationId, SerializationId>>,
+    ) -> Self {
         Self {
-            main_id,
-            sub_id,
-            child_list: None,
+            prefab_id,
+            member_id,
+            child_map,
         }
     }
 
-    pub fn main_id(&self) -> PrefabId {
-        self.main_id
+    pub fn prefab_id(&self) -> PrefabId {
+        self.prefab_id
     }
 
-    pub fn sub_id(&self) -> SerializationId {
-        self.sub_id
+    pub fn member_id(&self) -> SerializationId {
+        self.member_id
+    }
+
+    pub fn child_map(&self) -> &Option<HashMap<SerializationId, SerializationId>> {
+        &self.child_map
+    }
+
+    pub fn set_child_map(&mut self, new_map: Option<HashMap<SerializationId, SerializationId>>) {
+        self.child_map = new_map;
     }
 }
 
 impl ComponentBounds for PrefabMarker {
     fn entity_inspector(&mut self, ip: InspectorParameters<'_, '_>) {
-        if let Some(serialized_name) = &ip.prefabs.get(&self.main_id).unwrap().root_entity().name {
+        if let Some(serialized_name) = &ip.prefabs.get(&self.prefab_id).unwrap().root_entity().name {
             ip.ui
                 .text(imgui::im_str!("Original Prefab: {}", serialized_name.inner.name));
         } else {
-            ip.ui.text(imgui::im_str!("Original Prefab: {}", self.main_id));
+            ip.ui.text(imgui::im_str!("Original Prefab: {}", self.prefab_id));
         }
     }
 

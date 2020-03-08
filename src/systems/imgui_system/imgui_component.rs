@@ -271,15 +271,15 @@ pub fn entity_inspector(
                                 component_database
                                     .prefab_markers
                                     .get(first_root.inner())
-                                    .map(|pmc| pmc.inner().main_id())
+                                    .map(|pmc| pmc.inner().prefab_id())
                             } else {
                                 // We assume it's a non-SceneGraph Prefab, which means it's the only
-                                // entity in da game!
+                                // entity in da scene!
                                 ecs.component_database
                                     .prefab_markers
                                     .iter()
                                     .nth(0)
-                                    .map(|only_prefab_marker| only_prefab_marker.inner().main_id())
+                                    .map(|only_prefab_marker| only_prefab_marker.inner().prefab_id())
                             };
 
                             if let Some(prefab_id) = prefab_id {
@@ -328,7 +328,7 @@ pub fn entity_inspector(
                         let (main_id, sub_id) = component_database
                             .prefab_markers
                             .get(&command.entity)
-                            .map(|pm| (pm.inner().main_id(), pm.inner().sub_id()))
+                            .map(|pm| (pm.inner().prefab_id(), pm.inner().member_id()))
                             .unwrap();
 
                         let mut prefab = serialization_util::prefabs::load_prefab(&main_id)?.unwrap();
