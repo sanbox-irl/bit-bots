@@ -87,6 +87,4 @@ impl ComponentBounds for PrefabMarker {
 /// which you must use to reload any prefab-inheritors in the current scene.
 /// To do that, feed it into `prefab_system::update_prefab_inheritors();
 #[must_use]
-pub struct PrefabLoadRequired {
-    pub prefab_id: PrefabId,
-}
+pub struct PrefabLoadRequired;

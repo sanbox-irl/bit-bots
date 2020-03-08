@@ -1,16 +1,2 @@
 ---
-nodes:
-  - parent: ~
-    first_child: ~
-    last_child: ~
-    previous_sibling: ~
-    next_sibling: ~
-    removed: false
-    data: 87adb3bf-acd3-4ecd-87f7-bf182a9f62cc
-  - parent: ~
-    first_child: ~
-    last_child: ~
-    previous_sibling: ~
-    next_sibling: ~
-    removed: false
-    data: 654072eb-8af8-4a84-afd3-2de5656ea58d
+nodes: []

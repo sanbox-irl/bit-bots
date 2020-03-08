@@ -344,16 +344,22 @@ pub fn entity_inspector(
                             (serde_yaml::from_value(member_yaml)?, diff)
                         };
 
-                        prefab.members.insert(new_member.id, new_member);
+                        let prefab_id = *prefab.prefab_id();
+                        let member_id = new_member.id;
 
+                        // Add in our Member and Cache the Prefab
+                        prefab.members.insert(new_member.id, new_member);
                         let prefab_reload_required =
                             prefab_system::serialize_and_cache_prefab(prefab, resources);
 
-                        prefab_system::post_prefab_serialization(
-                            ecs,
+                        prefab_system::update_prefab_inheritor_component(
+                            prefab_reload_required,
+                            prefab_id,
+                            member_id,
                             command.key,
                             command.delta,
-                            prefab_reload_required,
+                            ecs,
+                            resources,
                         )?;
                     }
                 }
