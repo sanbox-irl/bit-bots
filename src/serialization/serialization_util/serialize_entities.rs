@@ -1,6 +1,6 @@
 use super::{
     imgui_component_utils::{EntitySerializationCommand, EntitySerializationCommandType},
-    PrefabId, SerializationId, *,
+    SerializationId, *,
 };
 pub type SerializedHashMap = std::collections::HashMap<SerializationId, SerializedEntity>;
 

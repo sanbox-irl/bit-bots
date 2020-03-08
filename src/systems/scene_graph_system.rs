@@ -133,25 +133,20 @@ pub fn find_transform_from_serialized_node<'a, 'b>(
     None
 }
 
-/// This iterates over the `ComponentDatabase`, finding the `Component<SerializationMarker>`,
-/// if it exists, which the `SerializedNode` corresponds to. It then finds and returns
-/// the corresponding `Component<Transform>`, if it exists.
 pub fn find_transform_from_prefab_node<'a, 'b>(
-    component_database: &'a mut ComponentDatabase,
+    transforms: &'a mut ComponentList<Transform>,
+    prefab_markers: &'a ComponentList<super::PrefabMarker>,
     serialized_node: &'b SerializedNode,
 ) -> Option<&'a mut Component<Transform>> {
-    // let prefab_markers = &component_database.prefab_markers;
-    // let tc = &mut component_database.transforms;
-
-    // if let Some(entity) = prefab_markers.iter().find_map(|prefab_marker_c| {
-    //     if prefab_marker_c.inner().sub_id() == *serialized_node.inner() {
-    //         Some(prefab_marker_c.entity_id())
-    //     } else {
-    //         None
-    //     }
-    // }) {
-    //     return tc.get_mut(&entity);
-    // }
-
-    None
+    if let Some(entity) = prefab_markers.iter().find_map(|prefab_marker_c| {
+        if prefab_marker_c.inner().member_id() == *serialized_node.inner() {
+            Some(prefab_marker_c.entity_id())
+        } else {
+            None
+        }
+    }) {
+        transforms.get_mut(&entity)
+    } else {
+        None
+    }
 }

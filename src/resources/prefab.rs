@@ -1,7 +1,6 @@
 use super::{
-    scene_graph::{SerializedNode, SerializedSceneGraph},
-    serialization_util::entities::SerializedHashMap,
-    PrefabId, SerializationId, SerializedEntity,
+    scene_graph::SerializedSceneGraph, serialization_util::entities::SerializedHashMap, PrefabId,
+    SerializationId, SerializedEntity,
 };
 use std::collections::HashMap;
 
@@ -18,8 +17,9 @@ pub struct Prefab {
 
 impl Prefab {
     /// Creates a new Prefab with only a single member, which will
-    /// also be the RootEntity
-    pub fn new(root_entity: SerializedEntity) -> Prefab {
+    /// also be the RootEntity. The PrefabId can be supplied (to write over
+    /// another prefab) or it can just be given a randomly made one.
+    pub fn new(root_entity: SerializedEntity, prefab_id: PrefabId) -> Prefab {
         let root_serialized_id = root_entity.id;
         let members = maplit::hashmap! {
             root_serialized_id => root_entity
@@ -29,7 +29,7 @@ impl Prefab {
         serialized_graph.instantiate_node(root_serialized_id);
 
         Prefab {
-            prefab_id: PrefabId(root_serialized_id.inner()),
+            prefab_id,
             members,
             serialized_graph,
             valid: true,
@@ -40,17 +40,14 @@ impl Prefab {
         let serialized_id = SerializationId::new();
 
         let members = maplit::hashmap! {
-            serialized_id => SerializedEntity {
-                id: serialized_id,
-                ..Default::default()
-            }
+            serialized_id => SerializedEntity::with_serialization_id(serialized_id)
         };
 
         let mut serialized_graph = SerializedSceneGraph::new();
         serialized_graph.instantiate_node(serialized_id);
 
         Prefab {
-            prefab_id: PrefabId(serialized_id.inner()),
+            prefab_id: PrefabId::new(),
             members,
             serialized_graph,
             valid: true,
@@ -70,7 +67,8 @@ impl Prefab {
     }
 
     pub fn root_entity_mut(&mut self) -> &mut SerializedEntity {
-        self.members.get_mut(self.root_id()).unwrap()
+        let root_id = *self.root_id();
+        self.members.get_mut(&root_id).unwrap()
     }
 
     pub fn invalidate(&mut self) {

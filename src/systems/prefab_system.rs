@@ -5,7 +5,6 @@ use super::{
 };
 use anyhow::{Context, Result};
 use serde_yaml::Value as YamlValue;
-use std::collections::HashMap;
 
 pub fn commit_blank_prefab(resources: &mut ResourcesDatabase) -> Result<PrefabId> {
     let blank_prefab = Prefab::new_blank();
@@ -17,6 +16,9 @@ pub fn commit_blank_prefab(resources: &mut ResourcesDatabase) -> Result<PrefabId
     Ok(id)
 }
 
+/// Create a new prefab based on an existing entity within a scene.
+/// The entity will become a Prefab Inheritor, and its serialization
+/// will be updated to reflect that.
 pub fn commit_new_prefab(
     entity: &Entity,
     component_database: &mut ComponentDatabase,
@@ -34,13 +36,14 @@ pub fn commit_new_prefab(
     // Create a serialized entity
     if let Some(serialized_entity) = SerializedEntity::new(
         entity,
-        new_prefab,
+        SerializationId::new(),
         component_database,
         singleton_database,
         resources,
     ) {
-        let prefab = Prefab::new(serialized_entity);
-        let prefab_id = prefab.root_id();
+        let prefab = Prefab::new(serialized_entity, new_prefab);
+        let prefab_id = *prefab.prefab_id();
+        let our_id = *prefab.root_id();
 
         // We can do this because we know no one else shares our prefab,
         // and we're sorting out fixing our own overrides below.
@@ -49,7 +52,7 @@ pub fn commit_new_prefab(
         // Add our Prefab Marker back to the Original entity we made into a prefab...
         component_database.prefab_markers.set_component(
             entity,
-            PrefabMarker::new(prefab_id, prefab_id),
+            PrefabMarker::new(prefab_id, our_id, None),
             scene_graph,
         );
 
@@ -68,6 +71,7 @@ pub fn commit_new_prefab(
     Ok(())
 }
 
+/// This creates an entity from a prefab into a Scene.
 pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab_map: &PrefabMap) -> Entity {
     // Make an entity
     let entity = ecs.create_entity();
@@ -75,6 +79,7 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
     // Instantiate the Prefab
     let success = ecs.component_database.load_serialized_prefab(
         &entity,
+        &None,
         prefab_map.get(&prefab_id).cloned(),
         &mut ecs.scene_graph,
         &mut ecs.entity_allocator,
@@ -106,7 +111,7 @@ pub fn serialize_and_cache_prefab(prefab: Prefab, resources: &mut ResourcesDatab
         error!("Error Creating Prefab: {}", e);
     }
 
-    let prefab_id = prefab.root_id();
+    let prefab_id = *prefab.prefab_id();
 
     match serialization_util::prefabs::cycle_prefab(prefab) {
         Ok(prefab) => {

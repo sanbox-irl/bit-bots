@@ -1,7 +1,6 @@
 use super::{scene_graph::*, *};
 use anyhow::Error;
 use std::collections::HashMap;
-use uuid::Uuid;
 
 #[derive(Default)]
 pub struct ComponentDatabase {
@@ -318,13 +317,16 @@ impl ComponentDatabase {
     ) -> Option<PostDeserializationRequired> {
         if let Some(mut prefab) = prefab_maybe {
             // Load in the Top Level
-            if let Some(se) = prefab.members.remove(prefab.root_id()) {
+            let prefab_main_entity_id = *prefab.root_id();
+            let prefab_id = *prefab.prefab_id();
+
+            if let Some(se) = prefab.members.remove(&prefab_main_entity_id) {
                 let _ =
                     self.load_serialized_entity_into_database(main_entity_id, se, scene_graph, marker_map);
 
                 self.prefab_markers.set_component(
                     &main_entity_id,
-                    PrefabMarker::new(*prefab.prefab_id(), se.id, child_map.clone()),
+                    PrefabMarker::new(prefab_id, prefab_main_entity_id, child_map.clone()),
                     scene_graph,
                 );
             } else {
@@ -338,7 +340,7 @@ impl ComponentDatabase {
             // Load in the Children
             serialized_graph.walk_tree_generically(|s_node| {
                 // A bit crude
-                if s_node.inner() == prefab.root_id() {
+                if *s_node.inner() == prefab_main_entity_id {
                     return;
                 }
 
@@ -361,11 +363,9 @@ impl ComponentDatabase {
                             s_node.parent().and_then(|serialized_node_id| {
                                 // Probably never None -- indicates graph issue
                                 serialized_graph.get(serialized_node_id).and_then(|parent_snode| {
-                                    // This won't work right there, because our Serialization is unrelated
-                                    // to the node in the real world!
-                                    compile_error!("Guah!");
-                                    scene_graph_system::find_transform_from_serialized_node(
-                                        self,
+                                    scene_graph_system::find_transform_from_prefab_node(
+                                        &mut self.transforms,
+                                        &self.prefab_markers,
                                         &parent_snode,
                                     )
                                     .and_then(|parent_transform| {
@@ -385,16 +385,19 @@ impl ComponentDatabase {
                         }
 
                         // Set our Prefab
-                        let prefab_marker = self.prefab_markers.set_component(
+                        self.prefab_markers.set_component(
                             &new_id,
-                            PrefabMarker::new(*prefab.prefab_id(), serialized_id, None),
+                            PrefabMarker::new(prefab_id, serialized_id, None),
                             scene_graph,
                         );
 
                         // Set our Serialization Marker here...
-                        let our_id = child_map
-                            .and_then(|child_map| child_map.get(s_node.inner()).cloned())
-                            .unwrap_or_else(|| SerializationId::new());
+                        let our_id = if let Some(child_map) = child_map {
+                            child_map.get(s_node.inner()).cloned()
+                        } else {
+                            None
+                        }
+                        .unwrap_or_else(|| SerializationId::new());
 
                         self.serialization_markers.set_component(
                             &new_id,

@@ -4,7 +4,6 @@ use super::{
 };
 use imgui::*;
 use std::time::{Duration, Instant};
-use uuid::Uuid;
 
 #[derive(Debug, Serialize, ComponentPostDeserialization, Deserialize, PartialEq, typename::TypeName)]
 pub struct SerializationMarker {
@@ -140,7 +139,7 @@ impl SerializationMarker {
 impl Default for SerializationMarker {
     fn default() -> Self {
         Self {
-            id: SerializationId(Uuid::new_v4()),
+            id: SerializationId::new(),
             cache: Default::default(),
         }
     }
