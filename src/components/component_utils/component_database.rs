@@ -315,38 +315,17 @@ impl ComponentDatabase {
         marker_map: &mut AssociatedEntityMap,
     ) -> Option<PostDeserializationRequired> {
         if let Some(mut prefab) = prefab_maybe {
-            // Load the Main
-            let post_marker = self.load_serialized_entity_into_database(
-                entity_to_load_into,
-                prefab.members.remove(&prefab.root_id()).unwrap(),
-                scene_graph,
-                marker_map,
-            );
-
-            let prefab_id = prefab.root_id();
-
-            self.prefab_markers.set_component(
-                entity_to_load_into,
-                PrefabMarker::new(prefab_id, prefab_id),
-                scene_graph,
-            );
-
             let members = &mut prefab.members;
             let serialized_graph = &prefab.serialized_graph;
 
             serialized_graph.walk_tree_generically(|s_node| {
-                // Don't handle the Root. Is this elegant? Nope!
-                if s_node.inner() == &prefab_id {
-                    return;
-                }
                 match members.remove(s_node.inner()) {
                     Some(serialized_entity) => {
                         let new_id = Ecs::create_entity_raw(self, entity_allocator, entities);
 
                         // Load in the Prefab Bebe.
                         // Note: Right here is where we'll need to figure out how to support
-                        // nested prefabs in the future. We essentially need to call `load_serialized_entity`,
-                        // which should probably just...work!
+                        // nested prefabs in the future.
                         let _ = self.load_serialized_entity_into_database(
                             &new_id,
                             serialized_entity,
@@ -354,25 +333,37 @@ impl ComponentDatabase {
                             marker_map,
                         );
 
-                        // Load in our Prefab Parent Transform. We know they will have one because
-                        // they have us, their child!
-                        let parent_id = {
-                            let p_uuid = serialized_graph.get(s_node.parent().unwrap()).unwrap();
-                            let pt = scene_graph_system::find_transform_from_serialized_node(self, &p_uuid)
-                                .unwrap();
-                            pt.inner().scene_graph_node_id().unwrap()
+                        // Load in our Prefab Parent NodeID.
+                        let parent_id: Option<NodeId> = {
+                            // None when Root Entity
+                            s_node.parent().and_then(|serialized_node_id| {
+                                // Probably never None -- indicates graph issue
+                                serialized_graph.get(serialized_node_id).and_then(|parent_snode| {
+                                    scene_graph_system::find_transform_from_serialized_node(
+                                        self,
+                                        &parent_snode,
+                                    )
+                                    .and_then(|parent_transform| {
+                                        parent_transform.inner().scene_graph_node_id()
+                                    })
+                                })
+                            })
                         };
 
-                        // And then add it all in!
-                        if let Some(transform_c) = self.transforms.get_mut(&new_id) {
-                            if let Some(node_id) = transform_c.inner().scene_graph_node_id() {
-                                parent_id.append(node_id, scene_graph);
+                        // Did we find a PrefabParentNodeID?
+                        if let Some(parent_id) = parent_id {
+                            // Assuming *we* have a transform...
+                            if let Some(transform) = self.transforms.get_mut(&new_id) {
+                                if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
+                                    parent_id.append(node_id, scene_graph);
+                                }
                             }
                         }
 
+                        // Set our Prefab
                         self.prefab_markers.set_component(
                             &new_id,
-                            PrefabMarker::new(prefab_id, *s_node.inner()),
+                            PrefabMarker::new(prefab.prefab_id(), *s_node.inner()),
                             scene_graph,
                         );
                     }
@@ -398,7 +389,7 @@ impl ComponentDatabase {
                 }
             }
 
-            Some(post_marker)
+            Some(PostDeserializationRequired)
         } else {
             error!(
                 "Prefab does not exist, but we tried to load it into entity {}. We cannot complete this operation.",

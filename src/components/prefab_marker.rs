@@ -1,4 +1,5 @@
 use super::{imgui_component_utils::InspectorParameters, ComponentBounds, PrefabId, SerializationId};
+use std::collections::HashMap;
 
 #[derive(
     Debug,
@@ -11,16 +12,20 @@ use super::{imgui_component_utils::InspectorParameters, ComponentBounds, PrefabI
     PartialEq,
     Eq,
     typename::TypeName,
-    Hash,
 )]
 pub struct PrefabMarker {
     main_id: PrefabId,
     sub_id: SerializationId,
+    child_list: Option<HashMap<SerializationId, SerializationId>>,
 }
 
 impl PrefabMarker {
     pub fn new(main_id: PrefabId, sub_id: SerializationId) -> Self {
-        Self { main_id, sub_id }
+        Self {
+            main_id,
+            sub_id,
+            child_list: None,
+        }
     }
 
     pub fn main_id(&self) -> PrefabId {
