@@ -75,6 +75,7 @@ impl super::ComponentPostDeserialization for Follow {
         &mut self,
         _: super::Entity,
         serialization_markers: &super::ComponentList<super::SerializationMarker>,
+        _: &super::scene_graph::SceneGraph,
     ) {
         self.target.serialized_refs_to_entity_id(serialization_markers);
     }

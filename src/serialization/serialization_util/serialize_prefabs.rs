@@ -42,7 +42,7 @@ pub fn load_prefab(prefab_id: &PrefabId) -> Result<Option<Prefab>, Error> {
     Ok(prefab
         .map_err(|e| error!("Error loading Prefab File: {}", e))
         .map(|ok| {
-            assert_eq!(ok.prefab_id(), prefab_id);
+            assert_eq!(ok.prefab_id(), *prefab_id);
             ok
         })
         .ok())
@@ -54,7 +54,7 @@ pub fn load_all_prefabs() -> AnyResult<PrefabMap> {
     for path in glob::glob(&PREFAB_GLOB)? {
         let path = path?;
         let prefab: Prefab = load_serialized_file(path.to_str().unwrap())?;
-        ret.insert(*prefab.prefab_id(), prefab);
+        ret.insert(prefab.prefab_id(), prefab);
     }
 
     Ok(ret)

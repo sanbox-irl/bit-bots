@@ -314,12 +314,12 @@ pub fn entity_inspector(
                             delta,
                             uuid,
                             &mut singleton_database.associated_entities,
-                            &mut ecs.scene_graph,
+                            scene_graph,
                         );
 
                         component_database.post_deserialization(post_deserialization, |component_list, sl| {
                             if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                                inner.post_deserialization(entity, sl);
+                                inner.post_deserialization(entity, sl, scene_graph);
                             }
                         })
                     }
@@ -344,7 +344,7 @@ pub fn entity_inspector(
                             (serde_yaml::from_value(member_yaml)?, diff)
                         };
 
-                        let prefab_id = *prefab.prefab_id();
+                        let prefab_id = prefab.prefab_id();
                         let member_id = new_member.id;
 
                         // Add in our Member and Cache the Prefab

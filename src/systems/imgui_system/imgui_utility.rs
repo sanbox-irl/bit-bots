@@ -314,7 +314,7 @@ pub fn select_prefab_entity(
             };
 
             if ui.button(&name_imstr, [0.0, 0.0]) {
-                ret = Some(Some(*prefab.prefab_id()));
+                ret = Some(Some(prefab.prefab_id()));
                 close_popup = true;
             }
         }

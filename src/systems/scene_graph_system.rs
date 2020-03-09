@@ -58,7 +58,7 @@ pub fn create_serialized_graph(
         f: &mut impl FnMut(&Entity, Option<SerializedNodeId>) -> Option<SerializedNodeId>,
     ) {
         let our_entity: &Entity = node.inner();
-        let our_id = f(our_entity, parent);
+        let our_id: Option<SerializedNodeId> = f(our_entity, parent);
 
         for child in node.children(scene_graph) {
             walk_serialized_graph(child, scene_graph, our_id, f);
@@ -85,7 +85,7 @@ pub fn create_serialized_graph(
     serialized_scene_graph
 }
 
-/// Walks the SceneGraph, giving supporting information. This is for the ImGui
+/// Walks the SceneGraph, giving supporting information. This is for the ImGui primarily.
 pub fn walk_tree_generically<T>(scene_graph: &SceneGraph, mut f: T)
 where
     T: FnMut(&Entity, usize, bool) -> bool,

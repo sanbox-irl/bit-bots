@@ -16,22 +16,11 @@ pub struct Prefab {
 }
 
 impl Prefab {
-    /// Creates a new Prefab with only a single member, which will
-    /// also be the RootEntity. The PrefabId can be supplied (to write over
-    /// another prefab) or it can just be given a randomly made one.
-    pub fn new(root_entity: SerializedEntity, prefab_id: PrefabId) -> Prefab {
-        let root_serialized_id = root_entity.id;
-        let members = maplit::hashmap! {
-            root_serialized_id => root_entity
-        };
-
-        let mut serialized_graph = SerializedSceneGraph::new();
-        serialized_graph.instantiate_node(root_serialized_id);
-
+    pub fn new(members: SerializedHashMap, serialized_graph: SerializedSceneGraph, prefab_id: PrefabId) -> Prefab {
         Prefab {
-            prefab_id,
             members,
             serialized_graph,
+            prefab_id,
             valid: true,
         }
     }
@@ -54,21 +43,20 @@ impl Prefab {
         }
     }
 
-    pub fn prefab_id(&self) -> &PrefabId {
-        &self.prefab_id
+    pub fn prefab_id(&self) -> PrefabId {
+        self.prefab_id
     }
 
-    pub fn root_id(&self) -> &SerializationId {
-        self.serialized_graph.iter_roots().nth(0).unwrap().inner()
+    pub fn root_id(&self) -> SerializationId {
+        *self.serialized_graph.iter_roots().nth(0).unwrap().inner()
     }
 
     pub fn root_entity(&self) -> &SerializedEntity {
-        println!("Members are {:#?}", self.members);
-        &self.members.get(self.root_id()).unwrap()
+        &self.members.get(&self.root_id()).unwrap()
     }
 
     pub fn root_entity_mut(&mut self) -> &mut SerializedEntity {
-        let root_id = *self.root_id();
+        let root_id = self.root_id();
         self.members.get_mut(&root_id).unwrap()
     }
 

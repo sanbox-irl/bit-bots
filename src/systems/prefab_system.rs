@@ -1,16 +1,18 @@
 use super::{
-    scene_graph::SceneGraph, serialization_util, Component, ComponentDatabase, Ecs, Entity, Prefab,
-    PrefabId, PrefabLoadRequired, PrefabMap, PrefabMarker, ResourcesDatabase, SerializationId,
-    SerializedComponent, SerializedEntity, SingletonDatabase,
+    scene_graph::{NodeId, SceneGraph, SerializedNodeId, SerializedSceneGraph},
+    serialization_util, Component, ComponentDatabase, Ecs, Entity, Prefab, PrefabId, PrefabLoadRequired,
+    PrefabMap, PrefabMarker, ResourcesDatabase, SerializationId, SerializedComponent, SerializedEntity,
+    SingletonDatabase,
 };
 use anyhow::{Context, Result};
 use serde_yaml::Value as YamlValue;
+use std::collections::HashMap;
 
 pub fn commit_blank_prefab(resources: &mut ResourcesDatabase) -> Result<PrefabId> {
     let blank_prefab = Prefab::new_blank();
 
     serialization_util::prefabs::serialize_prefab(&blank_prefab)?;
-    let id = *blank_prefab.prefab_id();
+    let id = blank_prefab.prefab_id();
     resources.add_prefab(blank_prefab);
 
     Ok(id)
@@ -26,40 +28,170 @@ pub fn commit_new_prefab(
     scene_graph: &mut SceneGraph,
     resources: &mut ResourcesDatabase,
 ) -> Result<()> {
-    // Create a serialized entity
+    let root_member_id = SerializationId::new();
+
+    // Create our Root Entity...
     if let Some(serialized_entity) = SerializedEntity::new(
         entity,
-        SerializationId::new(),
+        root_member_id,
         component_database,
         singleton_database,
         resources,
     ) {
-        let prefab = Prefab::new(serialized_entity, PrefabId::new());
-        let prefab_id = *prefab.prefab_id();
-        let our_id = *prefab.root_id();
+        let mut members = HashMap::new();
+        let mut serialized_graph = SerializedSceneGraph::new();
+        let prefab_id = PrefabId::new();
+        let root_serialized_graph_id = serialized_graph.instantiate_node(root_member_id);
+
+        fn commit_entity_to_prefab(
+            entity_id: &Entity,
+            serialized_entity: SerializedEntity,
+            prefab_id: PrefabId,
+            member_id: SerializationId,
+            prefab_members: &mut HashMap<SerializationId, SerializedEntity>,
+            child_map: Option<HashMap<SerializationId, SerializationId>>,
+            resources: &ResourcesDatabase,
+            singleton_database: &SingletonDatabase,
+            scene_graph: &mut SceneGraph,
+            component_database: &mut ComponentDatabase,
+        ) {
+            prefab_members.insert(member_id, serialized_entity);
+
+            // Have the Main Entity gets its markers!
+            component_database.prefab_markers.set_component(
+                entity_id,
+                PrefabMarker::new(prefab_id, member_id, child_map),
+                scene_graph,
+            );
+
+            if let Some(sc) = component_database.serialization_markers.get(entity_id) {
+                serialization_util::entities::serialize_entity_full(
+                    entity_id,
+                    sc.inner().id,
+                    component_database,
+                    singleton_database,
+                    resources,
+                );
+            }
+        }
+
+        // Load children into the Prefab...
+        if let Some(scene_graph_id) = component_database
+            .transforms
+            .get(entity)
+            .and_then(|tc| tc.inner().scene_graph_node_id())
+        {
+            fn create_prefab_serialization(
+                node_id: NodeId,
+                parent_id: SerializedNodeId,
+                prefab_id: PrefabId,
+                serialized_graph: &mut SerializedSceneGraph,
+                prefab_members: &mut HashMap<SerializationId, SerializedEntity>,
+                child_map: &mut HashMap<SerializationId, SerializationId>,
+                component_database: &mut ComponentDatabase,
+                singleton_database: &SingletonDatabase,
+                scene_graph: &SceneGraph,
+                raw_scene_graph_handle: *mut SceneGraph,
+                resources: &ResourcesDatabase,
+            ) {
+                for child in node_id.children(scene_graph) {
+                    let child: super::scene_graph::NodeId = child;
+                    if let Some(node) = scene_graph.get(child) {
+                        let entity = node.inner();
+                        let member_id = SerializationId::new();
+
+                        // Fun Scene Graph stuff!
+                        let serialized_node = serialized_graph.instantiate_node(member_id);
+                        parent_id.append(serialized_node, serialized_graph);
+
+                        if let Some(serialized_entity) = SerializedEntity::new(
+                            entity,
+                            member_id,
+                            component_database,
+                            singleton_database,
+                            resources,
+                        ) {
+                            if let Some(our_serialized_id) = component_database
+                                .serialization_markers
+                                .get(entity)
+                                .map(|sc| sc.inner().id)
+                            {
+                                child_map.insert(member_id, our_serialized_id);
+                            }
+
+                            commit_entity_to_prefab(
+                                entity,
+                                serialized_entity,
+                                prefab_id,
+                                member_id,
+                                prefab_members,
+                                None,
+                                resources,
+                                singleton_database,
+                                unsafe { &mut *raw_scene_graph_handle },
+                                component_database,
+                            );
+
+                            create_prefab_serialization(
+                                child,
+                                serialized_node,
+                                prefab_id,
+                                serialized_graph,
+                                prefab_members,
+                                child_map,
+                                component_database,
+                                singleton_database,
+                                scene_graph,
+                                raw_scene_graph_handle,
+                                resources,
+                            );
+                        } else {
+                            error!("We couldn't make our Root Entity a SerializedEntity! Normally that means Prefab Corruption.");
+                        }
+                    }
+                }
+            }
+            // We know this unsafeness is sound because `PrefabMarker`
+            // does not alter the scene graph at all.
+            let raw_scene_graph_handle: *mut SceneGraph = scene_graph;
+            let mut child_map = HashMap::new();
+
+            create_prefab_serialization(
+                scene_graph_id,
+                root_serialized_graph_id,
+                prefab_id,
+                &mut serialized_graph,
+                &mut members,
+                &mut child_map,
+                component_database,
+                singleton_database,
+                scene_graph,
+                raw_scene_graph_handle,
+                resources,
+            );
+
+            // Commit the Parent to the Prefab
+            commit_entity_to_prefab(
+                entity,
+                serialized_entity,
+                prefab_id,
+                root_member_id,
+                &mut members,
+                Some(child_map),
+                resources,
+                singleton_database,
+                scene_graph,
+                component_database,
+            );
+        }
+
+        let prefab = Prefab::new(members, serialized_graph, PrefabId::new());
 
         // We can do this because we know no one else shares our prefab,
         // and we're sorting out fixing our own overrides below.
         let _ = serialize_and_cache_prefab(prefab, resources);
-
-        // Add our Prefab Marker back to the Original entity we made into a prefab...
-        component_database.prefab_markers.set_component(
-            entity,
-            PrefabMarker::new(prefab_id, our_id, None),
-            scene_graph,
-        );
-
-        // And if it's serialized, let's cycle our Serialization too!
-        // We do this to remove the "Overrides" that would otherwise appear
-        if let Some(sc) = component_database.serialization_markers.get(entity) {
-            serialization_util::entities::serialize_entity_full(
-                entity,
-                sc.inner().id,
-                component_database,
-                singleton_database,
-                resources,
-            );
-        }
+    } else {
+        error!("We couldn't make our Root Entity a SerializedEntity! Normally that means Prefab Corruption.");
     }
     Ok(())
 }
@@ -81,10 +213,11 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
     );
 
     if let Some(post) = success {
+        let scene_graph = &ecs.scene_graph;
         ecs.component_database
             .post_deserialization(post, |component_list, sl| {
                 if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                    inner.post_deserialization(entity, sl);
+                    inner.post_deserialization(entity, sl, scene_graph);
                 }
             });
     } else {
@@ -96,9 +229,9 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
     entity
 }
 
-/// Serializes and caches a prefab, but it doesn't perform anything more complicated
-/// than that. Use the returned `PrefabLoadRequired` with `post_prefab_serialization`
-/// to finish the operation up.
+/// Serializes and caches a prefab, cycling it through the Serde. This is done because data made from Live
+/// Data might not be in the state that we'd expect it to be in if we store it live. Live -> Live Storage -> Live
+/// is bad. We need a stop in Serde town!
 pub fn serialize_and_cache_prefab(prefab: Prefab, resources: &mut ResourcesDatabase) -> PrefabLoadRequired {
     if let Err(e) = serialization_util::prefabs::serialize_prefab(&prefab) {
         error!("Error Creating Prefab: {}", e);
@@ -162,11 +295,13 @@ pub fn update_prefab_inheritor_component(
     }
 
     if let Some(pd) = post_deserialization {
+        let scene_graph = &ecs.scene_graph;
+
         ecs.component_database
             .post_deserialization(pd, |component_list, sl| {
                 for (entity, _) in entities_to_post_deserialize.iter_mut() {
                     if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                        inner.post_deserialization(*entity, sl);
+                        inner.post_deserialization(*entity, sl, scene_graph);
                     }
                 }
             });

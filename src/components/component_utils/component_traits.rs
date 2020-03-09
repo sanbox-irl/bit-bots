@@ -24,7 +24,7 @@ pub trait ComponentBounds {
 
 pub trait ComponentPostDeserialization {
     #[inline]
-    fn post_deserialization(&mut self, _: Entity, _: &ComponentList<SerializationMarker>) {}
+    fn post_deserialization(&mut self, _: Entity, _: &ComponentList<SerializationMarker>, _: &SceneGraph) {}
 }
 
 pub trait SerializableComponent:
@@ -76,7 +76,11 @@ pub trait ComponentListBounds {
         serialization_markers: &ComponentList<super::SerializationMarker>,
     );
 
-    fn post_deserialization(&mut self, entity_names: &ComponentList<SerializationMarker>);
+    fn post_deserialization(
+        &mut self,
+        entity_names: &ComponentList<SerializationMarker>,
+        scene_graph: &SceneGraph,
+    );
 
     // This gets the sync status of a given Entity, provided, optionally, two serialized entities.
     // In the most general sense, the returned SyncStatus
@@ -196,10 +200,16 @@ where
         }
     }
 
-    fn post_deserialization(&mut self, entity_serde: &ComponentList<SerializationMarker>) {
+    fn post_deserialization(
+        &mut self,
+        entity_serde: &ComponentList<SerializationMarker>,
+        scene_graph: &SceneGraph,
+    ) {
         for this_one in self.iter_mut() {
             let id = this_one.entity_id();
-            this_one.inner_mut().post_deserialization(id, entity_serde);
+            this_one
+                .inner_mut()
+                .post_deserialization(id, entity_serde, scene_graph);
         }
     }
 

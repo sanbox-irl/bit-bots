@@ -133,7 +133,7 @@ impl ComponentDatabase {
         component_database.post_deserialization(
             PostDeserializationRequired,
             |component_list, serialization_markers| {
-                component_list.post_deserialization(serialization_markers);
+                component_list.post_deserialization(serialization_markers, scene_graph);
             },
         );
 
@@ -315,8 +315,8 @@ impl ComponentDatabase {
     ) -> Option<PostDeserializationRequired> {
         if let Some(mut prefab) = prefab_maybe {
             // Load in the Top Level
-            let prefab_main_entity_id = *prefab.root_id();
-            let prefab_id = *prefab.prefab_id();
+            let prefab_main_entity_id = prefab.root_id();
+            let prefab_id = prefab.prefab_id();
 
             if let Some(se) = prefab.members.remove(&prefab_main_entity_id) {
                 let _ =
@@ -324,13 +324,15 @@ impl ComponentDatabase {
 
                 self.prefab_markers.set_component(
                     &main_entity_id,
-                    PrefabMarker::new(prefab_id, prefab_main_entity_id, child_map.clone()),
+                    PrefabMarker::new(prefab_id, prefab_main_entity_id, None),
                     scene_graph,
                 );
             } else {
                 error!("We couldn't find our main entity in our Prefab. That's weird!");
                 return None;
             }
+
+            let mut new_child_map = child_map.clone().unwrap_or_default();
 
             let members = &mut prefab.members;
             let serialized_graph = &prefab.serialized_graph;
@@ -390,16 +392,13 @@ impl ComponentDatabase {
                         );
 
                         // Set our Serialization Marker here...
-                        let our_id = if let Some(child_map) = child_map {
-                            child_map.get(s_node.inner()).cloned()
-                        } else {
-                            None
-                        }
-                        .unwrap_or_else(|| SerializationId::new());
-
                         self.serialization_markers.set_component(
                             &new_id,
-                            SerializationMarker::with_id(our_id),
+                            SerializationMarker::with_id(
+                                *new_child_map
+                                    .entry(*s_node.inner())
+                                    .or_insert(SerializationId::new()),
+                            ),
                             scene_graph,
                         );
                     }
@@ -413,6 +412,37 @@ impl ComponentDatabase {
                     }
                 }
             });
+
+            // Update our Serialized Baby Boy
+            if new_child_map.is_empty() == false {
+                if new_child_map != child_map.clone().unwrap_or_default() {
+                    let prefab_marker = self.prefab_markers.get_mut(&main_entity_id).unwrap().inner_mut();
+                    prefab_marker.set_child_map(Some(new_child_map));
+
+                    let serialization_id = self.serialization_markers.get(main_entity_id).unwrap().inner().id;
+
+                    match serialization_util::entities::load_entity_by_id(&serialization_id) {
+                        Ok(se) => {
+                            let mut se_yaml = serde_yaml::to_value(se).unwrap();
+                            se_yaml.as_mapping_mut().unwrap().insert(
+                                PrefabMarker::SERIALIZATION_NAME.clone(),
+                                serde_yaml::to_value(prefab_marker.clone()).unwrap(),
+                            );
+
+                            let se = serde_yaml::from_value(se_yaml).unwrap();
+                            if let Err(e) =
+                                serialization_util::entities::commit_entity_to_serialized_scene(se)
+                            {
+                                error!("Couldn't save Prefab ChildMap! {}", e);
+                            }
+                        }
+                        Err(e) => {
+                            error!("We couldn't reload our Prefab to fix its ChildMap. Prefab Inheritors are going to get weird!");
+                            error!("{}", e);
+                        }
+                    }
+                }
+            }
 
             #[cfg(debug_assertions)]
             {

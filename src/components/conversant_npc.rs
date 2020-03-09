@@ -82,6 +82,7 @@ impl ComponentPostDeserialization for ConversantNPC {
         &mut self,
         _: super::Entity,
         serialization_markers: &super::ComponentList<super::SerializationMarker>,
+        _: &super::scene_graph::SceneGraph,
     ) {
         self.conversation_partner
             .serialized_refs_to_entity_id(serialization_markers);

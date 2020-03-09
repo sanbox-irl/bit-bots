@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 #[derive(
     Debug,
-    SerializableComponent,
     ComponentPostDeserialization,
+    SerializableComponent,
     Default,
     Clone,
     Serialize,
