@@ -41,8 +41,6 @@ impl ComponentDatabase {
             }
         }
 
-        println!("Prefabs are {:#?}", prefabs);
-
         let mut saved_entities = serialization_util::entities::load_all_entities()?;
         let serialized_scene_graph = serialization_util::serialized_scene_graph::load_scene_graph()?;
         let mut component_database = ComponentDatabase::default();
@@ -419,11 +417,12 @@ impl ComponentDatabase {
             #[cfg(debug_assertions)]
             {
                 // Check here that all the Members within the Prefab were placed into the Scene!
-                if prefab.members.is_empty() {
+                if prefab.members.is_empty() == false {
                     error!(
                         "Not all members of Prefab {prefab_name} were assigned into the Scene! Prefab {prefab_name} does not make a true Scene Graph!",
-                        prefab_name = Name::get_name_even_quicklier(prefab.root_entity().name.as_ref().map(|sc| sc.inner.name.as_str()), prefab.root_id()),
-                    )
+                        prefab_name = prefab_id,
+                    );
+                    error!("The following were outside the Graph: {:#?}", prefab.members);
                 }
             }
 
@@ -568,82 +567,3 @@ bitflags! {
         const SERIALIZATION         =   0b0000_0100;
     }
 }
-
-// fn do_thing(
-//     entity_allocator: &mut EntityAllocator,
-//     entities: &mut Vec<Entity>,
-//     marker_map: &mut AssociatedEntityMap,
-//     prefabs: &PrefabMap,
-//     scene_graph: &mut SceneGraph,
-//     mut component_database: ComponentDatabase,
-//     serialized_scene_graph: SerializedSceneGraph,
-//     mut saved_entities: std::collections::HashMap<Uuid, SerializedEntity>,
-// ) {
-//     serialized_scene_graph.walk_tree_generically(|s_node| {
-//         match saved_entities.remove(s_node.inner()) {
-//             Some(serialized_entity) => {
-//                 let new_id = Ecs::create_entity_raw(&mut component_database, entity_allocator, entities);
-
-//                 // Load the SE. Note: if it's in the SceneGraph, then it'll almost certainly have a transform
-//                 let _ = component_database.load_serialized_entity(
-//                     &new_id,
-//                     serialized_entity,
-//                     scene_graph,
-//                     entity_allocator,
-//                     entities,
-//                     marker_map,
-//                     prefabs,
-//                 );
-
-//                 // Load in our Prefab Parent NodeID.
-//                 let parent_id: Option<NodeId> = {
-//                     s_node.parent().and_then(|s_node_id| {
-//                         serialized_scene_graph.get(s_node_id).and_then(|parent_uuid| {
-//                             scene_graph_system::find_transform_from_serialized_node(
-//                                 &mut component_database,
-//                                 &parent_uuid,
-//                             )
-//                             .and_then(|parent_transform| parent_transform.inner().scene_graph_node_id())
-//                         })
-//                     })
-//                 };
-
-//                 // Did we find a PrefabParentNodeID?
-//                 if let Some(parent_id) = parent_id {
-//                     // Assuming *we* have a transform...
-//                     if let Some(transform) = component_database.transforms.get_mut(&new_id) {
-//                         if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
-//                             parent_id.append(node_id, scene_graph);
-//                         }
-//                     }
-//                 }
-//             }
-
-//             None => {
-//                 error!(
-//                     "Our SceneGraph for {} had a child {} but we couldn't find it in the EntityList?",
-//                     scene_system::current_scene_name(),
-//                     s_node.inner()
-//                 );
-//             }
-//         }
-//     });
-
-//     #[cfg(debug_assertions)]
-//     {
-//         if serialized_scene_graph.iter().all(|s_node| {
-//             let id = s_node.inner();
-
-//             component_database
-//                 .serialization_markers
-//                 .iter()
-//                 .any(|smc| smc.inner().id == *id)
-//         }) == false
-//         {
-//             error!(
-//                 "Not all members of the SerializedGraph for {} have been placed into the scene.",
-//                 scene_system::current_scene_name()
-//             )
-//         }
-//     }
-// }

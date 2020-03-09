@@ -63,6 +63,7 @@ impl Prefab {
     }
 
     pub fn root_entity(&self) -> &SerializedEntity {
+        println!("Members are {:#?}", self.members);
         &self.members.get(self.root_id()).unwrap()
     }
 

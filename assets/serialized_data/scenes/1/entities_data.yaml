@@ -1,86 +1,8 @@
 ---
-8fa043e3-40f6-4a5f-a7d9-bd758d76c169:
+157ed152-44a1-4de7-9b70-285634873099:
   name:
     inner:
-      name: My Test
-    active: true
-  player: ~
-  transform: ~
-  scene_switcher: ~
-  velocity: ~
-  sprite:
-    inner:
-      sprite_name: PixelMainCharacterStanding
-      running_data:
-        draw_order:
-          draw_layer: Instance
-          order: 0
-        facing_horizontal: Right
-        facing_vertical: Up
-        scale:
-          x: 1.0
-          y: 1.0
-        tint:
-          r: 1.0
-          g: 1.0
-          b: 1.0
-          a: 1.0
-        current_frame: 0
-        frame_time: 0.0
-        is_animating: false
-    active: true
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: 8fa043e3-40f6-4a5f-a7d9-bd758d76c169
-  marker: ~
-663324cd-e452-41d5-8f56-884b57f04627:
-  name:
-    inner:
-      name: "MyChild Jim, It's my Boy"
-    active: true
-  player: ~
-  transform: ~
-  scene_switcher: ~
-  velocity: ~
-  sprite:
-    inner:
-      sprite_name: Fire
-      running_data:
-        draw_order:
-          draw_layer: Instance
-          order: 0
-        facing_horizontal: Right
-        facing_vertical: Up
-        scale:
-          x: 1.0
-          y: 1.0
-        tint:
-          r: 1.0
-          g: 1.0
-          b: 1.0
-          a: 1.0
-        current_frame: 0
-        frame_time: 0.0
-        is_animating: false
-    active: true
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: 663324cd-e452-41d5-8f56-884b57f04627
-  marker: ~
-87adb3bf-acd3-4ecd-87f7-bf182a9f62cc:
-  name:
-    inner:
-      name: Background
+      name: P1
     active: true
   player: ~
   transform:
@@ -89,40 +11,22 @@
         x: 0.0
         y: 0.0
       world_position:
-        x: 0.0
+        x: 10.0
         y: 0.0
     active: true
   scene_switcher: ~
   velocity: ~
   sprite: ~
   sound_source: ~
-  draw_rectangle:
-    inner:
-      rect:
-        min:
-          x: -100.0
-          y: -100.0
-        max:
-          x: 100.0
-          y: 100.0
-      draw_order:
-        draw_layer: Background
-        order: 0
-      tint:
-        r: 1.0
-        g: 1.0
-        b: 1.0
-        a: 1.0
-      bind_to_bounding_box: false
-    active: true
+  draw_rectangle: ~
   bounding_box: ~
   text_source: ~
   follow: ~
   conversant_npc: ~
   prefab_marker: ~
-  id: 87adb3bf-acd3-4ecd-87f7-bf182a9f62cc
+  id: 157ed152-44a1-4de7-9b70-285634873099
   marker: ~
-654072eb-8af8-4a84-afd3-2de5656ea58d:
+a8f9dceb-8d6f-4193-9681-05426ba1b051:
   name: ~
   player: ~
   transform: ~
@@ -137,8 +41,36 @@
   conversant_npc: ~
   prefab_marker:
     inner:
-      main_id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
-      sub_id: 58c9f8c9-d709-4da6-b3fd-ca1f41bb2bbd
+      prefab_id: 23a4a81f-b8e0-44cf-9696-6c4f336576bf
+      member_id: 10f58408-e5a3-4f54-94de-8a18c110d79c
+      child_map: ~
     active: true
-  id: 654072eb-8af8-4a84-afd3-2de5656ea58d
+  id: a8f9dceb-8d6f-4193-9681-05426ba1b051
+  marker: ~
+160ad894-aec8-4431-b0ee-ccfadca1e5ed:
+  name:
+    inner:
+      name: P2
+    active: true
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 0.0
+        y: 0.0
+      world_position:
+        x: 10.0
+        y: 0.0
+    active: true
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 160ad894-aec8-4431-b0ee-ccfadca1e5ed
   marker: ~

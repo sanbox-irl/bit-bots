@@ -23,16 +23,16 @@ pub fn cycle_prefab(prefab: Prefab) -> Result<Prefab, Error> {
 }
 
 pub fn serialize_prefab(prefab: &Prefab) -> Result<(), Error> {
-    let path = path(&prefab.root_id().to_string());
+    let path = path(&prefab.prefab_id().to_string());
 
     save_serialized_file(&prefab, &path)
 }
 
 pub fn invalidate_prefab(prefab: &Prefab) -> AnyResult<()> {
-    let path = path(&prefab.root_id().to_string());
+    let path = path(&prefab.prefab_id().to_string());
     fs::remove_file(&path)?;
 
-    save_serialized_file(prefab, &invalid_path(&prefab.root_id().to_string()))
+    save_serialized_file(prefab, &invalid_path(&prefab.prefab_id().to_string()))
 }
 
 pub fn load_prefab(prefab_id: &PrefabId) -> Result<Option<Prefab>, Error> {

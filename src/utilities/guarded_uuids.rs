@@ -3,12 +3,18 @@ use uuid::Uuid;
 
 macro_rules! create_guarded_uuid {
     ($this_val:ident) => {
-        #[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Copy, Clone, Default)]
+        #[derive(PartialEq, Eq, Hash, Serialize, Deserialize, Copy, Clone, Default)]
         pub struct $this_val(Uuid);
 
         impl fmt::Display for $this_val {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(f, "{}", self.0)
+            }
+        }
+
+        impl fmt::Debug for $this_val {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{} -- {}", stringify!($this_val), self.0)
             }
         }
 

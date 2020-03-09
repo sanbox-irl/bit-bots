@@ -1,0 +1,40 @@
+---
+prefab_id: 23a4a81f-b8e0-44cf-9696-6c4f336576bf
+valid: true
+members:
+  10f58408-e5a3-4f54-94de-8a18c110d79c:
+    name:
+      inner:
+        name: P
+      active: true
+    player: ~
+    transform:
+      inner:
+        local_position:
+          x: 10.0
+          y: 0.0
+        world_position:
+          x: 10.0
+          y: 0.0
+      active: true
+    scene_switcher: ~
+    velocity: ~
+    sprite: ~
+    sound_source: ~
+    draw_rectangle: ~
+    bounding_box: ~
+    text_source: ~
+    follow: ~
+    conversant_npc: ~
+    prefab_marker: ~
+    id: 10f58408-e5a3-4f54-94de-8a18c110d79c
+    marker: ~
+serialized_graph:
+  nodes:
+    - parent: ~
+      first_child: ~
+      last_child: ~
+      previous_sibling: ~
+      next_sibling: ~
+      removed: false
+      data: 10f58408-e5a3-4f54-94de-8a18c110d79c

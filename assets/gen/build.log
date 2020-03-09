@@ -1,18 +1,2 @@
-2020-03-08T10:17:58.133136300-07:00 INFO build_script_build_main::shader_builder - default_frag.frag has been changed.
-2020-03-08T10:17:58.424684600-07:00 INFO build_script_build_main::shader_builder - default_vert.vert has been changed.
-2020-03-08T10:17:58.437696300-07:00 INFO build_script_build_main::shader_builder - imgui_frag.frag has been changed.
-2020-03-08T10:17:58.446696500-07:00 INFO build_script_build_main::shader_builder - imgui_vert.vert has been changed.
-2020-03-08T10:17:58.467715300-07:00 INFO build_script_build_main::sprite_packer - Background has been changed.
-2020-03-08T10:17:58.467715300-07:00 INFO build_script_build_main::sprite_packer - Grass has been changed.
-2020-03-08T10:17:58.467715300-07:00 INFO build_script_build_main::sprite_packer - Block has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - Button has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - Fire has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - Flag has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - PlayerDead has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - PushableBlock has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - Target has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - Wall has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - YellowBot has been changed.
-2020-03-08T10:17:58.468716400-07:00 INFO build_script_build_main::sprite_packer - WhitePixel has been changed.
-2020-03-08T10:17:58.469717800-07:00 INFO build_script_build_main::sprite_packer - PixelMainCharacterStanding has been changed.
-2020-03-08T10:17:58.478725400-07:00 INFO build_script_build_main::sprite_packer - Repacking sprites...
+2020-03-08T17:08:03.137178600-07:00 INFO build_script_build_main::shader_builder - No shaders were recompiled.
+2020-03-08T17:08:03.142183400-07:00 INFO build_script_build_main::sprite_packer - Sprites were not repacked.

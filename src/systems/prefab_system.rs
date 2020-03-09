@@ -1,5 +1,5 @@
 use super::{
-    scene_graph::SceneGraph, serialization_util, Component, ComponentDatabase, Ecs, Entity, Name, Prefab,
+    scene_graph::SceneGraph, serialization_util, Component, ComponentDatabase, Ecs, Entity, Prefab,
     PrefabId, PrefabLoadRequired, PrefabMap, PrefabMarker, ResourcesDatabase, SerializationId,
     SerializedComponent, SerializedEntity, SingletonDatabase,
 };
@@ -26,13 +26,6 @@ pub fn commit_new_prefab(
     scene_graph: &mut SceneGraph,
     resources: &mut ResourcesDatabase,
 ) -> Result<()> {
-    let new_prefab = commit_blank_prefab(resources).with_context(|| {
-        format!(
-            "We create a new Prefab from {}",
-            Name::get_name_quick(&component_database.names, entity)
-        )
-    })?;
-
     // Create a serialized entity
     if let Some(serialized_entity) = SerializedEntity::new(
         entity,
@@ -41,7 +34,7 @@ pub fn commit_new_prefab(
         singleton_database,
         resources,
     ) {
-        let prefab = Prefab::new(serialized_entity, new_prefab);
+        let prefab = Prefab::new(serialized_entity, PrefabId::new());
         let prefab_id = *prefab.prefab_id();
         let our_id = *prefab.root_id();
 
