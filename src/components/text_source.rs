@@ -37,6 +37,7 @@ impl ComponentBounds for TextSource {
         if ip
             .ui
             .input_text(&imgui::im_str!("Text##{}", ip.uid), &mut current_text)
+            .resize_buffer(true)
             .build()
         {
             // @techdebt figure this out!
