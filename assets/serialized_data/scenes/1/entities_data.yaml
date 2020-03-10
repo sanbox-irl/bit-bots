@@ -1,2 +1,111 @@
 ---
-{}
+b33b5ef6-b672-4256-8640-5caf6862d865:
+  name: ~
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker:
+    inner:
+      prefab_id: 13bb1e9a-a332-4371-9ac2-b7a9cf5579c8
+      member_id: 109f9be2-3139-4b93-89e4-63e056eca6d8
+      child_map: ~
+    active: true
+  id: b33b5ef6-b672-4256-8640-5caf6862d865
+  marker: ~
+930ddd16-ac51-4c6b-ab55-f6d7abf743a6:
+  name: ~
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker:
+    inner:
+      prefab_id: 13bb1e9a-a332-4371-9ac2-b7a9cf5579c8
+      member_id: cd8b2f75-a16d-454d-8113-4613d2897771
+      child_map: ~
+    active: true
+  id: 930ddd16-ac51-4c6b-ab55-f6d7abf743a6
+  marker: ~
+99b7181f-fd39-4eb5-bff8-e29b5d25e29d:
+  name: ~
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker:
+    inner:
+      prefab_id: 13bb1e9a-a332-4371-9ac2-b7a9cf5579c8
+      member_id: 80e511d1-1d00-4ce1-b81d-a52af2395f00
+      child_map: ~
+    active: true
+  id: 99b7181f-fd39-4eb5-bff8-e29b5d25e29d
+  marker: ~
+20ddcdf5-8e78-4ee0-8afb-6f0fda5d5ac1:
+  name:
+    inner:
+      name: My Best Friend
+    active: true
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 16.0
+        y: 16.0
+      world_position:
+        x: 16.0
+        y: 16.0
+    active: true
+  scene_switcher: ~
+  velocity: ~
+  sprite:
+    inner:
+      sprite_name: Flag
+      running_data:
+        draw_order:
+          draw_layer: Instance
+          order: 0
+        facing_horizontal: Right
+        facing_vertical: Up
+        scale:
+          x: 1.0
+          y: 1.0
+        tint:
+          r: 1.0
+          g: 1.0
+          b: 1.0
+          a: 1.0
+        current_frame: 0
+        frame_time: 0.0
+        is_animating: false
+    active: true
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 20ddcdf5-8e78-4ee0-8afb-6f0fda5d5ac1
+  marker: ~

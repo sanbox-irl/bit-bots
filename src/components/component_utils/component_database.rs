@@ -263,11 +263,15 @@ impl ComponentDatabase {
         prefabs: &PrefabMap,
     ) -> Option<PostDeserializationRequired> {
         // Make a serialization data thingee on it...
-        self.serialization_markers.set_component(
-            &entity,
-            SerializationMarker::with_id(serialized_entity.id),
-            scene_graph,
-        );
+        let serialized_id = self
+            .serialization_markers
+            .set_component(
+                &entity,
+                SerializationMarker::with_id(serialized_entity.id),
+                scene_graph,
+            )
+            .inner()
+            .id;
 
         // If it's got a prefab, load the prefab. Otherwise,
         // load it like a normal serialized entity:
@@ -275,7 +279,7 @@ impl ComponentDatabase {
             // Base Prefab
             let success = self.load_serialized_prefab(
                 entity,
-                serialized_prefab_marker.inner.child_map(),
+                Some((serialized_id, serialized_prefab_marker.inner.child_map())),
                 prefabs.get(&serialized_prefab_marker.inner.prefab_id()).cloned(),
                 scene_graph,
                 entity_allocator,
@@ -306,7 +310,10 @@ impl ComponentDatabase {
     pub fn load_serialized_prefab(
         &mut self,
         main_entity_id: &Entity,
-        child_map: &Option<HashMap<SerializationId, SerializationId>>,
+        parent_data: Option<(
+            SerializationId,
+            &Option<HashMap<SerializationId, SerializationId>>,
+        )>,
         prefab_maybe: Option<Prefab>,
         scene_graph: &mut SceneGraph,
         entity_allocator: &mut EntityAllocator,
@@ -332,7 +339,8 @@ impl ComponentDatabase {
                 return None;
             }
 
-            let mut new_child_map = child_map.clone().unwrap_or_default();
+            // If the parent has a map, then copy it over!
+            let mut new_child_map = parent_data.and_then(|pd| pd.1.clone()).unwrap_or_default();
 
             let members = &mut prefab.members;
             let serialized_graph = &prefab.serialized_graph;
@@ -392,15 +400,17 @@ impl ComponentDatabase {
                         );
 
                         // Set our Serialization Marker here...
-                        self.serialization_markers.set_component(
-                            &new_id,
-                            SerializationMarker::with_id(
-                                *new_child_map
-                                    .entry(*s_node.inner())
-                                    .or_insert(SerializationId::new()),
-                            ),
-                            scene_graph,
-                        );
+                        if parent_data.is_some() {
+                            self.serialization_markers.set_component(
+                                &new_id,
+                                SerializationMarker::with_id(
+                                    *new_child_map
+                                        .entry(*s_node.inner())
+                                        .or_insert(SerializationId::new()),
+                                ),
+                                scene_graph,
+                            );
+                        }
                     }
 
                     None => {
@@ -415,30 +425,30 @@ impl ComponentDatabase {
 
             // Update our Serialized Baby Boy
             if new_child_map.is_empty() == false {
-                if new_child_map != child_map.clone().unwrap_or_default() {
-                    let prefab_marker = self.prefab_markers.get_mut(&main_entity_id).unwrap().inner_mut();
-                    prefab_marker.set_child_map(Some(new_child_map));
+                if let Some((serialization_id, Some(cached_child_map))) = parent_data {
+                    if new_child_map != cached_child_map.clone() {
+                        let prefab_marker = self.prefab_markers.get_mut(&main_entity_id).unwrap().inner_mut();
+                        prefab_marker.set_child_map(Some(new_child_map));
 
-                    let serialization_id = self.serialization_markers.get(main_entity_id).unwrap().inner().id;
+                        match serialization_util::entities::load_entity_by_id(&serialization_id) {
+                            Ok(se) => {
+                                let mut se_yaml = serde_yaml::to_value(se).unwrap();
+                                se_yaml.as_mapping_mut().unwrap().insert(
+                                    PrefabMarker::SERIALIZATION_NAME.clone(),
+                                    serde_yaml::to_value(prefab_marker.clone()).unwrap(),
+                                );
 
-                    match serialization_util::entities::load_entity_by_id(&serialization_id) {
-                        Ok(se) => {
-                            let mut se_yaml = serde_yaml::to_value(se).unwrap();
-                            se_yaml.as_mapping_mut().unwrap().insert(
-                                PrefabMarker::SERIALIZATION_NAME.clone(),
-                                serde_yaml::to_value(prefab_marker.clone()).unwrap(),
-                            );
-
-                            let se = serde_yaml::from_value(se_yaml).unwrap();
-                            if let Err(e) =
-                                serialization_util::entities::commit_entity_to_serialized_scene(se)
-                            {
-                                error!("Couldn't save Prefab ChildMap! {}", e);
+                                let se = serde_yaml::from_value(se_yaml).unwrap();
+                                if let Err(e) =
+                                    serialization_util::entities::commit_entity_to_serialized_scene(se)
+                                {
+                                    error!("Couldn't save Prefab ChildMap! {}", e);
+                                }
                             }
-                        }
-                        Err(e) => {
-                            error!("We couldn't reload our Prefab to fix its ChildMap. Prefab Inheritors are going to get weird!");
-                            error!("{}", e);
+                            Err(e) => {
+                                error!("We couldn't reload our Prefab to fix its ChildMap. Prefab Inheritors are going to get weird!");
+                                error!("{}", e);
+                            }
                         }
                     }
                 }
