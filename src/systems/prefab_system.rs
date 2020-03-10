@@ -202,22 +202,17 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
     let entity = ecs.create_entity();
 
     // If we're in Draft mode, let's make an ID:
-    let serialization_id = if super::scene_system::current_scene_mode() == super::SceneMode::Draft {
-        let serialization_id = SerializationId::new();
+    if super::scene_system::current_scene_mode() == super::SceneMode::Draft {
         ecs.component_database.serialization_markers.set_component(
             &entity,
-            super::SerializationMarker::with_id(serialization_id),
+            super::SerializationMarker::new(),
             &mut ecs.scene_graph,
         );
-        Some(serialization_id)
-    } else {
-        None
-    };
+    }
 
     // Instantiate the Prefab
     let success = ecs.component_database.load_serialized_prefab(
         &entity,
-        serialization_id.map(|sid| (sid, &None)),
         prefab_map.get(&prefab_id).cloned(),
         &mut ecs.scene_graph,
         &mut ecs.entity_allocator,
