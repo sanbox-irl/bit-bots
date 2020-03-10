@@ -147,7 +147,7 @@ impl ComponentDatabase {
         }
     }
 
-    pub fn deregister_entity(&mut self, entity: &Entity, scene_graph: &mut SceneGraph) {
+    pub fn deregister_entity(&mut self, entity: &Entity, scene_graph: &SceneGraph) {
         self.foreach_component_list_mut(NonInspectableEntities::all(), |list| {
             list.unset_component(entity, scene_graph);
         });

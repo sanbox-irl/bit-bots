@@ -19,7 +19,7 @@ pub trait ComponentBounds {
     fn on_set(&mut self, _: &Entity, _: &mut SceneGraph) {}
 
     #[inline]
-    fn on_unset(&mut self, _: Entity, _: &mut dyn ComponentListBounds, _: &mut SceneGraph) {}
+    fn on_unset(&mut self, _: Entity, _: &mut dyn ComponentListBounds, _: &SceneGraph) {}
 }
 
 pub trait ComponentPostDeserialization {
@@ -41,7 +41,7 @@ pub trait SerializableComponent:
 
 pub trait ComponentListBounds {
     fn expand_list(&mut self);
-    fn unset_component(&mut self, index: &Entity, scene_graph: &mut SceneGraph) -> bool;
+    fn unset_component(&mut self, index: &Entity, scene_graph: &SceneGraph) -> bool;
     fn get_for_post_deserialization(
         &mut self,
         index: &Entity,
@@ -112,7 +112,7 @@ where
         self.expand_list();
     }
 
-    fn unset_component(&mut self, index: &Entity, scene_graph: &mut SceneGraph) -> bool {
+    fn unset_component(&mut self, index: &Entity, scene_graph: &SceneGraph) -> bool {
         self.unset_component(index, scene_graph)
     }
 

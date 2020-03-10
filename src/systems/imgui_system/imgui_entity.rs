@@ -40,8 +40,18 @@ pub fn entity_list(
                 }
             }
             NameRequestedAction::Delete => {
-                ecs.remove_entity(&entity);
+                // Kill the children of a prefab first!
+                if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
+                    if prefab_system::is_prefab_marker_main(prefab_marker.inner(), resources.prefabs())
+                        == false
+                    {
+                        error!("You can't delete a prefab child! Please edit the Prefab.");
+                        return Ok(None);
+                    }
+                }
+                
                 ui_handler.stored_ids.remove(&entity);
+                ecs.remove_entity(&entity);
             }
             NameRequestedAction::GoToPrefab => {
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {

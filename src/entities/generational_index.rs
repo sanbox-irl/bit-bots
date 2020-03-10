@@ -5,6 +5,11 @@ pub struct GenerationalIndex {
 }
 
 impl GenerationalIndex {
+    /// For debugging purposes only!
+    pub fn stub(index: usize) -> Self {
+        Self { index, generation: 0 }
+    }
+
     pub fn index(&self) -> usize {
         self.index
     }

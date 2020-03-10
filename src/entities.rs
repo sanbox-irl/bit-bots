@@ -94,7 +94,7 @@ where
     }
 
     /// Wrapper around
-    pub fn unset_component(&mut self, index: &Entity, scene_graph: &mut SceneGraph) -> bool {
+    pub fn unset_component(&mut self, index: &Entity, scene_graph: &SceneGraph) -> bool {
         let old = self.unset(index);
         if let Some(mut old) = old {
             let id = old.entity_id();

@@ -122,7 +122,7 @@ impl Ecs {
         entity_allocator: &mut EntityAllocator,
         entities: &mut Vec<Entity>,
         component_database: &mut ComponentDatabase,
-        scene_graph: &mut SceneGraph,
+        scene_graph: &SceneGraph,
         entity_to_delete: &Entity,
     ) -> bool {
         let is_dealloc = entity_allocator.deallocate(entity_to_delete);
@@ -151,6 +151,35 @@ impl Ecs {
     }
 
     pub fn remove_entity(&mut self, entity_to_delete: &Entity) -> bool {
+        // If it's in the SceneGraph, we're going to delete its children too.
+        // children are, and this is a fact, the worst. Jk, I wnat to be a father one day.
+        if let Some(transform) = self.component_database.transforms.get(entity_to_delete) {
+            if let Some(node_id) = transform.inner().scene_graph_node_id() {
+                let scene_graph_raw_handle: *mut SceneGraph = &mut self.scene_graph;
+                for descendant in node_id
+                    .descendants(&self.scene_graph)
+                    .collect::<Vec<_>>()
+                    .iter()
+                    .rev()
+                {
+                    if descendant == &node_id {
+                        continue;
+                    }
+
+                    let id = self.scene_graph.get(*descendant).unwrap().inner();
+                    Ecs::remove_entity_raw(
+                        &mut self.entity_allocator,
+                        &mut self.entities,
+                        &mut self.component_database,
+                        &self.scene_graph,
+                        id,
+                    );
+                    descendant.remove(unsafe { &mut *scene_graph_raw_handle });
+                }
+                node_id.remove(&mut self.scene_graph);
+            }
+        }
+
         Ecs::remove_entity_raw(
             &mut self.entity_allocator,
             &mut self.entities,

@@ -2,7 +2,7 @@ use super::{
     graph::Graph,
     relations::{assert_triangle_nodes, insert_with_neighbors},
     siblings_range::SiblingsRange,
-    traverse::{Ancestors, Children},
+    traverse::{Ancestors, Children, Descendants},
     NodeError,
 };
 use std::{fmt, marker::PhantomData};
@@ -66,6 +66,10 @@ impl<T> GraphId<T> {
     /// Returns an iterator of references to this node’s children.
     pub fn children(self, scene_graph: &Graph<T>) -> Children<'_, T> {
         Children::new(scene_graph, self)
+    }
+
+    pub fn descendants(self, scene_graph: &Graph<T>) -> Descendants<'_, T> {
+        Descendants::new(scene_graph, self)
     }
 
     /// Detaches a node from its parent. Children are not affected.

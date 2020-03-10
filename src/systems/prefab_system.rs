@@ -400,3 +400,12 @@ pub fn load_override_into_prefab(
     serde_yaml::from_value(prefab_serialized_yaml)
         .with_context(|| format!("We could not transform a composed YAML SE back to SE",))
 }
+
+/// Returns `true` if this PrefabMarker denotes an entity which is the Root
+/// or only entity in a Prefab.
+pub fn is_prefab_marker_main(prefab_marker: &PrefabMarker, prefabs: &PrefabMap) -> bool {
+    prefabs
+        .get(&prefab_marker.prefab_id())
+        .map(|prefab| prefab.root_id() == prefab_marker.member_id())
+        .unwrap_or(false)
+}

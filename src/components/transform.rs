@@ -117,29 +117,6 @@ impl ComponentBounds for Transform {
         );
         self.scene_graph_node_id = Some(scene_graph.instantiate_node(*my_id));
     }
-
-    fn on_unset(
-        &mut self,
-        _: Entity,
-        my_list: &mut dyn super::ComponentListBounds,
-        scene_graph: &mut SceneGraph,
-    ) {
-        if let Some(id) = self.scene_graph_node_id {
-            // We do this to mess with the borrow checker, for fun
-            let scene_graph_raw: *mut SceneGraph = scene_graph;
-
-            for child in id.children(scene_graph) {
-                let child: NodeId = child;
-                let this_child_id: &Entity = scene_graph.get(child).unwrap().inner();
-
-                unsafe {
-                    my_list.unset_component(this_child_id, &mut *scene_graph_raw);
-                }
-            }
-
-            id.remove(scene_graph);
-        }
-    }
 }
 
 impl PartialEq for Transform {
