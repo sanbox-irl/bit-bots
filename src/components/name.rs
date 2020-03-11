@@ -23,7 +23,7 @@ pub struct Name {
 }
 
 impl Name {
-    const INDENT_AMOUNT: f32 = 38.0;
+    const INDENT_AMOUNT: f32 = 28.0;
 
     pub fn new(name: String) -> Self {
         Self { name }
@@ -73,8 +73,8 @@ impl Name {
         // Object Symbol:
         ui.text_colored(
             match nip.prefab_status {
-                PrefabStatus::None => imgui_system::base_grey_color(),
-                PrefabStatus::Prefab | PrefabStatus::PrefabInstance => imgui_system::prefab_blue_color(),
+                PrefabStatus::Prefab | PrefabStatus::PrefabInstanceRoot => imgui_system::prefab_blue_color(),
+                _ => imgui_system::base_grey_color(),
             },
             &imgui::im_str!("{}", imgui_system::ENTITY_ICON),
         );
@@ -110,7 +110,7 @@ impl Name {
                 }
             }
             None => {
-                ui.text_colored(eli.color, &imgui::im_str!("{}", name));
+                ui.text_colored(eli.color.into(), &imgui::im_str!("{}", name));
 
                 // Inspect on Single Click
                 if imgui_system::left_clicked_item(ui) {
@@ -178,7 +178,7 @@ impl Name {
                             }
                             prefab_kind => {
                                 if MenuItem::new(&im_str!("Unpack Prefab##{}", uid))
-                                    .enabled(prefab_kind == PrefabStatus::PrefabInstance)
+                                    .enabled(prefab_kind == PrefabStatus::PrefabInstanceRoot)
                                     .build(ui)
                                 {
                                     res.requested_action = Some(NameRequestedAction::UnpackPrefab);

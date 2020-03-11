@@ -184,7 +184,17 @@ impl ParentSyncStatus {
 pub enum PrefabStatus {
     None,
     Prefab,
-    PrefabInstance,
+    PrefabInstanceRoot,
+    PrefabInstanceSecondary,
+}
+
+impl PrefabStatus {
+    pub fn is_prefab_inheritor(&self) -> bool {
+        match self {
+            PrefabStatus::PrefabInstanceRoot | PrefabStatus::PrefabInstanceSecondary => true,
+            _ => false,
+        }
+    }
 }
 
 impl Default for PrefabStatus {
@@ -196,7 +206,7 @@ impl Default for PrefabStatus {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct EntityListInformation {
     pub open: bool,
-    pub color: [f32; 4],
+    pub color: Color,
     pub edit_name: Option<String>,
 }
 

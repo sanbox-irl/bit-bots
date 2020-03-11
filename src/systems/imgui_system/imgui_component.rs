@@ -125,14 +125,15 @@ pub fn entity_inspector(
                 },
             );
 
-            let prefab_status = if scene_is_prefab {
+            let prefab_status: PrefabStatus = if scene_is_prefab {
                 PrefabStatus::Prefab
             } else {
-                if component_database.prefab_markers.get(entity).is_some() {
-                    PrefabStatus::PrefabInstance
-                } else {
-                    PrefabStatus::None
-                }
+                component_database
+                    .prefab_markers
+                    .get(entity)
+                    .map_or(PrefabStatus::None, |pmc| {
+                        pmc.inner().prefab_status(resources.prefabs())
+                    })
             };
 
             // Serialization Inspector
@@ -177,7 +178,7 @@ pub fn entity_inspector(
                 if let Some(add_component_submenu) = ui.begin_menu(
                     &im_str!(
                         "Add {}",
-                        if prefab_status == PrefabStatus::PrefabInstance {
+                        if prefab_status.is_prefab_inheritor() {
                             "Override"
                         } else {
                             "Component"

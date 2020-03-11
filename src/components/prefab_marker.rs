@@ -1,4 +1,7 @@
-use super::{imgui_component_utils::InspectorParameters, ComponentBounds, PrefabId, SerializationId};
+use super::{
+    imgui_component_utils::{InspectorParameters, PrefabStatus},
+    ComponentBounds, PrefabId, PrefabMap, SerializationId,
+};
 use std::collections::HashMap;
 
 #[derive(
@@ -46,6 +49,18 @@ impl PrefabMarker {
 
     pub fn set_child_map(&mut self, new_map: Option<HashMap<SerializationId, SerializationId>>) {
         self.child_map = new_map;
+    }
+
+    pub fn prefab_status(&self, prefab_map: &PrefabMap) -> PrefabStatus {
+        prefab_map
+            .get(&self.prefab_id)
+            .map_or(PrefabStatus::None, |prefab| {
+                if prefab.root_id() == self.member_id {
+                    PrefabStatus::PrefabInstanceRoot
+                } else {
+                    PrefabStatus::PrefabInstanceSecondary
+                }
+            })
     }
 }
 

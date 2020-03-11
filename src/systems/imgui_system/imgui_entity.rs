@@ -49,7 +49,7 @@ pub fn entity_list(
                         return Ok(None);
                     }
                 }
-                
+
                 ui_handler.stored_ids.remove(&entity);
                 ecs.remove_entity(&entity);
             }
@@ -292,8 +292,9 @@ fn imgui_entity_list(
                 prefab_status: component_database
                     .prefab_markers
                     .get(entity)
-                    .map(|_| PrefabStatus::PrefabInstance)
-                    .unwrap_or_default(),
+                    .map_or(PrefabStatus::None, |pmc| {
+                        pmc.inner().prefab_status(resources.prefabs())
+                    }),
                 being_inspected: ui_handler.stored_ids.contains(entity),
                 serialization_status: component_database
                     .serialization_markers
@@ -375,8 +376,9 @@ fn imgui_entity_list(
                 prefab_status: component_database
                     .prefab_markers
                     .get(entity)
-                    .map(|_| PrefabStatus::PrefabInstance)
-                    .unwrap_or_default(),
+                    .map_or(PrefabStatus::None, |pmc| {
+                        pmc.inner().prefab_status(resources.prefabs())
+                    }),
                 being_inspected: ui_handler.stored_ids.contains(entity),
                 depth: 0,
                 has_children: false,

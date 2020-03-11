@@ -7,28 +7,28 @@ pub const ENTITY_ICON: char = '\u{f6d1}';
 
 pub type ImColor = [f32; 4];
 
-pub fn yellow_warning_color() -> ImColor {
+pub fn yellow_warning_color() -> Color {
     Color::with_u8(253, 229, 109, 255).into()
 }
 
-pub fn green_color() -> ImColor {
+pub fn green_color() -> Color {
     Color::with_u8(169, 220, 118, 255).into()
 }
 
-pub fn red_warning_color() -> ImColor {
+pub fn red_warning_color() -> Color {
     Color::with_u8(238, 93, 67, 255).into()
 }
 
-pub fn base_grey_color() -> ImColor {
-    Color::with_u8(202, 205, 210, 255).into()
+pub fn base_grey_color() -> Color {
+    Color::with_u8(202, 205, 210, 255)
 }
 
-pub fn prefab_light_blue_color() -> ImColor {
-    Color::with_u8(122, 203, 222, 255).into()
+pub fn prefab_light_blue_color() -> Color {
+    Color::with_u8(122, 203, 222, 255)
 }
 
-pub fn prefab_blue_color() -> ImColor {
-    Color::with_u8(188, 203, 222, 255).into()
+pub fn prefab_blue_color() -> Color {
+    Color::with_u8(188, 203, 222, 255)
 }
 
 pub fn typed_text_ui<T: typename::TypeName>() -> String {
