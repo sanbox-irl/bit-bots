@@ -136,15 +136,16 @@ impl SyncStatus {
 
     pub fn imgui_color(&self, scene_mode: super::SceneMode) -> [f32; 4] {
         if scene_mode != super::SceneMode::Draft {
-            Color::WHITE.into()
+            Color::WHITE
         } else {
             match self {
-                SyncStatus::Unsynced => Color::WHITE.into(),
+                SyncStatus::Unsynced => Color::WHITE,
                 SyncStatus::Headless => imgui_system::red_warning_color(),
                 SyncStatus::OutofSync => imgui_system::prefab_light_blue_color(),
                 SyncStatus::Synced => imgui_system::prefab_blue_color(),
             }
         }
+        .into()
     }
 
     pub fn imgui_symbol(&self, scene_mode: super::SceneMode) -> char {

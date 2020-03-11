@@ -73,8 +73,10 @@ impl Name {
         // Object Symbol:
         ui.text_colored(
             match nip.prefab_status {
-                PrefabStatus::Prefab | PrefabStatus::PrefabInstanceRoot => imgui_system::prefab_blue_color(),
-                _ => imgui_system::base_grey_color(),
+                PrefabStatus::Prefab | PrefabStatus::PrefabInstanceRoot => {
+                    imgui_system::prefab_blue_color().into()
+                }
+                _ => imgui_system::base_grey_color().into(),
             },
             &imgui::im_str!("{}", imgui_system::ENTITY_ICON),
         );
@@ -235,7 +237,7 @@ impl Name {
                     SyncStatus::Headless => {
                         ui.same_line(0.0);
                         ui.text_colored(
-                            imgui_system::red_warning_color(),
+                            imgui_system::red_warning_color().into(),
                             &format!("{}", nip.serialization_status.imgui_symbol(nip.scene_mode)),
                         );
                         if ui.is_item_hovered() {
@@ -247,7 +249,7 @@ impl Name {
                     SyncStatus::OutofSync => {
                         ui.same_line(0.0);
                         ui.text_colored(
-                            imgui_system::yellow_warning_color(),
+                            imgui_system::yellow_warning_color().into(),
                             &format!("{}", nip.serialization_status.imgui_symbol(nip.scene_mode)),
                         );
                         if ui.is_item_hovered() {

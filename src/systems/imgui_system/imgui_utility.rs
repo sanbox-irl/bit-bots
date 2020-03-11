@@ -465,8 +465,8 @@ pub fn wrap_style_var(ui: &Ui<'_>, style_var: StyleVar, f: impl FnOnce()) {
     style_var_token.pop(ui);
 }
 
-pub fn wrap_style_color_var(ui: &Ui<'_>, style_color: StyleColor, color: [f32; 4], f: impl FnOnce()) {
-    let style_color_token = ui.push_style_color(style_color, color);
+pub fn wrap_style_color_var(ui: &Ui<'_>, style_color: StyleColor, color: Color, f: impl FnOnce()) {
+    let style_color_token = ui.push_style_color(style_color, color.into());
 
     f();
 

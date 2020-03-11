@@ -562,7 +562,7 @@ where
             });
 
             if comp.is_active {
-                imgui_system::wrap_style_color_var(ui, imgui::StyleColor::Text, default_color, || {
+                imgui_system::wrap_style_color_var(ui, imgui::StyleColor::Text, default_color.into(), || {
                     let inspector_parameters = InspectorParameters {
                         is_open,
                         uid,
@@ -596,7 +596,7 @@ fn component_inspector_right_click(
     let mut delete = false;
 
     imgui_system::right_click_popup(ui, uid, || {
-        imgui_utility::wrap_style_color_var(ui, StyleColor::Text, default_color, || {
+        imgui_utility::wrap_style_color_var(ui, StyleColor::Text, default_color.into(), || {
             MenuItem::new(&im_str!("Is Active##{}", uid)).build_with_ref(ui, is_active);
 
             if MenuItem::new(&im_str!("Delete##{}", uid)).build(ui) {
