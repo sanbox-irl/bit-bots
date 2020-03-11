@@ -8,15 +8,15 @@ pub const ENTITY_ICON: char = '\u{f6d1}';
 pub type ImColor = [f32; 4];
 
 pub fn yellow_warning_color() -> Color {
-    Color::with_u8(253, 229, 109, 255).into()
+    Color::with_u8(253, 229, 109, 255)
 }
 
 pub fn green_color() -> Color {
-    Color::with_u8(169, 220, 118, 255).into()
+    Color::with_u8(169, 220, 118, 255)
 }
 
 pub fn red_warning_color() -> Color {
-    Color::with_u8(238, 93, 67, 255).into()
+    Color::with_u8(238, 93, 67, 255)
 }
 
 pub fn base_grey_color() -> Color {
