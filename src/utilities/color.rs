@@ -89,3 +89,43 @@ impl From<Color> for [f32; 4] {
         [o.r, o.g, o.b, o.a]
     }
 }
+
+use std::ops;
+impl ops::Add<Color> for Color {
+    type Output = Color;
+    fn add(self, rhs: Color) -> Self::Output {
+        Color::new(self.r + rhs.r, self.g + rhs.g, self.b + rhs.b, self.a + rhs.a)
+    }
+}
+
+impl ops::AddAssign<Color> for Color {
+    fn add_assign(&mut self, rhs: Color) {
+        *self = *self + rhs;
+    }
+}
+
+impl ops::Sub<Color> for Color {
+    type Output = Color;
+    fn sub(self, rhs: Color) -> Self::Output {
+        Color::new(self.r - rhs.r, self.g - rhs.g, self.b - rhs.b, self.a - rhs.a)
+    }
+}
+
+impl ops::SubAssign<Color> for Color {
+    fn sub_assign(&mut self, rhs: Color) {
+        *self = *self - rhs;
+    }
+}
+
+impl ops::Div<f32> for Color {
+    type Output = Color;
+    fn div(self, rhs: f32) -> Self::Output {
+        Color::new(self.r / rhs, self.g / rhs, self.b / rhs, self.a / rhs)
+    }
+}
+
+impl ops::DivAssign<f32> for Color {
+    fn div_assign(&mut self, rhs: f32) {
+        *self = *self / rhs;
+    }
+}

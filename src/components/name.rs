@@ -73,11 +73,10 @@ impl Name {
         // Object Symbol:
         ui.text_colored(
             match nip.prefab_status {
-                PrefabStatus::Prefab | PrefabStatus::PrefabInstanceRoot => {
-                    imgui_system::prefab_blue_color().into()
-                }
-                _ => imgui_system::base_grey_color().into(),
-            },
+                PrefabStatus::Prefab | PrefabStatus::PrefabInstanceRoot => imgui_system::prefab_blue_color(),
+                _ => imgui_system::base_grey_color(),
+            }
+            .into(),
             &imgui::im_str!("{}", imgui_system::ENTITY_ICON),
         );
         ui.same_line(0.0);
@@ -121,17 +120,26 @@ impl Name {
 
                 // Rename on Double Click
                 imgui_system::right_click_popup(ui, uid, || {
-                    if MenuItem::new(&im_str!("Rename##{}", uid)).build(ui) {
+                    if MenuItem::new(&im_str!("Rename##{}", uid))
+                        .enabled(nip.prefab_status != PrefabStatus::PrefabInstanceSecondary)
+                        .build(ui)
+                    {
                         eli.edit_name = Some(name.to_string());
                         ui.close_current_popup();
                     }
 
-                    if MenuItem::new(&im_str!("Clone##{}", uid)).build(ui) {
+                    if MenuItem::new(&im_str!("Clone##{}", uid))
+                        .enabled(nip.prefab_status != PrefabStatus::PrefabInstanceSecondary)
+                        .build(ui)
+                    {
                         res.requested_action = Some(NameRequestedAction::Clone);
                         ui.close_current_popup();
                     }
 
-                    if MenuItem::new(&im_str!("Delete##{}", uid)).build(ui) {
+                    if MenuItem::new(&im_str!("Delete##{}", uid))
+                        .enabled(nip.prefab_status != PrefabStatus::PrefabInstanceSecondary)
+                        .build(ui)
+                    {
                         res.requested_action = Some(NameRequestedAction::Delete);
                     }
 
@@ -225,12 +233,16 @@ impl Name {
                 });
 
                 // Manage the color...
-                eli.color = imgui_system::base_grey_color();
+                eli.color = if nip.prefab_status.is_prefab_inheritor() {
+                    imgui_system::prefab_blue_color()
+                } else {
+                    imgui_system::base_grey_color()
+                };
                 if ui.is_item_hovered() {
-                    eli.color = Color::WHITE.into();
+                    eli.color = (eli.color + Color::WHITE) / 2.0;
                 }
                 if nip.being_inspected {
-                    eli.color = imgui_system::yellow_warning_color();
+                    eli.color = (eli.color + imgui_system::yellow_warning_color()) / 2.0;
                 }
 
                 match nip.serialization_status {

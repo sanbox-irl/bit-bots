@@ -34,7 +34,7 @@ pub use {
     follow::*,
     name::Name,
     player::Player,
-    prefab_marker::{PrefabLoadRequired, PrefabMarker},
+    prefab_marker::*,
     scene_switcher::SceneSwitcher,
     serialization_marker::SerializationMarker,
     sound_source::SoundSource,

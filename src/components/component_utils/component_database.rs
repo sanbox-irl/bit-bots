@@ -273,8 +273,11 @@ impl ComponentDatabase {
         if let Some(serialized_prefab_marker) = &serialized_entity.prefab_marker {
             // Base Prefab
             let success = self.load_serialized_prefab(
-                entity,
-                prefabs.get(&serialized_prefab_marker.inner.prefab_id()).cloned(),
+                PrefabDeserializationInfo {
+                    root_entity_id: entity,
+                    prefab_maybe: prefabs.get(&serialized_prefab_marker.inner.prefab_id()).cloned(),
+                    child_map: serialized_prefab_marker.inner.child_map(),
+                },
                 scene_graph,
                 entity_allocator,
                 entities,
@@ -303,24 +306,27 @@ impl ComponentDatabase {
     #[must_use]
     pub fn load_serialized_prefab(
         &mut self,
-        main_entity_id: &Entity,
-        prefab_maybe: Option<Prefab>,
+        mut prefab_info: PrefabDeserializationInfo<'_>,
         scene_graph: &mut SceneGraph,
         entity_allocator: &mut EntityAllocator,
         entities: &mut Vec<Entity>,
         marker_map: &mut AssociatedEntityMap,
     ) -> Option<PostDeserializationRequired> {
-        if let Some(mut prefab) = prefab_maybe {
+        if let Some(mut prefab) = prefab_info.prefab_maybe.take() {
             // Load in the Top Level
             let prefab_main_entity_id = prefab.root_id();
             let prefab_id = prefab.prefab_id();
 
             if let Some(se) = prefab.members.remove(&prefab_main_entity_id) {
-                let _ =
-                    self.load_serialized_entity_into_database(main_entity_id, se, scene_graph, marker_map);
+                let _ = self.load_serialized_entity_into_database(
+                    &prefab_info.root_entity_id,
+                    se,
+                    scene_graph,
+                    marker_map,
+                );
 
                 self.prefab_markers.set_component(
-                    &main_entity_id,
+                    &prefab_info.root_entity_id,
                     PrefabMarker::new(prefab_id, prefab_main_entity_id, None),
                     scene_graph,
                 );
@@ -390,7 +396,7 @@ impl ComponentDatabase {
                     None => {
                         error!(
                             "Our Root ID for Prefab {} had a lost child {}",
-                            Name::get_name_quick(&self.names, main_entity_id),
+                            Name::get_name_quick(&self.names, &prefab_info.root_entity_id),
                             s_node.inner()
                         );
                     }
@@ -413,7 +419,7 @@ impl ComponentDatabase {
         } else {
             error!(
                 "Prefab does not exist, but we tried to load it into entity {}. We cannot complete this operation.",
-                Name::get_name_quick(&self.names, main_entity_id)
+                Name::get_name_quick(&self.names, &prefab_info.root_entity_id)
             );
 
             None

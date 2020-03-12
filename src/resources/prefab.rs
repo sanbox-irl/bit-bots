@@ -16,7 +16,11 @@ pub struct Prefab {
 }
 
 impl Prefab {
-    pub fn new(members: SerializedHashMap, serialized_graph: SerializedSceneGraph, prefab_id: PrefabId) -> Prefab {
+    pub fn new(
+        members: SerializedHashMap,
+        serialized_graph: SerializedSceneGraph,
+        prefab_id: PrefabId,
+    ) -> Prefab {
         Prefab {
             members,
             serialized_graph,

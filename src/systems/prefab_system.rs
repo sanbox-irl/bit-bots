@@ -1,8 +1,8 @@
 use super::{
     scene_graph::{NodeId, SceneGraph, SerializedNodeId, SerializedSceneGraph},
-    serialization_util, Component, ComponentDatabase, Ecs, Entity, Prefab, PrefabId, PrefabLoadRequired,
-    PrefabMap, PrefabMarker, ResourcesDatabase, SerializationId, SerializedComponent, SerializedEntity,
-    SingletonDatabase,
+    serialization_util, Component, ComponentDatabase, Ecs, Entity, Prefab, PrefabDeserializationInfo,
+    PrefabId, PrefabLoadRequired, PrefabMap, PrefabMarker, ResourcesDatabase, SerializationId,
+    SerializedComponent, SerializedEntity, SingletonDatabase,
 };
 use anyhow::{Context, Result};
 use serde_yaml::Value as YamlValue;
@@ -212,8 +212,11 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
 
     // Instantiate the Prefab
     let success = ecs.component_database.load_serialized_prefab(
-        &entity,
-        prefab_map.get(&prefab_id).cloned(),
+        PrefabDeserializationInfo {
+            root_entity_id: &entity,
+            prefab_maybe: prefab_map.get(&prefab_id).cloned(),
+            child_map: &None,
+        },
         &mut ecs.scene_graph,
         &mut ecs.entity_allocator,
         &mut ecs.entities,

@@ -1,4 +1,52 @@
 ---
+55b265fb-8f94-4a64-bec2-8104efa31240:
+  name: ~
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker:
+    inner:
+      prefab_id: 13bb1e9a-a332-4371-9ac2-b7a9cf5579c8
+      member_id: 109f9be2-3139-4b93-89e4-63e056eca6d8
+      child_map: ~
+    active: true
+  id: 55b265fb-8f94-4a64-bec2-8104efa31240
+  marker: ~
+91348340-4625-4c5f-bbf8-804dbc76383d:
+  name:
+    inner:
+      name: Jim
+    active: true
+  player: ~
+  transform:
+    inner:
+      local_position:
+        x: 0.0
+        y: 0.0
+      world_position:
+        x: 10.0
+        y: 0.0
+    active: true
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 91348340-4625-4c5f-bbf8-804dbc76383d
+  marker: ~
 e8193c04-b50d-491c-92d8-ed3eb85a1e5f:
   name:
     inner:
@@ -25,27 +73,6 @@ e8193c04-b50d-491c-92d8-ed3eb85a1e5f:
   conversant_npc: ~
   prefab_marker: ~
   id: e8193c04-b50d-491c-92d8-ed3eb85a1e5f
-  marker: ~
-55b265fb-8f94-4a64-bec2-8104efa31240:
-  name: ~
-  player: ~
-  transform: ~
-  scene_switcher: ~
-  velocity: ~
-  sprite: ~
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker:
-    inner:
-      prefab_id: 13bb1e9a-a332-4371-9ac2-b7a9cf5579c8
-      member_id: 109f9be2-3139-4b93-89e4-63e056eca6d8
-      child_map: ~
-    active: true
-  id: 55b265fb-8f94-4a64-bec2-8104efa31240
   marker: ~
 20ddcdf5-8e78-4ee0-8afb-6f0fda5d5ac1:
   name:

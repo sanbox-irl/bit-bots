@@ -21,3 +21,10 @@ nodes:
     next_sibling: ~
     removed: false
     data: 55b265fb-8f94-4a64-bec2-8104efa31240
+  - parent: ~
+    first_child: ~
+    last_child: ~
+    previous_sibling: ~
+    next_sibling: ~
+    removed: false
+    data: 91348340-4625-4c5f-bbf8-804dbc76383d
