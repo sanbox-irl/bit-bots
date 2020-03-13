@@ -40,7 +40,7 @@ impl Ecs {
                     let _ = ecs.load_serialized_entity(&new_id, serialized_entity, prefabs);
 
                     // Load in our Prefab Parent NodeID.
-                    let parent_id: Option<_> = {
+                    let parent_id = {
                         s_node.parent().and_then(|s_uuid| {
                             serialized_scene_graph.get(s_uuid).and_then(|parent_uuid| {
                                 scene_graph_system::find_transform_from_serialized_node(
@@ -54,7 +54,6 @@ impl Ecs {
 
                     // Did we find a PrefabParentNodeID?
                     if let Some(parent_id) = parent_id {
-                        // Assuming *we* have a transform...
                         if let Some(transform) = &mut ecs.component_database.transforms.get_mut(&new_id) {
                             if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
                                 parent_id.append(node_id, &mut ecs.scene_graph);
@@ -182,7 +181,7 @@ impl Ecs {
 
     /// For use during creation and startup, before we have an Ecs
     /// to do anything with
-    pub fn remove_entity_raw(
+    fn remove_entity_raw(
         entity_allocator: &mut EntityAllocator,
         entities: &mut Vec<Entity>,
         component_database: &mut ComponentDatabase,
@@ -203,7 +202,7 @@ impl Ecs {
     /// Use this only in weird situations. Otherwise, prefer to pass
     /// the entire Ecs around now that we have a leaner top level
     /// struct.
-    pub fn create_entity_raw(
+    fn create_entity_raw(
         component_database: &mut ComponentDatabase,
         entity_allocator: &mut EntityAllocator,
         entities: &mut Vec<Entity>,
@@ -284,11 +283,11 @@ impl Ecs {
         // load it like a normal serialized entity:
         if let Some(serialized_prefab_marker) = &serialized_entity.prefab_marker {
             // Base Prefab
-            let success = self.load_serialized_prefab(PrefabDeserializationInfo {
-                root_entity_id: entity,
-                prefab_maybe: prefabs.get(&serialized_prefab_marker.inner.prefab_id()).cloned(),
-                child_map: serialized_prefab_marker.inner.child_map(),
-            });
+            let success = self.load_serialized_prefab(
+                entity,
+                prefabs.get(&serialized_prefab_marker.inner.prefab_id()).cloned(),
+                serialized_prefab_marker.inner.child_map(),
+            );
 
             if success.is_none() {
                 if self.remove_entity(entity) == false {
@@ -317,23 +316,26 @@ impl Ecs {
     #[must_use]
     pub fn load_serialized_prefab(
         &mut self,
-        mut prefab_info: PrefabDeserializationInfo<'_>,
+        root_entity_id: &Entity,
+        mut prefab_maybe: Option<Prefab>,
+        // we're making this a guarded hashmap, I'm tired of being confused by this...
+        child_map: &Option<std::collections::HashMap<SerializationId, SerializationId>>,
     ) -> Option<PostDeserializationRequired> {
-        if let Some(mut prefab) = prefab_info.prefab_maybe.take() {
+        if let Some(mut prefab) = prefab_maybe.take() {
             // Load in the Top Level
             let prefab_main_entity_id = prefab.root_id();
             let prefab_id = prefab.prefab_id();
 
             if let Some(se) = prefab.members.remove(&prefab_main_entity_id) {
                 let _ = self.component_database.load_serialized_entity_into_database(
-                    &prefab_info.root_entity_id,
+                    root_entity_id,
                     se,
                     &mut self.scene_graph,
                     &mut self.singleton_database.associated_entities,
                 );
 
                 self.component_database.prefab_markers.set_component(
-                    &prefab_info.root_entity_id,
+                    root_entity_id,
                     PrefabMarker::new(prefab_id, prefab_main_entity_id, None),
                     &mut self.scene_graph,
                 );
@@ -366,7 +368,7 @@ impl Ecs {
                         );
 
                         // Load in our Prefab Parent NodeID.
-                        let parent_id: Option<_> = {
+                        let parent_id = {
                             // None when Root Entity
                             s_node.parent().and_then(|serialized_node_id| {
                                 // Probably never None -- indicates graph issue
@@ -398,12 +400,22 @@ impl Ecs {
                             PrefabMarker::new(prefab_id, serialized_id, None),
                             &mut self.scene_graph,
                         );
+
+                        // If the Parent is Serialized, then we'll add a Serialization ourselves...
+                        if self
+                            .component_database
+                            .serialization_markers
+                            .get(root_entity_id)
+                            .is_some()
+                        {
+                            // self.component_database.serialization_markers.set_component(&new_id, SerializationMarker::with_id(prefab_info.))
+                        }
                     }
 
                     None => {
                         error!(
                             "Our Root ID for Prefab {} had a lost child {}",
-                            Name::get_name_quick(&self.component_database.names, &prefab_info.root_entity_id),
+                            Name::get_name_quick(&self.component_database.names, root_entity_id),
                             s_node.inner()
                         );
                     }
@@ -426,7 +438,7 @@ impl Ecs {
         } else {
             error!(
                 "Prefab does not exist, but we tried to load it into entity {}. We cannot complete this operation.",
-                Name::get_name_quick(&self.component_database.names, &prefab_info.root_entity_id)
+                Name::get_name_quick(&self.component_database.names, root_entity_id)
             );
 
             None

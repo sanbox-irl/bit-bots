@@ -103,9 +103,3 @@ impl ComponentBounds for PrefabMarker {
 /// To do that, feed it into `prefab_system::update_prefab_inheritors();
 #[must_use]
 pub struct PrefabLoadRequired;
-
-pub struct PrefabDeserializationInfo<'a> {
-    pub root_entity_id: &'a Entity,
-    pub prefab_maybe: Option<Prefab>,
-    pub child_map: &'a Option<HashMap<SerializationId, SerializationId>>,
-}

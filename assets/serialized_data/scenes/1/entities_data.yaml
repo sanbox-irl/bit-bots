@@ -1,5 +1,5 @@
 ---
-55b265fb-8f94-4a64-bec2-8104efa31240:
+4c43e59d-4a7e-44a2-857d-ba370d4dd22a:
   name: ~
   player: ~
   transform: ~
@@ -14,110 +14,10 @@
   conversant_npc: ~
   prefab_marker:
     inner:
-      prefab_id: 13bb1e9a-a332-4371-9ac2-b7a9cf5579c8
-      member_id: 109f9be2-3139-4b93-89e4-63e056eca6d8
-      child_map: ~
+      prefab_id: e9ace87a-1c60-4588-9b15-effccdac858c
+      member_id: 2aadb255-d1ed-4611-b290-fcf713cfc1bf
+      child_map:
+        62ab296c-bc8d-4381-9d5b-60580de51417: 5baf2a85-c9d5-4198-b6b1-e16ca746a8f3
     active: true
-  id: 55b265fb-8f94-4a64-bec2-8104efa31240
-  marker: ~
-91348340-4625-4c5f-bbf8-804dbc76383d:
-  name:
-    inner:
-      name: Jim
-    active: true
-  player: ~
-  transform:
-    inner:
-      local_position:
-        x: 0.0
-        y: 0.0
-      world_position:
-        x: 10.0
-        y: 0.0
-    active: true
-  scene_switcher: ~
-  velocity: ~
-  sprite: ~
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: 91348340-4625-4c5f-bbf8-804dbc76383d
-  marker: ~
-e8193c04-b50d-491c-92d8-ed3eb85a1e5f:
-  name:
-    inner:
-      name: MyLil Override
-    active: true
-  player: ~
-  transform:
-    inner:
-      local_position:
-        x: 100.0
-        y: 100.0
-      world_position:
-        x: 100.0
-        y: 100.0
-    active: true
-  scene_switcher: ~
-  velocity: ~
-  sprite: ~
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: e8193c04-b50d-491c-92d8-ed3eb85a1e5f
-  marker: ~
-20ddcdf5-8e78-4ee0-8afb-6f0fda5d5ac1:
-  name:
-    inner:
-      name: My Best Friend
-    active: true
-  player: ~
-  transform:
-    inner:
-      local_position:
-        x: 16.0
-        y: 16.0
-      world_position:
-        x: 16.0
-        y: 16.0
-    active: true
-  scene_switcher: ~
-  velocity: ~
-  sprite:
-    inner:
-      sprite_name: Flag
-      running_data:
-        draw_order:
-          draw_layer: Instance
-          order: 0
-        facing_horizontal: Right
-        facing_vertical: Up
-        scale:
-          x: 1.0
-          y: 1.0
-        tint:
-          r: 1.0
-          g: 1.0
-          b: 1.0
-          a: 1.0
-        current_frame: 0
-        frame_time: 0.0
-        is_animating: false
-    active: true
-  sound_source: ~
-  draw_rectangle: ~
-  bounding_box: ~
-  text_source: ~
-  follow: ~
-  conversant_npc: ~
-  prefab_marker: ~
-  id: 20ddcdf5-8e78-4ee0-8afb-6f0fda5d5ac1
+  id: 4c43e59d-4a7e-44a2-857d-ba370d4dd22a
   marker: ~

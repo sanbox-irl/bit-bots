@@ -68,7 +68,7 @@ pub fn entity_list(
                 }
             }
             NameRequestedAction::PromoteToPrefab => {
-                prefab_system::commit_new_prefab(
+                prefab_system::promote_entity_to_prefab(
                     &entity,
                     &mut ecs.component_database,
                     &ecs.singleton_database,

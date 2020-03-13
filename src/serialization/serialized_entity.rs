@@ -92,8 +92,18 @@ impl SerializedEntity {
         )?;
 
         if let Some(prefab) = prefab {
+            let prefab_marker = serialized_entity.prefab_marker.take();
+
+            // Did we have any overrides?
+            if serialized_entity == prefab {
+                info!("Hell yeah");
+                return None;
+            }
+
             serialized_entity
                 .foreach_component_dedup(|component, active| component.is_serialized(&prefab, *active));
+
+            serialized_entity.prefab_marker = prefab_marker;
         }
 
         Some(serialized_entity)

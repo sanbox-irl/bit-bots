@@ -6,25 +6,4 @@ nodes:
     previous_sibling: ~
     next_sibling: ~
     removed: false
-    data: 20ddcdf5-8e78-4ee0-8afb-6f0fda5d5ac1
-  - parent: ~
-    first_child: ~
-    last_child: ~
-    previous_sibling: ~
-    next_sibling: ~
-    removed: false
-    data: e8193c04-b50d-491c-92d8-ed3eb85a1e5f
-  - parent: ~
-    first_child: ~
-    last_child: ~
-    previous_sibling: ~
-    next_sibling: ~
-    removed: false
-    data: 55b265fb-8f94-4a64-bec2-8104efa31240
-  - parent: ~
-    first_child: ~
-    last_child: ~
-    previous_sibling: ~
-    next_sibling: ~
-    removed: false
-    data: 91348340-4625-4c5f-bbf8-804dbc76383d
+    data: 4c43e59d-4a7e-44a2-857d-ba370d4dd22a
