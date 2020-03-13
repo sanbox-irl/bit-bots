@@ -183,12 +183,14 @@ mod systems {
     pub mod tilemap_system;
 }
 
-mod top_level {
+mod clockwork {
     use super::*;
+    mod clockwork;
     mod component_database;
     mod ecs;
     mod singleton_database;
 
+    pub use clockwork::Clockwork;
     pub use component_database::{ComponentDatabase, NonInspectableEntities};
     pub use ecs::Ecs;
     pub use singleton_database::{AssociatedEntityMap, SingletonDatabase};
@@ -216,11 +218,11 @@ mod utilities {
 }
 
 mod action_map;
-mod clockwork;
 mod scene;
 pub mod scene_graph;
 
 pub use action_map::ActionMap;
+pub use clockwork::*;
 pub use clockwork::*;
 pub use components::*;
 pub use components_singleton::*;
@@ -231,10 +233,7 @@ pub use scene::*;
 pub use serialization::*;
 pub use systems::*;
 pub use tick_structs::*;
-pub use top_level::*;
 pub use utilities::*;
-
-// use scene_graph::SceneGraph;
 
 fn main() {
     pretty_env_logger::init();
