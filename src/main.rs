@@ -16,11 +16,9 @@ mod entities {
     mod generational_index;
     mod generational_index_array;
     mod generational_index_value;
+    use generational_index::*;
 
-    pub use generational_index::*;
-    pub use generational_index_array::*;
-    pub use generational_index_value::*;
-
+    pub use generational_index_value::GenerationalIndexValue;
     pub type Entity = generational_index::GenerationalIndex;
     pub type EntityAllocator = GenerationalIndexAllocator;
     pub type ComponentList<T> = generational_index_array::GenerationalIndexArray<super::Component<T>>;
@@ -185,14 +183,18 @@ mod systems {
 
 mod clockwork {
     use super::*;
+    mod action_map;
     mod clockwork;
     mod component_database;
     mod ecs;
+    mod scene;
     mod singleton_database;
 
+    pub use action_map::*;
     pub use clockwork::Clockwork;
     pub use component_database::{ComponentDatabase, NonInspectableEntities};
     pub use ecs::Ecs;
+    pub use scene::*;
     pub use singleton_database::{AssociatedEntityMap, SingletonDatabase};
 }
 
@@ -217,19 +219,42 @@ mod utilities {
     pub use vec::{Vec2, Vec2Int};
 }
 
-mod action_map;
-mod scene;
-pub mod scene_graph;
+pub mod scene_graph {
+    #[macro_use]
+    mod relations;
 
-pub use action_map::ActionMap;
-pub use clockwork::*;
+    mod graph;
+    mod graph_id;
+    mod node;
+    mod node_error;
+    mod siblings_range;
+    mod traverse;
+
+    pub use node_error::*;
+
+    use super::{Entity, SerializationId};
+
+    pub type SceneGraph = graph::Graph<Entity>;
+    pub type Node = node::GraphNode<Entity>;
+    pub type NodeId = graph_id::GraphId<Entity>;
+
+    pub type SerializedSceneGraph = graph::Graph<SerializationId>;
+    pub type SerializedNode = node::GraphNode<SerializationId>;
+    pub type SerializedNodeId = graph_id::GraphId<SerializationId>;
+
+    impl SceneGraph {
+        pub fn pretty_print(&self, names: &super::ComponentList<super::Name>) {
+            self.print_tree(|node| println!("{}", super::Name::get_name_quick(names, node.inner())));
+        }
+    }
+}
+
 pub use clockwork::*;
 pub use components::*;
 pub use components_singleton::*;
 pub use entities::*;
 pub use hardware_interfaces::*;
 pub use resources::*;
-pub use scene::*;
 pub use serialization::*;
 pub use systems::*;
 pub use tick_structs::*;
