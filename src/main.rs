@@ -45,26 +45,14 @@ pub use utilities::*;
 fn main() {
     pretty_env_logger::init();
 
-    // let mut scene_graph = SceneGraph::new();
-    // let zero = scene_graph.instantiate_node(Entity::stub(0));
-    // let one = scene_graph.instantiate_node(Entity::stub(1));
-    // let two = scene_graph.instantiate_node(Entity::stub(2));
-    // let one_one = scene_graph.instantiate_node(Entity::stub(3));
-    // let two_one = scene_graph.instantiate_node(Entity::stub(4));
-    // let two_two = scene_graph.instantiate_node(Entity::stub(5));
-
-    // let scene_graph = &mut scene_graph;
-    // two.append(two_one, scene_graph);
-    // two.append(two_two, scene_graph);
-
-    // one.append(one_one, scene_graph);
-
-    // zero.append(one, scene_graph);
-    // zero.append(two, scene_graph);
-
-    // for descedants in zero.descendants(scene_graph).collect::<Vec<_>>().iter().rev() {
-    //     println!("Descendant {}", scene_graph.get(*descedants).unwrap());
-    // }
+    // Update the database...
+    #[cfg(debug_assertions)]
+    {
+        if update_serialization::UPDATE_COMPONENT_DATABASE {
+            update_serialization::update_component_database()
+                .expect_err("We failed to update serialization!");
+        }
+    }
 
     let mut clockwork = match clockwork::Clockwork::new() {
         Ok(clockwork) => clockwork,

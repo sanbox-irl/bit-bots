@@ -17,11 +17,11 @@ pub struct SingletonDatabase {
 }
 
 impl SingletonDatabase {
-    pub fn new(marker_map: AssociatedEntityMap) -> Result<SingletonDatabase, Error> {
+    pub fn new() -> Result<SingletonDatabase, Error> {
         let mut serialized_singletons: SingletonDatabase =
             serialization_util::singleton_components::load_singleton_database()?;
 
-        serialized_singletons.associated_entities = marker_map;
+        serialized_singletons.associated_entities = AssociatedEntityMap::new();
         Ok(serialized_singletons)
     }
 

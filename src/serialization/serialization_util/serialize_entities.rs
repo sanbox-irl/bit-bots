@@ -45,15 +45,7 @@ pub fn process_serialized_command(
             })?;
 
             // Reload the Entity
-            let post = ecs.component_database.load_serialized_entity(
-                &command.entity,
-                serialized_entity,
-                &mut ecs.scene_graph,
-                &mut ecs.entity_allocator,
-                &mut ecs.entities,
-                &mut ecs.singleton_database.associated_entities,
-                resources.prefabs(),
-            );
+            let post = ecs.load_serialized_entity(&command.entity, serialized_entity, resources.prefabs());
 
             if let Some(post) = post {
                 let scene_graph = &ecs.scene_graph;

@@ -211,17 +211,11 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
     }
 
     // Instantiate the Prefab
-    let success = ecs.component_database.load_serialized_prefab(
-        PrefabDeserializationInfo {
-            root_entity_id: &entity,
-            prefab_maybe: prefab_map.get(&prefab_id).cloned(),
-            child_map: &None,
-        },
-        &mut ecs.scene_graph,
-        &mut ecs.entity_allocator,
-        &mut ecs.entities,
-        &mut ecs.singleton_database.associated_entities,
-    );
+    let success = ecs.load_serialized_prefab(PrefabDeserializationInfo {
+        root_entity_id: &entity,
+        prefab_maybe: prefab_map.get(&prefab_id).cloned(),
+        child_map: &None,
+    });
 
     if let Some(post) = success {
         let scene_graph = &ecs.scene_graph;

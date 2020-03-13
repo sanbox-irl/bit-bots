@@ -23,7 +23,6 @@ pub use {
     component::*,
     component_utils::{
         bounding_circle::BoundingCircle,
-        component_database::{ComponentDatabase, NonInspectableEntities},
         component_traits::*,
         draw_layer::*,
         imgui_component_utils, Approach, DrawCommand, EditingMode, GameWorldDrawCommands, ImGuiDrawCommands,

@@ -12,7 +12,6 @@ mod text_orientation;
 mod tile;
 
 pub mod bounding_circle;
-pub mod component_database;
 pub mod component_traits;
 pub mod draw_layer;
 
