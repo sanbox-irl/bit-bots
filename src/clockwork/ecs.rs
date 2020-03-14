@@ -11,10 +11,11 @@ use anyhow::Error;
 
 pub struct Ecs {
     pub component_database: ComponentDatabase,
-    pub scene_graph: SceneGraph,
     pub singleton_database: SingletonDatabase,
     pub entities: Vec<Entity>,
     pub entity_allocator: EntityAllocator,
+    pub scene_data: SceneData,
+    pub scene_graph: SceneGraph,
 }
 
 impl Ecs {
@@ -25,10 +26,8 @@ impl Ecs {
             singleton_database: SingletonDatabase::new()?,
             entities: Vec::new(),
             entity_allocator: EntityAllocator::new(),
+            scene_data: SceneData::new()?,
         };
-
-        let mut saved_entities = serialization_util::entities::load_all_entities()?;
-        let serialized_scene_graph = serialization_util::serialized_scene_graph::load_scene_graph()?;
 
         // Load in the SceneGraph...
         serialized_scene_graph.walk_tree_generically(|s_node| {

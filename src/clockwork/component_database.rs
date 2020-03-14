@@ -16,7 +16,6 @@ pub struct ComponentDatabase {
     pub follows: ComponentList<Follow>,
     pub conversant_npcs: ComponentList<ConversantNPC>,
     pub scene_switchers: ComponentList<SceneSwitcher>,
-    pub serialization_markers: ComponentList<SerializationMarker>,
     size: usize,
 }
 

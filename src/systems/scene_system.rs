@@ -1,34 +1,19 @@
 use super::{
-    serialization_util, Scene, SceneMode, SerializedEntity, SingletonDatabase, ENTITY_SUBPATH,
+    serialization_util, Scene, SerializedEntity, SingletonDatabase, ENTITY_SUBPATH,
     PREFAB_DIRECTORY, SCENE_DIRECTORY, SINGLETONS_SUBPATH,
 };
 use anyhow::Error;
-use lazy_static::lazy_static;
-use std::sync::Mutex;
 
-lazy_static! {
-    pub static ref CURRENT_SCENE: Mutex<Scene> = Mutex::new(Scene::new("NULL".to_string()));
-    pub static ref NEXT_SCENE: Mutex<Option<Scene>> = Mutex::new(Some(Scene::new("1".to_string())));
-}
+// pub fn set_next_scene(scene: Scene) -> bool {
+//     if scene_exists(&scene) == false {
+//         return false;
+//     }
 
-pub fn current_scene_mode() -> SceneMode {
-    CURRENT_SCENE.lock().unwrap().mode()
-}
+//     let mut next_scene_handle = NEXT_SCENE.lock().unwrap();
+//     *next_scene_handle = Some(scene);
 
-pub fn current_scene_name() -> String {
-    CURRENT_SCENE.lock().unwrap().name().to_owned()
-}
-
-pub fn set_next_scene(scene: Scene) -> bool {
-    if scene_exists(&scene) == false {
-        return false;
-    }
-
-    let mut next_scene_handle = NEXT_SCENE.lock().unwrap();
-    *next_scene_handle = Some(scene);
-
-    true
-}
+//     true
+// }
 
 pub fn create_scene(scene_name: &str) -> Result<bool, Error> {
     let scene = Scene::new(scene_name.to_string());

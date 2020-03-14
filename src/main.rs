@@ -188,6 +188,7 @@ mod clockwork {
     mod component_database;
     mod ecs;
     mod scene;
+    mod scene_data;
     mod singleton_database;
 
     pub use action_map::*;
@@ -195,6 +196,7 @@ mod clockwork {
     pub use component_database::{ComponentDatabase, NonInspectableEntities};
     pub use ecs::Ecs;
     pub use scene::*;
+    pub use scene_data::*;
     pub use singleton_database::{AssociatedEntityMap, SingletonDatabase};
 }
 
