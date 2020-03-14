@@ -1,6 +1,5 @@
 use super::{
-    imgui_component_utils::InspectorParameters, imgui_system, ComponentList, Entity, SerializationId,
-    SerializationMarker,
+    imgui_component_utils::InspectorParameters, imgui_system, Entity, EntitySerializationMap, SerializationId,
 };
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -18,53 +17,25 @@ impl SerializableEntityReference {
         }
     }
 
-    pub fn blank() -> Self {
-        SerializableEntityReference {
-            target: None,
-            target_serialized_id: None,
-        }
-    }
-
-    pub fn from_entity_id(
-        maybe_entity: Option<Entity>,
-        serialized_data: &ComponentList<SerializationMarker>,
-    ) -> Self {
-        if let Some(entity) = maybe_entity {
-            SerializableEntityReference {
-                target_serialized_id: serialized_data.get(&entity).map(|sd| sd.inner().id),
-                target: Some(entity),
-            }
-        } else {
-            SerializableEntityReference {
-                target: None,
-                target_serialized_id: None,
-            }
-        }
-    }
-
     pub fn target_serialized_id(&self) -> Option<SerializationId> {
         self.target_serialized_id
     }
 
-    pub fn entity_id_to_serialized_refs(&mut self, serialized_list: &ComponentList<SerializationMarker>) {
+    pub fn entity_id_to_serialized_refs(&mut self, serialization_map: &EntitySerializationMap) {
         if let Some(target) = &self.target {
-            if let Some(sd) = serialized_list.get(target) {
-                self.target_serialized_id = Some(sd.inner().id.clone());
-            } else {
-                error!("Reference to {:?} is being serialized, but it itself is not serialized. We will outlive it and follow nothing on deserialization!", target);
-            }
+            self.target_serialized_id = serialization_map.get(target).cloned();
         }
     }
 
-    pub fn serialized_refs_to_entity_id(
-        &mut self,
-        serialization_marker: &ComponentList<SerializationMarker>,
-    ) {
+    pub fn serialized_refs_to_entity_id(&mut self, serialization_map: &EntitySerializationMap) {
         if let Some(tsi) = &self.target_serialized_id {
-            self.target = serialization_marker
-                .iter()
-                .find(|sd| &sd.inner().id == tsi)
-                .map(|i| i.entity_id());
+            self.target = serialization_map.iter().find_map(|(entity, serialization_id)| {
+                if serialization_id == tsi {
+                    Some(*entity)
+                } else {
+                    None
+                }
+            });
 
             if self.target.is_none() {
                 error!(

@@ -52,7 +52,6 @@ mod components {
     mod player;
     mod prefab_marker;
     mod scene_switcher;
-    mod serialization_marker;
     mod sound_source;
     mod sprite;
     mod text_source;
@@ -74,7 +73,6 @@ mod components {
         player::Player,
         prefab_marker::*,
         scene_switcher::SceneSwitcher,
-        serialization_marker::SerializationMarker,
         sound_source::SoundSource,
         sprite::Sprite,
         text_source::TextSource,

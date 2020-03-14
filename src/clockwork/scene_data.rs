@@ -1,12 +1,14 @@
 use super::{
-    scene_graph::SerializedSceneGraph, serialization_util, ComponentDatabase, Entity, GuardedRwLock,
-    ResourcesDatabase, Scene, SceneIsDraft, SceneMode, SerializationId, SerializedEntity, SingletonDatabase,
+    scene_graph::SerializedSceneGraph,
+    serialization_util::{self, entities::SerializedHashMap},
+    ComponentDatabase, Entity, GuardedRwLock, ResourcesDatabase, Scene, SceneIsDraft, SceneMode,
+    SerializationId, SerializedEntity, SingletonDatabase,
 };
 use anyhow::Result as AnyResult;
-use std::collections::HashMap;
+pub type EntitySerializationMap = std::collections::HashMap<Entity, SerializationId>;
 
 pub struct SceneData {
-    entity_to_serialization_id: GuardedRwLock<HashMap<Entity, SerializationId>, SceneIsDraft>,
+    entity_to_serialization_id: GuardedRwLock<EntitySerializationMap, SceneIsDraft>,
     serialized_scene_cache: GuardedRwLock<SerializedSceneCache, SceneIsDraft>,
     scene: Scene,
 }
@@ -20,7 +22,7 @@ impl SceneData {
         })
     }
 
-    pub fn entity_to_serialization_id(&self) -> &HashMap<Entity, SerializationId> {
+    pub fn entity_to_serialization_id(&self) -> &EntitySerializationMap {
         &self.entity_to_serialization_id.read()
     }
 
@@ -104,8 +106,8 @@ impl SceneData {
 }
 
 pub struct SerializedSceneCache {
-    entities: HashMap<SerializationId, SerializedEntity>,
-    prefab_child_map: HashMap<SerializationId, PrefabChildMap>,
+    entities: SerializedHashMap,
+    prefab_child_map: PrefabChildMap,
     singleton_data: SingletonDatabase,
     scene_graph: SerializedSceneGraph,
 
@@ -130,5 +132,5 @@ impl SerializedSceneCache {
 }
 
 pub type PrefabMemberId = SerializationId;
-pub struct PrefabChildMap(HashMap<PrefabMemberId, SerializationId>);
+pub struct PrefabChildMap(std::collections::HashMap<PrefabMemberId, SerializationId>);
 impl PrefabChildMap {}

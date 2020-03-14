@@ -37,7 +37,7 @@ impl Clockwork {
         renderer_system::initialize_imgui(&mut self.hardware_interfaces.renderer, &mut imgui)?;
 
         loop {
-            let scene_mode = scene_system::current_scene_mode();
+            let scene_mode = self.ecs.scene_data.scene().mode();
             self.time_keeper.start_frame();
 
             // GET INPUT PER FRAME

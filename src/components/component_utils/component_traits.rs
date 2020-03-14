@@ -1,6 +1,6 @@
 use super::{
-    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, Name, PrefabMap,
-    SerializationMarker, SerializedEntity,
+    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, EntitySerializationMap, Name,
+    PrefabMap, SerializedEntity,
 };
 use imgui::Ui;
 
@@ -11,7 +11,7 @@ pub trait ComponentBounds {
         &self,
         serialized_entity: &mut SerializedEntity,
         active: bool,
-        serialization_marker: &super::ComponentList<super::SerializationMarker>,
+        serialization_map: &EntitySerializationMap,
     );
     fn uncommit_to_scene(&self, serialized_entity: &mut SerializedEntity);
 
@@ -24,7 +24,7 @@ pub trait ComponentBounds {
 
 pub trait ComponentPostDeserialization {
     #[inline]
-    fn post_deserialization(&mut self, _: Entity, _: &ComponentList<SerializationMarker>, _: &SceneGraph) {}
+    fn post_deserialization(&mut self, _: Entity, _: &EntitySerializationMap, _: &SceneGraph) {}
 }
 
 pub trait SerializableComponent:
@@ -66,21 +66,17 @@ pub trait ComponentListBounds {
         &self,
         ui: &Ui<'_>,
         index: &Entity,
-        serialized_marker: &ComponentList<super::SerializationMarker>,
+        serialized_marker: &EntitySerializationMap,
     ) -> Option<ComponentSerializationCommandType>;
 
     fn load_component_into_serialized_entity(
         &self,
         index: &Entity,
         serialized_entity: &mut super::SerializedEntity,
-        serialization_markers: &ComponentList<super::SerializationMarker>,
+        serialization_markers: &EntitySerializationMap,
     );
 
-    fn post_deserialization(
-        &mut self,
-        entity_names: &ComponentList<SerializationMarker>,
-        scene_graph: &SceneGraph,
-    );
+    fn post_deserialization(&mut self, entity_names: &EntitySerializationMap, scene_graph: &SceneGraph);
 
     // This gets the sync status of a given Entity, provided, optionally, two serialized entities.
     // In the most general sense, the returned SyncStatus
@@ -174,7 +170,7 @@ where
         &self,
         ui: &imgui::Ui<'_>,
         entity_id: &Entity,
-        serialized_markers: &ComponentList<super::SerializationMarker>,
+        serialized_markers: &EntitySerializationMap,
     ) -> Option<ComponentSerializationCommandType> {
         self.serialization_option_raw(ui, entity_id, serialized_markers)
     }
@@ -183,7 +179,7 @@ where
         &self,
         entity: &Entity,
         serialized_entity: &mut super::SerializedEntity,
-        serialization_markers: &ComponentList<super::SerializationMarker>,
+        serialization_markers: &EntitySerializationMap,
     ) {
         if let Some(member_component) = self.get(entity) {
             if member_component
@@ -200,11 +196,7 @@ where
         }
     }
 
-    fn post_deserialization(
-        &mut self,
-        entity_serde: &ComponentList<SerializationMarker>,
-        scene_graph: &SceneGraph,
-    ) {
+    fn post_deserialization(&mut self, entity_serde: &EntitySerializationMap, scene_graph: &SceneGraph) {
         for this_one in self.iter_mut() {
             let id = this_one.entity_id();
             this_one

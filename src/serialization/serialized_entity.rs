@@ -1,8 +1,8 @@
 use super::{
     imgui_component_utils::PrefabStatus, physics_components::*, prefab_system, ComponentBounds,
     ComponentDatabase, ConversantNPC, DrawRectangle, Entity, Follow, Marker, Name, NonInspectableEntities,
-    Player, PrefabMarker, ResourcesDatabase, SceneSwitcher, SerializableComponent, SerializationId,
-    SingletonDatabase, SoundSource, Sprite, TextSource, Transform, Velocity,
+    Player, PrefabMarker, ResourcesDatabase, SceneData, SceneSwitcher, SerializableComponent,
+    SerializationId, SingletonDatabase, SoundSource, Sprite, TextSource, Transform, Velocity,
 };
 use serde_yaml::Value as YamlValue;
 
@@ -120,6 +120,7 @@ impl SerializedEntity {
         serialization_id: SerializationId,
         component_database: &ComponentDatabase,
         singleton_database: &SingletonDatabase,
+        scene_data: &SceneData,
         resources: &ResourcesDatabase,
         give_prefab: Option<&mut Option<SerializedEntity>>,
     ) -> Option<SerializedEntity> {

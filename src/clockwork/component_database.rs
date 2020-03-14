@@ -58,10 +58,6 @@ impl ComponentDatabase {
         if non_inspectable_entities.contains(NonInspectableEntities::PREFAB) {
             f(&mut self.prefab_markers);
         }
-
-        if non_inspectable_entities.contains(NonInspectableEntities::SERIALIZATION) {
-            f(&mut self.serialization_markers);
-        }
     }
 
     /// This loops over every component except for the following:
@@ -100,10 +96,6 @@ impl ComponentDatabase {
 
         if non_inspectable_entities.contains(NonInspectableEntities::PREFAB) {
             f(&self.prefab_markers);
-        }
-
-        if non_inspectable_entities.contains(NonInspectableEntities::SERIALIZATION) {
-            f(&self.serialization_markers);
         }
     }
 
@@ -236,16 +228,11 @@ impl ComponentDatabase {
     pub fn post_deserialization(
         &mut self,
         _: PostDeserializationRequired,
-        mut f: impl FnMut(&mut dyn ComponentListBounds, &ComponentList<SerializationMarker>),
+        entity_serialization_map: &EntitySerializationMap,
+        mut f: impl FnMut(&mut dyn ComponentListBounds, &EntitySerializationMap),
     ) {
-        let s_pointer: *const _ = &self.serialization_markers;
-        let bitflag = {
-            let mut all_flags = NonInspectableEntities::all();
-            all_flags.remove(NonInspectableEntities::SERIALIZATION);
-            all_flags
-        };
-        self.foreach_component_list_mut(bitflag, |component_list| {
-            f(component_list, unsafe { &*s_pointer });
+        self.foreach_component_list_mut(NonInspectableEntities::all(), |component_list| {
+            f(component_list, entity_serialization_map);
         });
     }
 }
@@ -255,6 +242,5 @@ bitflags! {
     pub struct NonInspectableEntities: u32 {
         const NAME                  =   0b0000_0001;
         const PREFAB                =   0b0000_0010;
-        const SERIALIZATION         =   0b0000_0100;
     }
 }
