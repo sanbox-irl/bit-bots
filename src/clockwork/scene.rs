@@ -109,3 +109,14 @@ pub enum SceneMode {
     Playing,
     Paused,
 }
+
+pub struct SceneIsDraft(());
+impl SceneIsDraft {
+    pub fn new(scene_mode: SceneMode) -> Option<SceneIsDraft> {
+        match scene_mode {
+            SceneMode::Draft => Some(SceneIsDraft(())),
+            SceneMode::Playing => None,
+            SceneMode::Paused => None,
+        }
+    }
+}

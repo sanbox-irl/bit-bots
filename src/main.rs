@@ -207,6 +207,7 @@ mod utilities {
     mod cached_bool;
     pub mod cardinals;
     mod color;
+    mod guarded_rw_lock;
     mod guarded_uuids;
     pub mod math;
     mod rect;
@@ -216,6 +217,7 @@ mod utilities {
     pub use axis::Axis;
     pub use cached_bool::CachedBool;
     pub use color::Color;
+    pub use guarded_rw_lock::*;
     pub use guarded_uuids::*;
     pub use rect::Rect;
     pub use vec::{Vec2, Vec2Int};
