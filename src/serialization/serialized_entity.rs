@@ -1,8 +1,8 @@
 use super::{
-    physics_components::*, prefab_system, ComponentBounds, ComponentDatabase, ConversantNPC, DrawRectangle,
-    Entity, Follow, Marker, Name, NonInspectableEntities, Player, PrefabMarker, ResourcesDatabase,
-    SceneSwitcher, SerializableComponent, SerializationId, SingletonDatabase, SoundSource, Sprite,
-    TextSource, Transform, Velocity,
+    imgui_component_utils::PrefabStatus, physics_components::*, prefab_system, ComponentBounds,
+    ComponentDatabase, ConversantNPC, DrawRectangle, Entity, Follow, Marker, Name, NonInspectableEntities,
+    Player, PrefabMarker, ResourcesDatabase, SceneSwitcher, SerializableComponent, SerializationId,
+    SingletonDatabase, SoundSource, Sprite, TextSource, Transform, Velocity,
 };
 use serde_yaml::Value as YamlValue;
 
@@ -92,18 +92,21 @@ impl SerializedEntity {
         )?;
 
         if let Some(prefab) = prefab {
-            let prefab_marker = serialized_entity.prefab_marker.take();
-
             // Did we have any overrides?
-            if serialized_entity == prefab {
-                info!("Hell yeah");
-                return None;
+            if let Some(prefab_marker) = serialized_entity.prefab_marker.take() {
+                match prefab_marker.inner.prefab_status(resources.prefabs()) {
+                    PrefabStatus::PrefabInstanceSecondary => {
+                        if serialized_entity == prefab {
+                            return None;
+                        }
+                    }
+                    _ => {}
+                }
+                serialized_entity.prefab_marker = Some(prefab_marker);
             }
 
             serialized_entity
                 .foreach_component_dedup(|component, active| component.is_serialized(&prefab, *active));
-
-            serialized_entity.prefab_marker = prefab_marker;
         }
 
         Some(serialized_entity)

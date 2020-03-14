@@ -1,4 +1,20 @@
 ---
+8020a965-e819-41a5-9e24-42aa1194e81a:
+  name: ~
+  player: ~
+  transform: ~
+  scene_switcher: ~
+  velocity: ~
+  sprite: ~
+  sound_source: ~
+  draw_rectangle: ~
+  bounding_box: ~
+  text_source: ~
+  follow: ~
+  conversant_npc: ~
+  prefab_marker: ~
+  id: 8020a965-e819-41a5-9e24-42aa1194e81a
+  marker: ~
 4c43e59d-4a7e-44a2-857d-ba370d4dd22a:
   name: ~
   player: ~
