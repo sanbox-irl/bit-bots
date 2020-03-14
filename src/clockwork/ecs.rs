@@ -19,14 +19,14 @@ pub struct Ecs {
 }
 
 impl Ecs {
-    pub fn new(prefabs: &PrefabMap) -> Result<Self, Error> {
+    pub fn new(scene: Scene, prefabs: &PrefabMap) -> Result<Self, Error> {
         let mut ecs = Ecs {
             component_database: ComponentDatabase::default(),
             scene_graph: SceneGraph::new(),
             singleton_database: SingletonDatabase::new()?,
             entities: Vec::new(),
             entity_allocator: EntityAllocator::new(),
-            scene_data: SceneData::new()?,
+            scene_data: SceneData::new(scene)?,
         };
 
         // Load in the SceneGraph...
@@ -271,9 +271,8 @@ impl Ecs {
 }
 
 impl Ecs {
-    /// We can load anything using this function. The key thing to note here,
-    /// however, is that this adds a `SerializationMarker` component to whatever is being
-    /// loaded. Ie -- if you load something with this function, it is now serialized.
+    /// We can load anything using this function. This will start TRACKING this serialized entity
+    /// using the serialization entity id provided.
     #[must_use]
     pub fn load_serialized_entity(
         &mut self,
@@ -281,12 +280,7 @@ impl Ecs {
         serialized_entity: SerializedEntity,
         prefabs: &PrefabMap,
     ) -> Option<PostDeserializationRequired> {
-        // Make a serialization data thingee on it...
-        self.component_database.serialization_markers.set_component(
-            &entity,
-            SerializationMarker::with_id(serialized_entity.id),
-            &mut self.scene_graph,
-        );
+        // self.scene_data.track_entity()
 
         // If it's got a prefab, load the prefab. Otherwise,
         // load it like a normal serialized entity:
@@ -409,16 +403,6 @@ impl Ecs {
                             PrefabMarker::new(prefab_id, serialized_id, None),
                             &mut self.scene_graph,
                         );
-
-                        // If the Parent is Serialized, then we'll add a Serialization ourselves...
-                        if self
-                            .component_database
-                            .serialization_markers
-                            .get(root_entity_id)
-                            .is_some()
-                        {
-                            // self.component_database.serialization_markers.set_component(&new_id, SerializationMarker::with_id(prefab_info.))
-                        }
                     }
 
                     None => {

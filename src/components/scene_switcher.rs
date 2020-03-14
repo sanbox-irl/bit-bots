@@ -41,7 +41,7 @@ impl ComponentBounds for SceneSwitcher {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::EntitySerializationMap,
     ) {
         se.scene_switcher = Some(super::SerializedComponent {
             inner: self.clone(),

@@ -7,6 +7,7 @@ pub struct Clockwork {
     pub hardware_interfaces: HardwareInterface,
     pub resources: ResourcesDatabase,
     pub time_keeper: TimeKeeper,
+    pub next_scene: Option<Scene>,
 }
 
 impl Clockwork {
@@ -16,7 +17,11 @@ impl Clockwork {
         let mut hardware_interfaces = HardwareInterface::new(&resources.config)?;
         resources.initialize(&mut hardware_interfaces.renderer)?;
 
-        let ecs = Clockwork::start_scene(&mut resources, &mut hardware_interfaces)?;
+        let ecs = Clockwork::start_scene(
+            resources.config.default_scene,
+            &mut resources,
+            &mut hardware_interfaces,
+        )?;
 
         Ok(Clockwork {
             ecs,
@@ -24,6 +29,7 @@ impl Clockwork {
             resources,
             action_map: ActionMap::default(),
             time_keeper: TimeKeeper::default(),
+            next_scene: None,
         })
     }
 
@@ -98,7 +104,12 @@ impl Clockwork {
             self.render(ui_handler)?;
 
             // CHANGE SCENE?
-            self.check_scene_change(&mut imgui)?;
+            if self.check_scene_change()? {
+                // Clear up the ImGui
+                imgui.meta_data.entity_list_information.clear();
+                imgui.meta_data.entity_vec.clear();
+                imgui.meta_data.stored_ids.clear();
+            }
         }
 
         imgui.save_meta_data()?;
@@ -149,40 +160,24 @@ impl Clockwork {
         Ok(())
     }
 
-    fn check_scene_change(&mut self, imgui: &mut ImGui) -> Result<(), Error> {
-        let should_change_scene = {
-            let next_scene = scene_system::NEXT_SCENE.lock().unwrap();
-            next_scene.is_some()
-        };
-
-        if should_change_scene {
-            self.ecs = Clockwork::start_scene(&mut self.resources, &mut self.hardware_interfaces)?;
-
-            // Clear up the ImGui
-            imgui.meta_data.entity_list_information.clear();
-            imgui.meta_data.entity_vec.clear();
-            imgui.meta_data.stored_ids.clear();
-        }
-
-        Ok(())
+    fn check_scene_change(&mut self) -> Result<bool, Error> {
+        Ok(if let Some(scene) = self.next_scene.take() {
+            self.ecs = Clockwork::start_scene(scene, &mut self.resources, &mut self.hardware_interfaces)?;
+            true
+        } else {
+            false
+        })
     }
 
     fn start_scene(
+        scene: Scene,
         resources: &mut ResourcesDatabase,
         hardware_interfaces: &mut HardwareInterface,
     ) -> Result<Ecs, Error> {
-        // Change the Scene Name!
-        {
-            let next_scene = scene_system::NEXT_SCENE.lock().unwrap().take();
-            let mut value = scene_system::CURRENT_SCENE.lock().unwrap();
-            if let Some(next_scene) = next_scene {
-                info!("Loading {}", next_scene);
-                *value = next_scene;
-            }
-        }
+        info!("Loading {}...", scene);
 
         // Initialize the ECS and Scene Graph
-        let mut ecs = Ecs::new(&resources.prefabs())?;
+        let mut ecs = Ecs::new(scene, &resources.prefabs())?;
         ecs.game_start(resources, hardware_interfaces)?;
 
         info!("..Scene Loaded!");

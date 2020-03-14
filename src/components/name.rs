@@ -344,7 +344,7 @@ impl ComponentBounds for Name {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::super::EntitySerializationMap,
     ) {
         se.name = Some(super::SerializedComponent {
             inner: self.clone(),

@@ -85,7 +85,7 @@ impl ComponentBounds for PrefabMarker {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::EntitySerializationMap,
     ) {
         se.prefab_marker = Some(super::SerializedComponent {
             inner: self.clone(),

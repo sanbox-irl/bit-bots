@@ -89,7 +89,7 @@ impl ComponentBounds for TextSource {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::EntitySerializationMap,
     ) {
         se.text_source = Some(super::SerializedComponent {
             inner: self.clone(),

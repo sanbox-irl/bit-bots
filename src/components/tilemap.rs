@@ -198,7 +198,7 @@ impl Tilemap {
 //         &self,
 //         se: &mut super::SerializedEntity,
 //         active: bool,
-//         _: &super::ComponentList<super::SerializationMarker>,
+// _: &super::EntitySerializationMap
 //     ) {
 //         se.tilemap = TilemapSerialized::from_tilemap(self.clone(), &se.id)
 //             .map_err(|e| {

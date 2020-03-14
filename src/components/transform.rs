@@ -93,7 +93,7 @@ impl ComponentBounds for Transform {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::EntitySerializationMap,
     ) {
         se.transform = Some(super::SerializedComponent {
             inner: self.clone(),

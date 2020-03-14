@@ -154,12 +154,7 @@ impl ComponentBounds for SerializationMarker {
         unimplemented!()
     }
 
-    fn commit_to_scene(
-        &self,
-        _: &mut super::SerializedEntity,
-        _: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
-    ) {
+    fn commit_to_scene(&self, _: &mut super::SerializedEntity, _: bool, _: &super::EntitySerializationMap) {
         unimplemented!();
     }
 

@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    imgui_component_utils::{CreateEntityCommand, CreateEntityCommandType},
+    *,
+};
 
 pub fn imgui_main(
     ecs: &mut Ecs,
@@ -6,15 +9,17 @@ pub fn imgui_main(
     hardware_interfaces: &mut HardwareInterface,
     ui_handler: &mut UiHandler<'_>,
     time_keeper: &TimeKeeper,
+    next_scene: &mut Option<Scene>,
 ) {
     let mut entity_serialization_command = None;
 
-    main_menu_bar(
+    *next_scene = main_menu_bar(
         hardware_interfaces
             .input
             .kb_input
             .is_pressed(winit::event::VirtualKeyCode::F1),
         ui_handler,
+        ecs.scene_data.scene(),
     );
 
     // Scene Entity Inspector
@@ -77,7 +82,7 @@ pub fn imgui_main(
     });
 
     if let Some(sc) = entity_serialization_command {
-        if let Err(e) = serialization_util::entities::process_serialized_command(sc, ecs, resources) {
+        if let Err(e) = SceneData::process_serialized_command(sc, ecs, resources) {
             error!("Error Processing Serialized Command: {}", e);
         }
     }
@@ -93,10 +98,12 @@ pub fn imgui_main(
     }
 }
 
-fn main_menu_bar(toggle_main_menu_bar: bool, ui_handler: &mut UiHandler<'_>) {
+fn main_menu_bar(toggle_main_menu_bar: bool, ui_handler: &mut UiHandler<'_>, scene: &Scene) -> Option<Scene> {
     if toggle_main_menu_bar {
         ui_handler.flags.toggle(ImGuiFlags::MAIN_MENU_BAR);
     }
+
+    let mut ret = None;
 
     if ui_handler.flags.contains(ImGuiFlags::MAIN_MENU_BAR) {
         // MENU
@@ -104,15 +111,16 @@ fn main_menu_bar(toggle_main_menu_bar: bool, ui_handler: &mut UiHandler<'_>) {
         if let Some(menu_bar) = ui.begin_main_menu_bar() {
             // SCENE
 
-            if let Some(menu) =
-                ui.begin_menu(&im_str!("{}", &scene_system::CURRENT_SCENE.lock().unwrap()), true)
-            {
+            if let Some(menu) = ui.begin_menu(&im_str!("{}", scene), true) {
                 scene_change(
                     "Switch Scene",
                     ui,
                     &mut ui_handler.scene_changing_info.switch_scene_name,
                     |new_name| {
-                        if scene_system::set_next_scene(Scene::new(new_name.to_string())) == false {
+                        let new_scene = Scene::new(new_name.to_string());
+                        if scene_system::scene_exists(&new_scene) {
+                            ret = Some(new_scene);
+                        } else {
                             error!("Couldn't switch to Scene {}", new_name);
                             error!("Does a Scene by that name exist?");
                         }
@@ -234,6 +242,8 @@ fn main_menu_bar(toggle_main_menu_bar: bool, ui_handler: &mut UiHandler<'_>) {
             menu_bar.end(ui);
         }
     }
+
+    ret
 }
 
 fn menu_option(imstr: &imgui::ImStr, flag: ImGuiFlags, ui: &Ui<'_>, flags_to_change: &mut ImGuiFlags) {
@@ -289,4 +299,30 @@ fn imgui_logging_tool(ui_handler: &mut UiHandler<'_>, ecs: &mut Ecs) -> bool {
     }
 
     is_opened
+}
+
+pub(super) fn process_entity_subcommand(
+    create_entity: CreateEntityCommand,
+    ecs: &mut Ecs,
+    prefabs: &PrefabMap,
+) {
+    let entity = match create_entity.command_type {
+        CreateEntityCommandType::CreateBlank => ecs.create_entity(),
+        CreateEntityCommandType::CreatePrefab(prefab_id) => {
+            prefab_system::instantiate_entity_from_prefab(ecs, prefab_id, prefabs)
+        }
+    };
+
+    if let Some(parent) = create_entity.parent_id {
+        let my_transform_c = ecs
+            .component_database
+            .transforms
+            .set_component_default(&entity, &mut ecs.scene_graph);
+
+        if let Some(node_id) = my_transform_c.inner().scene_graph_node_id() {
+            parent.append(node_id, &mut ecs.scene_graph);
+        }
+    }
+
+    ecs.scene_data.serialize_entity()
 }

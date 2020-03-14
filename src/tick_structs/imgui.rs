@@ -200,11 +200,7 @@ pub struct UiHandler<'a> {
 
 impl<'a> UiHandler<'a> {
     pub fn save_requested(&self) -> bool {
-        if super::scene_system::current_scene_mode() == super::SceneMode::Draft {
-            self.request_save
-        } else {
-            false
-        }
+        self.request_save
     }
 
     pub fn prepare_render(&self, window: &Window) {

@@ -60,13 +60,13 @@ impl ComponentBounds for ConversantNPC {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        serialization_marker: &super::ComponentList<super::SerializationMarker>,
+        serialization_map: &super::EntitySerializationMap,
     ) {
         se.conversant_npc = Some({
             let mut clone: super::ConversantNPC = self.clone();
             clone
                 .conversation_partner
-                .entity_id_to_serialized_refs(&serialization_marker);
+                .entity_id_to_serialized_refs(serialization_map);
 
             super::SerializedComponent { inner: clone, active }
         });
@@ -81,10 +81,10 @@ impl ComponentPostDeserialization for ConversantNPC {
     fn post_deserialization(
         &mut self,
         _: super::Entity,
-        serialization_markers: &super::ComponentList<super::SerializationMarker>,
+        serialization_map: &super::EntitySerializationMap,
         _: &super::scene_graph::SceneGraph,
     ) {
         self.conversation_partner
-            .serialized_refs_to_entity_id(serialization_markers);
+            .serialized_refs_to_entity_id(serialization_map);
     }
 }

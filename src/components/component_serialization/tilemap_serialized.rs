@@ -59,7 +59,7 @@ impl TilemapSerialized {
 //         &self,
 //         _: &mut super::SerializedEntity,
 //         _: bool,
-//         _: &super::ComponentList<super::SerializationMarker>,
+// _: &super::EntitySerializationMap
 //     ) {
 //         unimplemented!()
 //     }
@@ -68,4 +68,3 @@ impl TilemapSerialized {
 //         unimplemented!()
 //     }
 // }
-

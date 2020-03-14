@@ -1,19 +1,8 @@
 use super::{
-    serialization_util, Scene, SerializedEntity, SingletonDatabase, ENTITY_SUBPATH,
-    PREFAB_DIRECTORY, SCENE_DIRECTORY, SINGLETONS_SUBPATH,
+    serialization_util, Scene, SerializedEntity, SingletonDatabase, ENTITY_SUBPATH, PREFAB_DIRECTORY,
+    SCENE_DIRECTORY, SINGLETONS_SUBPATH,
 };
 use anyhow::Error;
-
-// pub fn set_next_scene(scene: Scene) -> bool {
-//     if scene_exists(&scene) == false {
-//         return false;
-//     }
-
-//     let mut next_scene_handle = NEXT_SCENE.lock().unwrap();
-//     *next_scene_handle = Some(scene);
-
-//     true
-// }
 
 pub fn create_scene(scene_name: &str) -> Result<bool, Error> {
     let scene = Scene::new(scene_name.to_string());
@@ -56,7 +45,7 @@ pub fn delete_scene(name: &str) -> Result<bool, Error> {
     Ok(true)
 }
 
-fn scene_exists(scene: &Scene) -> bool {
+pub fn scene_exists(scene: &Scene) -> bool {
     let path = if scene.is_prefab() {
         format!("{}/{}.prefab", PREFAB_DIRECTORY, scene.name())
     } else {

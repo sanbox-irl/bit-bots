@@ -1,7 +1,7 @@
 use super::{
     scene_graph::SerializedSceneGraph,
     serialization_util::{self, entities::SerializedHashMap},
-    ComponentDatabase, Entity, GuardedRwLock, ResourcesDatabase, Scene, SceneIsDraft, SceneMode,
+    ComponentDatabase, Ecs, Entity, GuardedRwLock, ResourcesDatabase, Scene, SceneIsDraft, SceneMode,
     SerializationId, SerializedEntity, SingletonDatabase,
 };
 use anyhow::Result as AnyResult;
@@ -44,6 +44,7 @@ impl SceneData {
                     *serialization_id,
                     component_database,
                     singleton_database,
+                    self,
                     resources,
                 ) {
                     self.serialize_entity(*entity, se);
@@ -103,6 +104,69 @@ impl SceneData {
     pub fn scene(&self) -> &Scene {
         &self.scene
     }
+
+    pub fn process_serialized_command(
+        command: EntitySerializationCommand,
+        ecs: &mut Ecs,
+        resources: &ResourcesDatabase,
+    ) -> Result<(), Error> {
+        match &command.command_type {
+            EntitySerializationCommandType::Revert => {
+                let serialized_entity =
+                    load_entity_by_id(&command.id, ecs.scene_data.scene())?.ok_or_else(|| {
+                        format_err!(
+                            "We couldn't find {}. Is it in the YAML?",
+                            Name::get_name_quick(&ecs.component_database.names, &command.entity)
+                        )
+                    })?;
+
+                // Reload the Entity
+                let post =
+                    ecs.load_serialized_entity(&command.entity, serialized_entity, resources.prefabs());
+
+                if let Some(post) = post {
+                    let scene_graph = &ecs.scene_graph;
+                    ecs.component_database
+                        .post_deserialization(post, |component_list, sl| {
+                            if let Some((inner, _)) =
+                                component_list.get_for_post_deserialization(&command.entity)
+                            {
+                                inner.post_deserialization(command.entity, sl, scene_graph);
+                            }
+                        });
+                }
+            }
+
+            EntitySerializationCommandType::Overwrite => {
+                if let Some(se) = SerializedEntity::new(
+                    &command.entity,
+                    command.id,
+                    &ecs.component_database,
+                    &ecs.singleton_database,
+                    resources,
+                ) {
+                    match commit_entity_to_serialized_scene(se, ecs.scene_data.scene()) {
+                        Ok(_old_entity) => {}
+                        Err(e) => {
+                            error!("COULDN'T SERIALIZE! {}", e);
+                        }
+                    }
+                }
+            }
+
+            EntitySerializationCommandType::StopSerializing => {
+                let result = unserialize_entity(&command.id, ecs.scene_data.scene())?;
+                if result == false {
+                    bail!(
+                        "We couldn't find {}. Is it in the YAML?",
+                        Name::get_name_quick(&ecs.component_database.names, &command.entity)
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct SerializedSceneCache {
@@ -116,7 +180,7 @@ pub struct SerializedSceneCache {
 
 impl SerializedSceneCache {
     pub fn new(scene: &Scene) -> AnyResult<Self> {
-        let mut saved_entities = serialization_util::entities::load_all_entities(scene)?;
+        // let mut saved_entities = serialization_util::entities::load_all_entities(scene)?;
         let serialized_scene_graph = serialization_util::serialized_scene_graph::load_scene_graph()?;
 
         unimplemented!()

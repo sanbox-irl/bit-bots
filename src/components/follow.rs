@@ -55,11 +55,11 @@ impl ComponentBounds for Follow {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        serialization_markers: &super::ComponentList<super::SerializationMarker>,
+        serialization_map: &super::EntitySerializationMap,
     ) {
         se.follow = Some({
             let mut clone: Follow = self.clone();
-            clone.target.entity_id_to_serialized_refs(&serialization_markers);
+            clone.target.entity_id_to_serialized_refs(serialization_map);
 
             super::SerializedComponent { inner: clone, active }
         });
@@ -74,9 +74,9 @@ impl super::ComponentPostDeserialization for Follow {
     fn post_deserialization(
         &mut self,
         _: super::Entity,
-        serialization_markers: &super::ComponentList<super::SerializationMarker>,
+        serialization_map: &super::EntitySerializationMap,
         _: &super::scene_graph::SceneGraph,
     ) {
-        self.target.serialized_refs_to_entity_id(serialization_markers);
+        self.target.serialized_refs_to_entity_id(serialization_map);
     }
 }

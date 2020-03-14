@@ -39,7 +39,7 @@ impl ComponentBounds for Velocity {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::EntitySerializationMap,
     ) {
         se.velocity = Some(super::SerializedComponent {
             inner: self.clone(),

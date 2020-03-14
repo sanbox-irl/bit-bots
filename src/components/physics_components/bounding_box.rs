@@ -49,7 +49,7 @@ impl ComponentBounds for BoundingBox {
         &self,
         serialized_entity: &mut super::SerializedEntity,
         active: bool,
-        _: &super::ComponentList<super::SerializationMarker>,
+        _: &super::EntitySerializationMap,
     ) {
         serialized_entity.bounding_box = Some(super::SerializedComponent {
             inner: self.clone(),

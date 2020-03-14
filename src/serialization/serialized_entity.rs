@@ -78,6 +78,7 @@ impl SerializedEntity {
         serialization_id: SerializationId,
         component_database: &ComponentDatabase,
         singleton_database: &SingletonDatabase,
+        scene_data: &SceneData,
         resources: &ResourcesDatabase,
     ) -> Option<Self> {
         let mut prefab = None;
@@ -87,6 +88,7 @@ impl SerializedEntity {
             serialization_id,
             component_database,
             singleton_database,
+            scene_data,
             resources,
             Some(&mut prefab),
         )?;
@@ -148,7 +150,7 @@ impl SerializedEntity {
             component_list.load_component_into_serialized_entity(
                 entity_id,
                 &mut serialized_entity,
-                &component_database.serialization_markers,
+                scene_data,
             );
         });
         serialized_entity.marker = singleton_database.save_singleton_markers(entity_id);

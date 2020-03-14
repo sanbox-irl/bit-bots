@@ -524,27 +524,3 @@ pub fn create_entity_submenu(
 
     out_entity
 }
-
-pub fn process_entity_subcommand(create_entity: CreateEntityCommand, ecs: &mut Ecs, prefabs: &PrefabMap) {
-    let entity = match create_entity.command_type {
-        CreateEntityCommandType::CreateBlank => ecs.create_entity(),
-        CreateEntityCommandType::CreatePrefab(prefab_id) => {
-            prefab_system::instantiate_entity_from_prefab(ecs, prefab_id, prefabs)
-        }
-    };
-
-    if let Some(parent) = create_entity.parent_id {
-        let my_transform_c = ecs
-            .component_database
-            .transforms
-            .set_component_default(&entity, &mut ecs.scene_graph);
-
-        if let Some(node_id) = my_transform_c.inner().scene_graph_node_id() {
-            parent.append(node_id, &mut ecs.scene_graph);
-        }
-    }
-
-    ecs.component_database
-        .serialization_markers
-        .set_component_default(&entity, &mut ecs.scene_graph);
-}

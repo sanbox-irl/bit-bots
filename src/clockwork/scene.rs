@@ -9,10 +9,11 @@ pub const SCENE_SUBPATH: &str = "scene_graph.graph";
 pub const ENTITY_SUBPATH: &str = "entities_data.yaml";
 pub const SINGLETONS_SUBPATH: &str = "singleton_data.yaml";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Scene {
     name: String,
     is_prefab: bool,
+    #[serde(skip)]
     mode: SceneMode,
 }
 
@@ -108,6 +109,12 @@ pub enum SceneMode {
     Draft,
     Playing,
     Paused,
+}
+
+impl Default for SceneMode {
+    fn default() -> Self {
+        SceneMode::Draft
+    }
 }
 
 pub struct SceneIsDraft(());
