@@ -96,7 +96,8 @@ pub fn serialize_all_entities(
     singleton_database: &SingletonDatabase,
     resources: &ResourcesDatabase,
 ) -> Result<(), Error> {
-    let mut serialized_entities = load_all_entities()?;
+    // We load all the Entities cause fuck you bish!
+    let mut serialized_entities: std::collections::HashMap<_, _> = Default::default();
 
     // FIND THE OLD SERIALIZED ENTITY
     for entity in entities {

@@ -245,5 +245,6 @@ bitflags! {
         const PREFAB_INSPECTOR      =   0b0000_0000_0100_0000;
         const MAIN_MENU_BAR         =   0b0000_0000_1000_0000;
         const IMGUI_EXAMPLE         =   0b0000_0001_0000_0000;
+        const LOGGER         =   0b0000_0010_0000_0000;
     }
 }

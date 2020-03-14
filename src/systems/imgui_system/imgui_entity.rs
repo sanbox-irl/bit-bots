@@ -40,10 +40,10 @@ pub fn entity_list(
                 }
             }
             NameRequestedAction::Delete => {
-                // Kill the children of a prefab first!
+                // Do not kill the children of a prefab first!
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
-                    if prefab_system::is_prefab_marker_main(prefab_marker.inner(), resources.prefabs())
-                        == false
+                    if prefab_marker.inner().prefab_status(resources.prefabs())
+                        == PrefabStatus::PrefabInstanceSecondary
                     {
                         error!("You can't delete a prefab child! Please edit the Prefab.");
                         return Ok(None);
@@ -228,16 +228,7 @@ fn imgui_entity_list(
                 }
                 .imgui_symbol(scene_mode);
 
-            // Debug the Scene Graph
-            if let Some(menu_token) =
-                ui.begin_menu(&im_str!("Scene Graph {}", scene_graph_serialization_status), true)
-            {
-                if imgui::MenuItem::new(im_str!("Log")).build(ui) {
-                    ecs.scene_graph.pretty_print(&ecs.component_database.names);
-                }
-
-                menu_token.end(ui);
-            }
+            imgui::MenuItem::new(&im_str!("Scene Graph {}", scene_graph_serialization_status)).build(ui);
 
             // Save Button!
             if imgui::MenuItem::new(im_str!("\u{f0c7}")).build(ui) || ui_handler.save_requested() {

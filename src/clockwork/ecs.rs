@@ -179,6 +179,16 @@ impl Ecs {
         )
     }
 
+    /// Logs the Component Database to Console using the Debug of Dump to Log.
+    pub fn log_component_database(&self) {
+        for entity in self.entities.iter() {
+            self.component_database
+                .foreach_component_list(NonInspectableEntities::all(), |comp_list| {
+                    comp_list.dump_to_log(&entity);
+                });
+        }
+    }
+
     /// For use during creation and startup, before we have an Ecs
     /// to do anything with
     fn remove_entity_raw(

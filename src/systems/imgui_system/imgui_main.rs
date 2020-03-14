@@ -1,4 +1,4 @@
-use super::{imgui_component_utils::EntitySerializationCommand, *};
+use super::*;
 
 pub fn imgui_main(
     ecs: &mut Ecs,
@@ -7,7 +7,7 @@ pub fn imgui_main(
     ui_handler: &mut UiHandler<'_>,
     time_keeper: &TimeKeeper,
 ) {
-    let mut entity_serialization_command: Option<EntitySerializationCommand> = None;
+    let mut entity_serialization_command = None;
 
     main_menu_bar(
         hardware_interfaces
@@ -70,6 +70,11 @@ pub fn imgui_main(
             ui_handler.flags.remove(ImGuiFlags::IMGUI_EXAMPLE);
         }
     }
+
+    // Logger
+    imgui_utility::create_window(ui_handler, ImGuiFlags::LOGGER, |ui_handler| {
+        imgui_logging_tool(ui_handler, ecs)
+    });
 
     if let Some(sc) = entity_serialization_command {
         if let Err(e) = serialization_util::entities::process_serialized_command(sc, ecs, resources) {
@@ -220,6 +225,9 @@ fn main_menu_bar(toggle_main_menu_bar: bool, ui_handler: &mut UiHandler<'_>) {
                     ui,
                     &mut ui_handler.flags,
                 );
+
+                menu_option(im_str!("Logger"), ImGuiFlags::LOGGER, ui, &mut ui_handler.flags);
+
                 utility_bar.end(ui);
             }
 
@@ -257,4 +265,28 @@ fn scene_change<F: Fn(&str)>(prompt: &str, ui: &imgui::Ui<'_>, scene_name: &mut 
 
         scene_submenu.end(ui);
     }
+}
+
+fn imgui_logging_tool(ui_handler: &mut UiHandler<'_>, ecs: &mut Ecs) -> bool {
+    let mut is_opened = true;
+
+    let ui = &mut ui_handler.ui;
+    let time_keeper_window = imgui::Window::new(im_str!("Logging Tool"))
+        .size(Vec2::new(400.0, 100.0).into(), imgui::Condition::FirstUseEver)
+        .opened(&mut is_opened);
+
+    if let Some(window) = time_keeper_window.begin(ui) {
+        if ui.button(im_str!("Log ComponentDatabase"), [0.0, 0.0]) {
+            ecs.log_component_database();
+        }
+        if ui.button(im_str!("Log SingletonDatabase"), [0.0, 0.0]) {
+            println!("{:#?}", ecs.singleton_database);
+        }
+        if ui.button(im_str!("Log SceneGraph"), [0.0, 0.0]) {
+            ecs.scene_graph.pretty_print(&ecs.component_database.names);
+        }
+        window.end(ui);
+    }
+
+    is_opened
 }
