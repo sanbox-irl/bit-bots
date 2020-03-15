@@ -1,14 +1,15 @@
 use super::{
+    imgui_component_utils::{EntitySerializationCommand, EntitySerializationCommandType},
     scene_graph::SerializedSceneGraph,
     serialization_util::{self, entities::SerializedHashMap},
-    ComponentDatabase, Ecs, Entity, GuardedRwLock, ResourcesDatabase, Scene, SceneIsDraft, SceneMode,
+    ComponentDatabase, Ecs, Entity, GuardedRwLock, Name, ResourcesDatabase, Scene, SceneIsDraft, SceneMode,
     SerializationId, SerializedEntity, SingletonDatabase,
 };
 use anyhow::Result as AnyResult;
-pub type EntitySerializationMap = std::collections::HashMap<Entity, SerializationId>;
+pub type TrackedEntitiesMap = std::collections::HashMap<Entity, SerializationId>;
 
 pub struct SceneData {
-    entity_to_serialization_id: GuardedRwLock<EntitySerializationMap, SceneIsDraft>,
+    tracked_entities: GuardedRwLock<TrackedEntitiesMap, SceneIsDraft>,
     serialized_scene_cache: GuardedRwLock<SerializedSceneCache, SceneIsDraft>,
     scene: Scene,
 }
@@ -16,14 +17,10 @@ pub struct SceneData {
 impl SceneData {
     pub fn new(scene: Scene) -> AnyResult<SceneData> {
         Ok(SceneData {
-            entity_to_serialization_id: GuardedRwLock::new(Default::default()),
+            tracked_entities: GuardedRwLock::new(Default::default()),
             serialized_scene_cache: GuardedRwLock::new(SerializedSceneCache::new(&scene)?),
             scene,
         })
-    }
-
-    pub fn entity_to_serialization_id(&self) -> &EntitySerializationMap {
-        &self.entity_to_serialization_id.read()
     }
 
     pub fn overwrite_serialization_with_all_entities(
@@ -38,7 +35,7 @@ impl SceneData {
         }
 
         for entity in entities {
-            if let Some(serialization_id) = self.entity_to_serialization_id().get(entity) {
+            if let Some(serialization_id) = self.tracked_entities().get(entity) {
                 if let Some(se) = SerializedEntity::new(
                     entity,
                     *serialization_id,
@@ -89,33 +86,64 @@ impl SceneData {
         entity: Entity,
         serialization_id: SerializationId,
     ) {
-        self.entity_to_serialization_id
+        self.tracked_entities
             .read_mut(scene_is_draft)
             .insert(entity, serialization_id);
     }
 
     pub fn stop_tracking_entity(&mut self, scene_is_draft: SceneIsDraft, entity: &Entity) {
-        let _old = self
-            .entity_to_serialization_id
-            .read_mut(scene_is_draft)
-            .remove(entity);
+        let _old = self.tracked_entities.read_mut(scene_is_draft).remove(entity);
     }
 
     pub fn scene(&self) -> &Scene {
         &self.scene
     }
 
+    pub fn tracked_entities(&self) -> &TrackedEntitiesMap {
+        self.tracked_entities.read()
+    }
+
+    pub fn saved_serialized_entities(&self) -> &SerializedHashMap {
+        &self.serialized_scene_cache.read().entities
+    }
+
+    pub fn serialized_entity_from_entity(&self, entity: &Entity) -> Option<&SerializedEntity> {
+        self.tracked_entities()
+            .get(entity)
+            .and_then(|serialization_id| self.saved_serialized_entities().get(serialization_id))
+    }
+
+    pub fn serialized_entity_from_entity_mut(&mut self, entity: &Entity) -> Option<&mut SerializedEntity> {
+        SceneIsDraft::new(self.scene().mode()).and_then(|scene_is_draft| {
+            self.tracked_entities
+                .read()
+                .get(entity)
+                .and_then(|serialization_id| {
+                    self.serialized_scene_cache
+                        .read_mut(scene_is_draft)
+                        .entities
+                        .get_mut(serialization_id)
+                })
+        })
+    }
+
     pub fn process_serialized_command(
         command: EntitySerializationCommand,
         ecs: &mut Ecs,
         resources: &ResourcesDatabase,
-    ) -> Result<(), Error> {
+    ) -> AnyResult<()> {
         match &command.command_type {
             EntitySerializationCommandType::Revert => {
-                let serialized_entity =
-                    load_entity_by_id(&command.id, ecs.scene_data.scene())?.ok_or_else(|| {
+                let serialized_entity = ecs
+                    .scene_data
+                    .serialized_scene_cache
+                    .read()
+                    .entities
+                    .get(&command.id)
+                    .cloned()
+                    .ok_or_else(|| {
                         format_err!(
-                            "We couldn't find {}. Is it in the YAML?",
+                            "We couldn't find {}.",
                             Name::get_name_quick(&ecs.component_database.names, &command.entity)
                         )
                     })?;
@@ -126,14 +154,17 @@ impl SceneData {
 
                 if let Some(post) = post {
                     let scene_graph = &ecs.scene_graph;
-                    ecs.component_database
-                        .post_deserialization(post, |component_list, sl| {
+                    ecs.component_database.post_deserialization(
+                        post,
+                        ecs.scene_data.tracked_entities(),
+                        |component_list, sl| {
                             if let Some((inner, _)) =
                                 component_list.get_for_post_deserialization(&command.entity)
                             {
                                 inner.post_deserialization(command.entity, sl, scene_graph);
                             }
-                        });
+                        },
+                    );
                 }
             }
 
@@ -143,22 +174,18 @@ impl SceneData {
                     command.id,
                     &ecs.component_database,
                     &ecs.singleton_database,
+                    &ecs.scene_data,
                     resources,
                 ) {
-                    match commit_entity_to_serialized_scene(se, ecs.scene_data.scene()) {
-                        Ok(_old_entity) => {}
-                        Err(e) => {
-                            error!("COULDN'T SERIALIZE! {}", e);
-                        }
-                    }
+                    ecs.scene_data.serialize_entity(command.entity, se);
                 }
             }
 
             EntitySerializationCommandType::StopSerializing => {
-                let result = unserialize_entity(&command.id, ecs.scene_data.scene())?;
-                if result == false {
+                let result = ecs.scene_data.unserialize_entity(&command.entity, &command.id);
+                if result.is_none() {
                     bail!(
-                        "We couldn't find {}. Is it in the YAML?",
+                        "We couldn't find {} to stop serializing them.",
                         Name::get_name_quick(&ecs.component_database.names, &command.entity)
                     );
                 }
@@ -169,12 +196,17 @@ impl SceneData {
     }
 }
 
+/// This is a serialized scene cache, representing our scene,
+/// while we are editing on it. Changes to the serialized scene
+/// cache are not saved to disk automatically.
 pub struct SerializedSceneCache {
     entities: SerializedHashMap,
     prefab_child_map: PrefabChildMap,
     singleton_data: SingletonDatabase,
     scene_graph: SerializedSceneGraph,
 
+    /// If dirty, this SerializedSceneCache no longer directly reflects
+    /// what is serialized to disk.
     dirty: bool,
 }
 
@@ -183,15 +215,27 @@ impl SerializedSceneCache {
         // let mut saved_entities = serialization_util::entities::load_all_entities(scene)?;
         let serialized_scene_graph = serialization_util::serialized_scene_graph::load_scene_graph()?;
 
+        // set self to dirty here
+
         unimplemented!()
     }
 
     pub fn serialize_entity(&mut self, serialized_entity: SerializedEntity) -> Option<SerializedEntity> {
+        self.dirty = true;
+
         self.entities.insert(serialized_entity.id, serialized_entity)
     }
 
+    /// Returns the old serialized entity, if it was previously serialized.
     pub fn unserialize_entity(&mut self, serialization_id: &SerializationId) -> Option<SerializedEntity> {
-        self.entities.remove(serialization_id)
+        let result = self.entities.remove(serialization_id);
+
+        // A little cheeky here...
+        if result.is_some() {
+            self.dirty = true;
+        }
+
+        result
     }
 }
 

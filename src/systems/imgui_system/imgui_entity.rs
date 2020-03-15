@@ -5,6 +5,7 @@ pub fn entity_list(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
     ui_handler: &mut UiHandler<'_>,
+    next_scene: &mut Option<Scene>,
 ) -> Result<Option<EntitySerializationCommand>, Error> {
     let mut open = true;
     let mut later_action_on_entity: Option<(Entity, NameRequestedAction)> = None;
@@ -56,7 +57,11 @@ pub fn entity_list(
             NameRequestedAction::GoToPrefab => {
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
                     let id = prefab_marker.inner().prefab_id();
-                    if scene_system::set_next_scene(Scene::new_prefab(id)) == false {
+                    let new_scene = Scene::new_prefab(id);
+
+                    if scene_system::scene_exists(&new_scene) {
+                        *next_scene = Some(new_scene);
+                    } else {
                         error!("Couldn't switch to Prefab {}", id);
                         error!("Does a Prefab by that name exist?");
                     }
@@ -68,34 +73,19 @@ pub fn entity_list(
                 }
             }
             NameRequestedAction::PromoteToPrefab => {
-                prefab_system::promote_entity_to_prefab(
-                    &entity,
-                    &mut ecs.component_database,
-                    &ecs.singleton_database,
-                    &mut ecs.scene_graph,
-                    resources,
-                )?;
+                prefab_system::promote_entity_to_prefab(&entity, &mut ecs, resources)?;
             }
 
             NameRequestedAction::UnpackPrefab => {
                 let mut success = false;
 
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
-                    if let Some(serialization_marker) =
-                        ecs.component_database.serialization_markers.get(&entity)
+                    if let Some(serialized_entity) = ecs.scene_data.serialized_entity_from_entity_mut(&entity)
                     {
-                        let serialized_entity = serialization_util::entities::load_committed_entity(
-                            &serialization_marker.inner(),
-                        );
-
-                        if let Ok(Some(mut serialized_entity)) = serialized_entity {
-                            prefab_marker.inner().uncommit_to_scene(&mut serialized_entity);
-
-                            success = serialization_util::entities::commit_entity_to_serialized_scene(
-                                serialized_entity,
-                            )
-                            .is_ok();
-                        }
+                        prefab_marker.inner().uncommit_to_scene(serialized_entity);
+                        ecs.component_database
+                            .prefab_markers
+                            .unset_component(&entity, &mut ecs.scene_graph);
                     }
                 }
 
@@ -129,16 +119,10 @@ pub fn entity_list(
                 }
             }
             NameRequestedAction::LogSerializedEntity => {
-                if let Some(serialization_marker) =
-                    ecs.component_database.serialization_markers.get_mut(&entity)
-                {
-                    if let Some(cached) = serialization_marker.inner_mut().cached_serialized_entity() {
-                        cached.log_to_console();
-                    } else {
-                        error!(
-                            "We didn't have a Cached Serialized Entity. Is there a problem with the caching?"
-                        );
-                    }
+                if let Some(serialized_entity) = ecs.scene_data.serialized_entity_from_entity(&entity) {
+                    serialized_entity.log_to_console();
+                } else {
+                    error!("We didn't have a Cached Serialized Entity.");
                 }
             }
             NameRequestedAction::LogEntity => {
@@ -153,22 +137,15 @@ pub fn entity_list(
             }
 
             NameRequestedAction::EntitySerializationCommand(entity_serialization_command) => {
-                let uuid = ecs
-                    .component_database
-                    .serialization_markers
-                    .get(&entity)
-                    .map(|smc| smc.inner().id)
-                    .unwrap();
-
                 return Ok(Some(EntitySerializationCommand {
                     entity,
-                    id: uuid,
+                    id: ecs.scene_data.tracked_entities().get(&entity).cloned().unwrap(),
                     command_type: entity_serialization_command,
                 }));
             }
 
             NameRequestedAction::CreateEntityCommand(create_entity_command) => {
-                process_entity_subcommand(create_entity_command, ecs, resources.prefabs())
+                super::imgui_main::process_entity_subcommand(create_entity_command, ecs, resources.prefabs())
             }
         }
     }
@@ -176,9 +153,7 @@ pub fn entity_list(
     Ok(None)
 }
 
-/// This is in a separate function to make it clear that ImGui code must always
-/// handle its own errors locally. Use `match` or `if let Err` to identify errors,
-/// and log them using `error!()`.
+/// Actual ImGui Code. Cannot error out of this function. Must handle it!
 fn imgui_entity_list(
     ecs: &mut Ecs,
     resources: &mut ResourcesDatabase,
@@ -186,7 +161,7 @@ fn imgui_entity_list(
     open: &mut bool,
     later_action_on_entity: &mut Option<(Entity, NameRequestedAction)>,
 ) {
-    let scene_mode = scene_system::current_scene_mode();
+    let scene_mode = ecs.scene_data.scene().mode();
 
     // Top menu bar!
     let entity_window = imgui::Window::new(&im_str!("Entity List"))
@@ -203,7 +178,7 @@ fn imgui_entity_list(
             if let Some(sub_command) =
                 create_entity_submenu("Create Entity", true, None, resources.prefabs(), ui)
             {
-                process_entity_subcommand(sub_command, ecs, resources.prefabs());
+                super::imgui_main::process_entity_subcommand(sub_command, ecs, resources.prefabs());
             }
 
             // Get Scene Graph Serialization Status:

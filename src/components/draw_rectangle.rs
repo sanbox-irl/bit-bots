@@ -56,7 +56,7 @@ impl ComponentBounds for DrawRectangle {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::EntitySerializationMap,
+        _: &super::TrackedEntitiesMap,
     ) {
         se.draw_rectangle = Some(super::SerializedComponent {
             inner: self.clone(),

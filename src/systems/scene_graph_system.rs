@@ -1,5 +1,6 @@
 use super::{
-    scene_graph::*, Component, ComponentDatabase, ComponentList, Entity, SerializationMarker, Transform, Vec2,
+    scene_graph::*, Component, ComponentDatabase, ComponentList, Entity, SerializationId, TrackedEntitiesMap,
+    Transform, Vec2,
 };
 
 /// This function walks the SceneGraph, updating each Transform/GraphNode
@@ -49,7 +50,7 @@ pub fn update_transforms_via_scene_graph(
 /// can have weird behavior if you're not careful!
 pub fn create_serialized_graph(
     scene_graph: &SceneGraph,
-    serialization_markers: &ComponentList<SerializationMarker>,
+    tracked_entities: &TrackedEntitiesMap,
 ) -> SerializedSceneGraph {
     fn walk_serialized_graph(
         node: &Node,
@@ -69,8 +70,8 @@ pub fn create_serialized_graph(
 
     for parent in scene_graph.iter_roots() {
         walk_serialized_graph(parent, scene_graph, None, &mut |entity, parent_id| {
-            serialization_markers.get(entity).map(|smc| {
-                let id = serialized_scene_graph.instantiate_node(smc.inner().id);
+            tracked_entities.get(entity).map(|smc| {
+                let id = serialized_scene_graph.instantiate_node(smc);
 
                 // Append if we can
                 if let Some(parent_id) = parent_id {
@@ -113,24 +114,22 @@ where
 /// This iterates over the `ComponentDatabase`, finding the `Component<SerializationMarker>`,
 /// if it exists, which the `SerializedNode` corresponds to. It then finds and returns
 /// the corresponding `Component<Transform>`, if it exists.
-pub fn find_transform_from_serialized_node<'a, 'b>(
-    component_database: &'a mut ComponentDatabase,
-    serialized_node: &'b SerializedNode,
+pub fn find_transform_from_serialized_node<'a>(
+    transforms: &'a mut ComponentList<Transform>,
+    tracked_entities: &'_ TrackedEntitiesMap,
+    target_id: SerializationId,
 ) -> Option<&'a mut Component<Transform>> {
-    let sm = &component_database.serialization_markers;
-    let tc = &mut component_database.transforms;
-
-    if let Some(entity) = sm.iter().find_map(|smc| {
-        if smc.inner().id == *serialized_node.inner() {
-            Some(smc.entity_id())
+    if let Some(entity) = tracked_entities.iter().find_map(|(entity, serialization_id)| {
+        if *serialization_id == target_id {
+            Some(entity)
         } else {
             None
         }
     }) {
-        return tc.get_mut(&entity);
+        transforms.get_mut(&entity)
+    } else {
+        None
     }
-
-    None
 }
 
 pub fn find_transform_from_prefab_node<'a, 'b>(

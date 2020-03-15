@@ -81,7 +81,7 @@ impl ComponentBounds for Sprite {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::EntitySerializationMap,
+        _: &super::TrackedEntitiesMap,
     ) {
         se.sprite = Some(super::SerializedComponent {
             inner: self.clone(),

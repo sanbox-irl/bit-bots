@@ -1,5 +1,5 @@
 use super::{
-    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, EntitySerializationMap, Name,
+    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, TrackedEntitiesMap, Name,
     PrefabMap, SerializedEntity,
 };
 use imgui::Ui;
@@ -11,7 +11,7 @@ pub trait ComponentBounds {
         &self,
         serialized_entity: &mut SerializedEntity,
         active: bool,
-        serialization_map: &EntitySerializationMap,
+        serialization_map: &TrackedEntitiesMap,
     );
     fn uncommit_to_scene(&self, serialized_entity: &mut SerializedEntity);
 
@@ -24,7 +24,7 @@ pub trait ComponentBounds {
 
 pub trait ComponentPostDeserialization {
     #[inline]
-    fn post_deserialization(&mut self, _: Entity, _: &EntitySerializationMap, _: &SceneGraph) {}
+    fn post_deserialization(&mut self, _: Entity, _: &TrackedEntitiesMap, _: &SceneGraph) {}
 }
 
 pub trait SerializableComponent:
@@ -62,21 +62,21 @@ pub trait ComponentListBounds {
         is_open: bool,
     ) -> (Option<ComponentSerializationCommandType>, bool);
 
-    fn serialization_option(
-        &self,
-        ui: &Ui<'_>,
-        index: &Entity,
-        serialized_marker: &EntitySerializationMap,
-    ) -> Option<ComponentSerializationCommandType>;
+    // fn serialization_option(
+    //     &self,
+    //     ui: &Ui<'_>,
+    //     index: &Entity,
+    //     serialized_marker: &EntitySerializationMap,
+    // ) -> Option<ComponentSerializationCommandType>;
 
     fn load_component_into_serialized_entity(
         &self,
         index: &Entity,
         serialized_entity: &mut super::SerializedEntity,
-        serialization_markers: &EntitySerializationMap,
+        serialization_markers: &TrackedEntitiesMap,
     );
 
-    fn post_deserialization(&mut self, entity_names: &EntitySerializationMap, scene_graph: &SceneGraph);
+    fn post_deserialization(&mut self, entity_names: &TrackedEntitiesMap, scene_graph: &SceneGraph);
 
     // This gets the sync status of a given Entity, provided, optionally, two serialized entities.
     // In the most general sense, the returned SyncStatus
@@ -85,7 +85,6 @@ pub trait ComponentListBounds {
         index: &Entity,
         serialized_entity: Option<&SerializedEntity>,
         serialized_prefab: Option<&SerializedEntity>,
-        should_have_serialized_entity: bool,
         should_have_prefab_entity: bool,
     ) -> Option<ParentSyncStatus>;
 
@@ -166,20 +165,20 @@ where
         }
     }
 
-    fn serialization_option(
-        &self,
-        ui: &imgui::Ui<'_>,
-        entity_id: &Entity,
-        serialized_markers: &EntitySerializationMap,
-    ) -> Option<ComponentSerializationCommandType> {
-        self.serialization_option_raw(ui, entity_id, serialized_markers)
-    }
+    // fn serialization_option(
+    //     &self,
+    //     ui: &imgui::Ui<'_>,
+    //     entity_id: &Entity,
+    //     serialized_markers: &EntitySerializationMap,
+    // ) -> Option<ComponentSerializationCommandType> {
+    //     self.serialization_option_raw(ui, entity_id, serialized_markers)
+    // }
 
     fn load_component_into_serialized_entity(
         &self,
         entity: &Entity,
         serialized_entity: &mut super::SerializedEntity,
-        serialization_markers: &EntitySerializationMap,
+        serialization_markers: &TrackedEntitiesMap,
     ) {
         if let Some(member_component) = self.get(entity) {
             if member_component
@@ -196,7 +195,7 @@ where
         }
     }
 
-    fn post_deserialization(&mut self, entity_serde: &EntitySerializationMap, scene_graph: &SceneGraph) {
+    fn post_deserialization(&mut self, entity_serde: &TrackedEntitiesMap, scene_graph: &SceneGraph) {
         for this_one in self.iter_mut() {
             let id = this_one.entity_id();
             this_one
@@ -220,7 +219,6 @@ where
         index: &Entity,
         serialized_entity: Option<&SerializedEntity>,
         serialized_prefab: Option<&SerializedEntity>,
-        should_have_serialized_entity: bool,
         should_have_prefab_entity: bool,
     ) -> Option<ParentSyncStatus> {
         self.get(index).map(|cmp| {
@@ -228,7 +226,6 @@ where
                 cmp,
                 serialized_entity,
                 serialized_prefab,
-                should_have_serialized_entity,
                 should_have_prefab_entity,
             )
         })

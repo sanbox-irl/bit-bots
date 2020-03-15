@@ -46,7 +46,7 @@ impl ComponentBounds for Player {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::EntitySerializationMap,
+        _: &super::TrackedEntitiesMap,
     ) {
         se.player = Some(super::SerializedComponent {
             inner: self.clone(),

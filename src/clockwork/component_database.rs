@@ -228,8 +228,8 @@ impl ComponentDatabase {
     pub fn post_deserialization(
         &mut self,
         _: PostDeserializationRequired,
-        entity_serialization_map: &EntitySerializationMap,
-        mut f: impl FnMut(&mut dyn ComponentListBounds, &EntitySerializationMap),
+        entity_serialization_map: &TrackedEntitiesMap,
+        mut f: impl FnMut(&mut dyn ComponentListBounds, &TrackedEntitiesMap),
     ) {
         self.foreach_component_list_mut(NonInspectableEntities::all(), |component_list| {
             f(component_list, entity_serialization_map);

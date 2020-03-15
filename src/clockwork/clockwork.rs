@@ -73,6 +73,7 @@ impl Clockwork {
                 &mut self.hardware_interfaces,
                 &mut ui_handler,
                 &self.time_keeper,
+                &mut self.next_scene,
             );
 
             if scene_mode == SceneMode::Draft {

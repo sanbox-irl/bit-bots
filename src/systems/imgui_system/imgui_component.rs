@@ -18,12 +18,8 @@ pub fn entity_inspector(
         entity_allocator: _,
         scene_graph,
         entities,
+        scene_data,
     } = ecs;
-
-    let scene_is_prefab = {
-        let scene_data = scene_system::CURRENT_SCENE.lock().unwrap();
-        scene_data.is_prefab()
-    };
 
     for entity in ui_handler.stored_ids.iter() {
         let mut window_is_open = true;
@@ -50,15 +46,14 @@ pub fn entity_inspector(
         };
 
         let names = &component_database.names;
-        let serialized_entity = component_database
-            .serialization_markers
-            .get_mut(entity)
-            .and_then(|se| {
+        let serialized_entity = scene_data
+            .tracked_entities()
+            .get(&entity)
+            .and_then(|serialization_id| {
                 let base_entity = serialized_prefab.clone().unwrap_or_default();
-
-                let cached_se: SerializedEntity = se
-                    .inner_mut()
-                    .cached_serialized_entity()
+                let cached_se = scene_data
+                    .saved_serialized_entities()
+                    .get(serialization_id)
                     .cloned()
                     .unwrap_or_default();
 
@@ -74,7 +69,6 @@ pub fn entity_inspector(
             });
 
         let should_have_prefab = component_database.prefab_markers.get(entity).is_some();
-        let should_have_serialized_entity = component_database.serialization_markers.get(entity).is_some();
 
         let entity_window = Window::new(&window_name)
             .size([600.0, 800.0], Condition::FirstUseEver)
@@ -95,7 +89,6 @@ pub fn entity_inspector(
                         entity,
                         serialized_entity.as_ref(),
                         serialized_prefab.as_ref(),
-                        should_have_serialized_entity,
                         should_have_prefab,
                     );
 
@@ -125,7 +118,7 @@ pub fn entity_inspector(
                 },
             );
 
-            let prefab_status: PrefabStatus = if scene_is_prefab {
+            let prefab_status: PrefabStatus = if scene_data.scene().is_prefab() {
                 PrefabStatus::Prefab
             } else {
                 component_database
@@ -135,42 +128,6 @@ pub fn entity_inspector(
                         pmc.inner().prefab_status(resources.prefabs())
                     })
             };
-
-            // Serialization Inspector
-            if let Some(s_marker) = component_database.serialization_markers.get_mut(entity) {
-                let (_, delete) = component_inspector_raw(
-                    s_marker,
-                    SyncStatus::Synced,
-                    SyncStatus::Unsynced,
-                    entities,
-                    &component_database.names,
-                    resources.prefabs(),
-                    ui,
-                    window_is_open,
-                    false,
-                    |inner, ip| {
-                        if inner.entity_inspector_results(ip) {
-                            final_post_action = Some(ComponentInspectorPostAction::EntityCommands(
-                                EntitySerializationCommand {
-                                    entity: *entity,
-                                    id: inner.id,
-                                    command_type: EntitySerializationCommandType::Overwrite,
-                                },
-                            ))
-                        }
-                    },
-                );
-
-                if delete {
-                    final_post_action = Some(ComponentInspectorPostAction::EntityCommands(
-                        EntitySerializationCommand {
-                            entity: *entity,
-                            id: s_marker.inner().id,
-                            command_type: EntitySerializationCommandType::StopSerializing,
-                        },
-                    ));
-                }
-            }
 
             // Menu bar funtimes!
             if let Some(menu_bar) = ui.begin_menu_bar() {
@@ -186,34 +143,13 @@ pub fn entity_inspector(
                     ),
                     true,
                 ) {
-                    // Prefab Marker, Name, Graph Node is omitted
-                    component_database.foreach_component_list_mut(
-                        NonInspectableEntities::SERIALIZATION,
-                        |component_list| component_list.component_add_button(entity, ui, scene_graph),
-                    );
+                    // Prefab Marker, Name is omitted
+                    component_database
+                        .foreach_component_list_mut(NonInspectableEntities::empty(), |component_list| {
+                            component_list.component_add_button(entity, ui, scene_graph)
+                        });
 
                     add_component_submenu.end(ui);
-                }
-
-                // Serialization Menubar
-                if let Some(serialization_submenu) = ui.begin_menu(
-                    im_str!("Serialize"),
-                    component_database.serialization_markers.get(entity).is_some(),
-                ) {
-                    if let Some(comp) = component_database.serialization_markers.get(entity) {
-                        if let Some(post_inspector) = serialization_menu(
-                            comp.inner(),
-                            ui,
-                            entity,
-                            component_database,
-                            serialized_entity.as_ref(),
-                            serialized_prefab.as_ref(),
-                        ) {
-                            final_post_action = Some(post_inspector);
-                        };
-                    }
-
-                    serialization_submenu.end(ui);
                 }
                 menu_bar.end(ui);
             }
@@ -237,15 +173,15 @@ pub fn entity_inspector(
                 match command.command_type {
                     ComponentSerializationCommandType::Serialize
                     | ComponentSerializationCommandType::StopSerializing => {
-                        let uuid = component_database
-                            .serialization_markers
-                            .get(&command.entity)
-                            .map(|sm| sm.inner().id)
+                        let serialization_id = scene_data.tracked_entities().get(&command.entity).unwrap();
+
+                        let serialized_entity = scene_data
+                            .saved_serialized_entities()
+                            .get(serialization_id)
+                            .cloned()
                             .unwrap();
 
-                        let mut serialized_yaml = serde_yaml::to_value(
-                            serialization_util::entities::load_entity_by_id(&uuid)?.unwrap(),
-                        )?;
+                        let mut serialized_yaml = serde_yaml::to_value(serialized_entity)?;
 
                         // Insert our New Serialization
                         serialized_yaml
@@ -256,11 +192,10 @@ pub fn entity_inspector(
                         let new_serialized_entity: SerializedEntity =
                             serde_yaml::from_value(serialized_yaml)?;
 
-                        serialization_util::entities::commit_entity_to_serialized_scene(
-                            new_serialized_entity.clone(),
-                        )?;
+                        scene_data.serialize_entity(command.entity, new_serialized_entity);
 
-                        if scene_is_prefab {
+                        // If we're in a Prefab Scene, update our Prefab Cache!
+                        if scene_data.scene().is_prefab() {
                             // We can have two kinds of Prefabs -- SceneGraph prefabs and
                             // non SceneGraph prefabs. We need to support both.
                             // In both cases, we assume that we only have one "root":
@@ -286,7 +221,10 @@ pub fn entity_inspector(
                             if let Some(prefab_id) = prefab_id {
                                 let cached_prefab =
                                     resources.prefabs_mut().unwrap().get_mut(&prefab_id).unwrap();
-                                cached_prefab.members.insert(uuid, new_serialized_entity);
+
+                                cached_prefab
+                                    .members
+                                    .insert(*serialization_id, new_serialized_entity);
                             } else {
                                 // This is very unlikely!
                                 error!("We were in a Prefab Scene but we couldn't find our Prefab.");
@@ -294,12 +232,13 @@ pub fn entity_inspector(
                             }
                         }
                     }
+
                     ComponentSerializationCommandType::Revert
                     | ComponentSerializationCommandType::RevertToParentPrefab => {
-                        let uuid = component_database
-                            .serialization_markers
+                        let serialization_id = scene_data
+                            .tracked_entities()
                             .get(&command.entity)
-                            .map(|sm| sm.inner().id)
+                            .cloned()
                             .unwrap();
 
                         let ComponentSerializationCommand {
@@ -313,16 +252,21 @@ pub fn entity_inspector(
                             &entity,
                             key,
                             delta,
-                            uuid,
+                            serialization_id,
                             &mut singleton_database.associated_entities,
                             scene_graph,
                         );
 
-                        component_database.post_deserialization(post_deserialization, |component_list, sl| {
-                            if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                                inner.post_deserialization(entity, sl, scene_graph);
-                            }
-                        })
+                        component_database.post_deserialization(
+                            post_deserialization,
+                            scene_data.tracked_entities(),
+                            |component_list, sl| {
+                                if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity)
+                                {
+                                    inner.post_deserialization(entity, sl, scene_graph);
+                                }
+                            },
+                        )
                     }
 
                     ComponentSerializationCommandType::ApplyOverrideToParentPrefab => {
@@ -376,64 +320,10 @@ pub fn entity_inspector(
     Ok(entity_command)
 }
 
-pub fn serialization_menu(
-    serialized_marker: &SerializationMarker,
-    ui: &Ui<'_>,
-    entity: &Entity,
-    component_database: &ComponentDatabase,
-    current_serialized_entity: Option<&SerializedEntity>,
-    current_prefab_parent: Option<&SerializedEntity>,
-) -> Option<ComponentInspectorPostAction> {
-    let mut post_action: Option<ComponentInspectorPostAction> = None;
-
-    component_database.foreach_component_list(
-        NonInspectableEntities::NAME | NonInspectableEntities::PREFAB,
-        |component_list| {
-            if let Some(command_type) =
-                component_list.serialization_option(ui, entity, &component_database.serialization_markers)
-            {
-                post_action = Some(handle_serialization_command(
-                    *entity,
-                    command_type,
-                    current_serialized_entity,
-                    current_prefab_parent,
-                    component_list,
-                ));
-            }
-        },
-    );
-
-    ui.separator();
-
-    // REVERT SAVE
-    if ui.button(im_str!("Revert"), [0.0, 0.0]) {
-        post_action = Some(ComponentInspectorPostAction::EntityCommands(
-            EntitySerializationCommand {
-                entity: *entity,
-                id: serialized_marker.id,
-                command_type: EntitySerializationCommandType::Revert,
-            },
-        ));
-    }
-
-    // OVERWRITE
-    ui.same_line(0.0);
-    if ui.button(im_str!("Overwrite"), [0.0, 0.0]) {
-        post_action = Some(ComponentInspectorPostAction::EntityCommands(
-            EntitySerializationCommand {
-                entity: *entity,
-                id: serialized_marker.id,
-                command_type: EntitySerializationCommandType::Revert,
-            },
-        ));
-    }
-
-    post_action
-}
-
 #[must_use]
 pub fn component_inspector_raw<T>(
     comp: &mut Component<T>,
+    scene_mode: SceneMode,
     serialization_sync_status: SyncStatus,
     prefab_sync_status: SyncStatus,
     entities: &[Entity],
@@ -450,7 +340,6 @@ where
     let mut requested_action = None;
     let mut delete = false;
 
-    let scene_mode = scene_system::current_scene_mode();
     let name = super::imgui_system::typed_text_ui::<T>();
     let uid = &format!("{}{}", comp.entity_id(), &T::type_name());
 
@@ -647,51 +536,51 @@ fn component_inspector_right_click(
     (requested_action, delete)
 }
 
-impl<T> ComponentList<T>
-where
-    T: ComponentBounds + Clone + typename::TypeName + std::fmt::Debug + 'static,
-{
-    pub fn serialization_option_raw(
-        &self,
-        ui: &imgui::Ui<'_>,
-        entity_id: &Entity,
-        serialized_markers: &ComponentList<SerializationMarker>,
-    ) -> Option<ComponentSerializationCommandType> {
-        lazy_static::lazy_static! {
-            static ref SERIALIZE: &'static ImStr = im_str!("Serialize");
-            static ref DESERIALIZE: &'static ImStr = im_str!("Stop Serializing");
-            static ref REVERT: &'static ImStr = im_str!("Revert");
-        }
+// impl<T> ComponentList<T>
+// where
+//     T: ComponentBounds + Clone + typename::TypeName + std::fmt::Debug + 'static,
+// {
+//     pub fn serialization_option_raw(
+//         &self,
+//         ui: &imgui::Ui<'_>,
+//         entity_id: &Entity,
+//         serialized_markers: &ComponentList<SerializationMarker>,
+//     ) -> Option<ComponentSerializationCommandType> {
+//         lazy_static::lazy_static! {
+//             static ref SERIALIZE: &'static ImStr = im_str!("Serialize");
+//             static ref DESERIALIZE: &'static ImStr = im_str!("Stop Serializing");
+//             static ref REVERT: &'static ImStr = im_str!("Revert");
+//         }
 
-        let type_name = ImString::new(imgui_system::typed_text_ui::<T>());
-        let component_exists = self.get(entity_id).is_some();
-        let mut output = None;
+//         let type_name = ImString::new(imgui_system::typed_text_ui::<T>());
+//         let component_exists = self.get(entity_id).is_some();
+//         let mut output = None;
 
-        if serialized_markers.get(entity_id).is_some() {
-            if let Some(serde_menu) = ui.begin_menu(&type_name, component_exists) {
-                if self.get(entity_id).is_some() {
-                    // Serialize
-                    if MenuItem::new(&SERIALIZE).build(ui) {
-                        output = Some(ComponentSerializationCommandType::Serialize);
-                    }
+//         if serialized_markers.get(entity_id).is_some() {
+//             if let Some(serde_menu) = ui.begin_menu(&type_name, component_exists) {
+//                 if self.get(entity_id).is_some() {
+//                     // Serialize
+//                     if MenuItem::new(&SERIALIZE).build(ui) {
+//                         output = Some(ComponentSerializationCommandType::Serialize);
+//                     }
 
-                    // Deserialize
-                    if MenuItem::new(&DESERIALIZE).build(ui) {
-                        output = Some(ComponentSerializationCommandType::StopSerializing);
-                    }
+//                     // Deserialize
+//                     if MenuItem::new(&DESERIALIZE).build(ui) {
+//                         output = Some(ComponentSerializationCommandType::StopSerializing);
+//                     }
 
-                    // Revert
-                    if MenuItem::new(&REVERT).build(ui) {
-                        output = Some(ComponentSerializationCommandType::Revert);
-                    }
-                }
-                serde_menu.end(ui);
-            }
-        }
+//                     // Revert
+//                     if MenuItem::new(&REVERT).build(ui) {
+//                         output = Some(ComponentSerializationCommandType::Revert);
+//                     }
+//                 }
+//                 serde_menu.end(ui);
+//             }
+//         }
 
-        output
-    }
-}
+//         output
+//     }
+// }
 
 fn handle_serialization_command(
     entity: Entity,

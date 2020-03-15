@@ -171,11 +171,16 @@ impl ParentSyncStatus {
         comp: &super::Component<T>,
         serialized_entity: Option<&SerializedEntity>,
         prefab_entity: Option<&SerializedEntity>,
-        should_have_serialized_entity: bool,
         should_have_prefab_entity: bool,
     ) -> ParentSyncStatus {
         ParentSyncStatus {
-            serialized: SyncStatus::new(comp, serialized_entity, should_have_serialized_entity),
+            serialized: serialized_entity.map_or(SyncStatus::Unsynced, |se| {
+                if comp.is_serialized(se) {
+                    SyncStatus::Synced
+                } else {
+                    SyncStatus::OutofSync
+                }
+            }),
             prefab: SyncStatus::new(comp, prefab_entity, should_have_prefab_entity),
         }
     }

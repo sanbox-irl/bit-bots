@@ -43,7 +43,7 @@ impl ComponentBounds for SoundSource {
         &self,
         se: &mut super::SerializedEntity,
         active: bool,
-        _: &super::EntitySerializationMap,
+        _: &super::TrackedEntitiesMap,
     ) {
         se.sound_source = Some(super::SerializedComponent {
             inner: self.clone(),

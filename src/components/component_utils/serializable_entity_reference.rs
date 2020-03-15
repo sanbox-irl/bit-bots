@@ -1,5 +1,5 @@
 use super::{
-    imgui_component_utils::InspectorParameters, imgui_system, Entity, EntitySerializationMap, SerializationId,
+    imgui_component_utils::InspectorParameters, imgui_system, Entity, TrackedEntitiesMap, SerializationId,
 };
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -21,13 +21,13 @@ impl SerializableEntityReference {
         self.target_serialized_id
     }
 
-    pub fn entity_id_to_serialized_refs(&mut self, serialization_map: &EntitySerializationMap) {
+    pub fn entity_id_to_serialized_refs(&mut self, serialization_map: &TrackedEntitiesMap) {
         if let Some(target) = &self.target {
             self.target_serialized_id = serialization_map.get(target).cloned();
         }
     }
 
-    pub fn serialized_refs_to_entity_id(&mut self, serialization_map: &EntitySerializationMap) {
+    pub fn serialized_refs_to_entity_id(&mut self, serialization_map: &TrackedEntitiesMap) {
         if let Some(tsi) = &self.target_serialized_id {
             self.target = serialization_map.iter().find_map(|(entity, serialization_id)| {
                 if serialization_id == tsi {
