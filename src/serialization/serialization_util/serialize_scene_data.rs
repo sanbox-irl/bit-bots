@@ -10,7 +10,7 @@ pub fn load_entities(scene: &Scene) -> AnyResult<SerializedHashMap> {
 
 pub fn load_prefab_child_map(
     scene: &Scene,
-) -> AnyResult<std::collections::HashMap<PrefabId, PrefabChildMap>> {
+) -> AnyResult<std::collections::HashMap<SerializationId, PrefabChildMap>> {
     load_file(&scene.prefab_child_map_path(), scene.is_prefab(), |prefab| {
         prefab.child_map
     })

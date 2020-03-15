@@ -13,7 +13,7 @@ pub struct Prefab {
     valid: bool,
     pub members: SerializedHashMap,
     pub serialized_graph: SerializedSceneGraph,
-    pub child_map: PrefabChildMap,
+    pub child_map: HashMap<SerializationId, PrefabChildMap>,
 }
 
 impl Prefab {
@@ -26,7 +26,7 @@ impl Prefab {
             members,
             serialized_graph,
             prefab_id,
-            child_map: PrefabChildMap::new(),
+            child_map: HashMap::new(),
             valid: true,
         }
     }
@@ -46,7 +46,7 @@ impl Prefab {
             members,
             serialized_graph,
             valid: true,
-            child_map: PrefabChildMap::new(),
+            child_map: HashMap::new(),
         }
     }
 

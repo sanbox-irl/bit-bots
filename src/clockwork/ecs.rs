@@ -359,10 +359,11 @@ impl Ecs {
 
             match members.remove(s_node.inner()) {
                 Some(serialized_entity) => {
-                    let serialized_id: SerializationId = {
-                        // self.scene_data.
-                        todo!()
-                    };
+                    let serialized_id = self
+                        .scene_data
+                        .get_scene_id_for_prefab_child(prefab_main_entity_id, serialized_entity.id)
+                        .unwrap_or_else(|| SerializationId::new());
+
                     let new_id = self.create_entity();
 
                     // Load in the Prefab
@@ -384,7 +385,7 @@ impl Ecs {
                         })
                     };
 
-                    // Did we find a PrefabParentNodeID?
+                    // Did we find a PrefabParentNodeID? We basically always should!
                     if let Some(parent_id) = parent_id {
                         if let Some(transform) = self.component_database.transforms.get_mut(&new_id) {
                             if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
@@ -396,7 +397,7 @@ impl Ecs {
                     // Set our Prefab
                     self.component_database.prefab_markers.set_component(
                         &new_id,
-                        PrefabMarker::new(prefab_id, serialized_id),
+                        PrefabMarker::new(prefab_id, serialized_entity.id),
                         &mut self.scene_graph,
                     );
                 }

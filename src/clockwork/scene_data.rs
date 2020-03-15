@@ -1,8 +1,8 @@
 use super::{
     imgui_component_utils::{EntitySerializationCommand, EntitySerializationCommandType},
     scene_graph::SerializedSceneGraph,
-    serialization_util, ComponentDatabase, Ecs, Entity, Name, PrefabChildMap, ResourcesDatabase, Scene,
-    SceneIsDraft, SceneMode, SerializationId, SerializedEntity, SingletonDatabase, TokenizedRwLock, PrefabId,
+    serialization_util, ComponentDatabase, Ecs, Entity, Name, PrefabChildMap, PrefabId, ResourcesDatabase,
+    Scene, SceneIsDraft, SceneMode, SerializationId, SerializedEntity, SingletonDatabase, TokenizedRwLock,
 };
 use anyhow::Result as AnyResult;
 use std::collections::HashMap;
@@ -104,7 +104,27 @@ impl SceneData {
         })
     }
 
-    pub fn get_scene_id_for_prefab_child(prefab_id: PrefabId, )
+    pub fn get_scene_id_for_prefab_child(
+        &mut self,
+        parent_id: SerializationId,
+        member_id: SerializationId,
+    ) -> Option<SerializationId> {
+        SceneIsDraft::new(self.scene().mode()).map(|scene_is_draft| {
+            let prefab_map = self
+                .serialized_scene_cache
+                .read_mut(scene_is_draft)
+                .prefab_child_map
+                .entry(parent_id)
+                .or_default();
+            if let Some(id) = prefab_map.get_serialization_id_for_member(member_id) {
+                *id
+            } else {
+                let new_id = SerializationId::new();
+                prefab_map.set_serializaiton_id_for_member(member_id, SerializationId::new());
+                new_id
+            }
+        })
+    }
 
     fn track_entity_with_token(
         &mut self,
@@ -154,7 +174,7 @@ impl SceneData {
 /// cache are not saved to disk automatically.
 pub struct SerializedSceneCache {
     entities: SerializedHashMap,
-    prefab_child_map: HashMap<PrefabId, PrefabChildMap>,
+    prefab_child_map: HashMap<SerializationId, PrefabChildMap>,
     singleton_data: SingletonDatabase,
     serialized_scene_graph: SerializedSceneGraph,
 
