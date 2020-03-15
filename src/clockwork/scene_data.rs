@@ -1,12 +1,13 @@
 use super::{
     imgui_component_utils::{EntitySerializationCommand, EntitySerializationCommandType},
     scene_graph::SerializedSceneGraph,
-    serialization_util::{self, entities::SerializedHashMap},
-    ComponentDatabase, Ecs, Entity, GuardedRwLock, Name, ResourcesDatabase, Scene, SceneIsDraft, SceneMode,
-    SerializationId, SerializedEntity, SingletonDatabase,
+    serialization_util, ComponentDatabase, Ecs, Entity, GuardedRwLock, Name, ResourcesDatabase, Scene,
+    SceneIsDraft, SceneMode, SerializationId, SerializedEntity, SingletonDatabase,
 };
 use anyhow::Result as AnyResult;
 pub type TrackedEntitiesMap = std::collections::HashMap<Entity, SerializationId>;
+pub type SerializedHashMap = std::collections::HashMap<SerializationId, SerializedEntity>;
+type PrefabMemberId = SerializationId;
 
 pub struct SceneData {
     tracked_entities: GuardedRwLock<TrackedEntitiesMap, SceneIsDraft>,
@@ -21,35 +22,6 @@ impl SceneData {
             serialized_scene_cache: GuardedRwLock::new(SerializedSceneCache::new(&scene)?),
             scene,
         })
-    }
-
-    pub fn overwrite_serialization_with_all_entities(
-        &mut self,
-        entities: &[Entity],
-        component_database: &ComponentDatabase,
-        singleton_database: &SingletonDatabase,
-        resources: &ResourcesDatabase,
-    ) -> bool {
-        if self.scene().mode() != SceneMode::Draft {
-            return false;
-        }
-
-        for entity in entities {
-            if let Some(serialization_id) = self.tracked_entities().get(entity) {
-                if let Some(se) = SerializedEntity::new(
-                    entity,
-                    *serialization_id,
-                    component_database,
-                    singleton_database,
-                    self,
-                    resources,
-                ) {
-                    self.serialize_entity(*entity, se);
-                }
-            }
-        }
-
-        true
     }
 
     pub fn serialize_entity(
@@ -107,10 +79,18 @@ impl SceneData {
         &self.serialized_scene_cache.read().entities
     }
 
+    pub fn saved_serialized_scene_graph(&self) -> &SerializedSceneGraph {
+        &self.serialized_scene_cache.read().serialized_scene_graph
+    }
+
     pub fn serialized_entity_from_entity(&self, entity: &Entity) -> Option<&SerializedEntity> {
         self.tracked_entities()
             .get(entity)
             .and_then(|serialization_id| self.saved_serialized_entities().get(serialization_id))
+    }
+
+    pub fn saved_singleton_data(&self) -> &SingletonDatabase {
+        &self.serialized_scene_cache.read().singleton_data
     }
 
     pub fn serialized_entity_from_entity_mut(&mut self, entity: &Entity) -> Option<&mut SerializedEntity> {
@@ -126,7 +106,57 @@ impl SceneData {
                 })
         })
     }
+}
 
+/// This is a serialized scene cache, representing our scene,
+/// while we are editing on it. Changes to the serialized scene
+/// cache are not saved to disk automatically.
+pub struct SerializedSceneCache {
+    entities: SerializedHashMap,
+    prefab_child_map: PrefabChildMap,
+    singleton_data: SingletonDatabase,
+    serialized_scene_graph: SerializedSceneGraph,
+
+    /// If dirty, this SerializedSceneCache no longer directly reflects
+    /// what is serialized to disk.
+    dirty: bool,
+}
+
+impl SerializedSceneCache {
+    pub fn new(scene: &Scene) -> AnyResult<Self> {
+        Ok(Self {
+            entities: serialization_util::scene_data::load_entities(scene)?,
+            prefab_child_map: serialization_util::scene_data::load_prefab_child_map(scene)?,
+            singleton_data: serialization_util::scene_data::load_singletons(scene)?,
+            serialized_scene_graph: serialization_util::scene_data::load_serialized_scene_graph(scene)?,
+            dirty: false,
+        })
+    }
+
+    pub fn serialize_entity(&mut self, serialized_entity: SerializedEntity) -> Option<SerializedEntity> {
+        self.dirty = true;
+
+        self.entities.insert(serialized_entity.id, serialized_entity)
+    }
+
+    /// Returns the old serialized entity, if it was previously serialized.
+    pub fn unserialize_entity(&mut self, serialization_id: &SerializationId) -> Option<SerializedEntity> {
+        let result = self.entities.remove(serialization_id);
+
+        // A little cheeky here...
+        if result.is_some() {
+            self.dirty = true;
+        }
+
+        result
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct PrefabChildMap(std::collections::HashMap<PrefabMemberId, SerializationId>);
+impl PrefabChildMap {}
+
+impl SceneData {
     pub fn process_serialized_command(
         command: EntitySerializationCommand,
         ecs: &mut Ecs,
@@ -194,51 +224,33 @@ impl SceneData {
 
         Ok(())
     }
-}
 
-/// This is a serialized scene cache, representing our scene,
-/// while we are editing on it. Changes to the serialized scene
-/// cache are not saved to disk automatically.
-pub struct SerializedSceneCache {
-    entities: SerializedHashMap,
-    prefab_child_map: PrefabChildMap,
-    singleton_data: SingletonDatabase,
-    scene_graph: SerializedSceneGraph,
-
-    /// If dirty, this SerializedSceneCache no longer directly reflects
-    /// what is serialized to disk.
-    dirty: bool,
-}
-
-impl SerializedSceneCache {
-    pub fn new(scene: &Scene) -> AnyResult<Self> {
-        // let mut saved_entities = serialization_util::entities::load_all_entities(scene)?;
-        let serialized_scene_graph = serialization_util::serialized_scene_graph::load_scene_graph()?;
-
-        // set self to dirty here
-
-        unimplemented!()
-    }
-
-    pub fn serialize_entity(&mut self, serialized_entity: SerializedEntity) -> Option<SerializedEntity> {
-        self.dirty = true;
-
-        self.entities.insert(serialized_entity.id, serialized_entity)
-    }
-
-    /// Returns the old serialized entity, if it was previously serialized.
-    pub fn unserialize_entity(&mut self, serialization_id: &SerializationId) -> Option<SerializedEntity> {
-        let result = self.entities.remove(serialization_id);
-
-        // A little cheeky here...
-        if result.is_some() {
-            self.dirty = true;
+    pub fn overwrite_serialization_with_all_entities(
+        &mut self,
+        entities: &[Entity],
+        component_database: &ComponentDatabase,
+        singleton_database: &SingletonDatabase,
+        resources: &ResourcesDatabase,
+    ) -> bool {
+        if self.scene().mode() != SceneMode::Draft {
+            return false;
         }
 
-        result
+        for entity in entities {
+            if let Some(serialization_id) = self.tracked_entities().get(entity) {
+                if let Some(se) = SerializedEntity::new(
+                    entity,
+                    *serialization_id,
+                    component_database,
+                    singleton_database,
+                    self,
+                    resources,
+                ) {
+                    self.serialize_entity(*entity, se);
+                }
+            }
+        }
+
+        true
     }
 }
-
-pub type PrefabMemberId = SerializationId;
-pub struct PrefabChildMap(std::collections::HashMap<PrefabMemberId, SerializationId>);
-impl PrefabChildMap {}

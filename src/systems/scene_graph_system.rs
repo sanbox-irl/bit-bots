@@ -70,8 +70,8 @@ pub fn create_serialized_graph(
 
     for parent in scene_graph.iter_roots() {
         walk_serialized_graph(parent, scene_graph, None, &mut |entity, parent_id| {
-            tracked_entities.get(entity).map(|smc| {
-                let id = serialized_scene_graph.instantiate_node(smc);
+            tracked_entities.get(entity).map(|serialization_id| {
+                let id = serialized_scene_graph.instantiate_node(*serialization_id);
 
                 // Append if we can
                 if let Some(parent_id) = parent_id {

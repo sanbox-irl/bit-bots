@@ -7,6 +7,7 @@ pub const DEFAULT_SINGLETONS_SUBPATH: &str = "default_singleton_data.yaml";
 pub const TILEMAP_SUBPATH: &str = "tilemap";
 pub const SCENE_SUBPATH: &str = "scene_graph.graph";
 pub const ENTITY_SUBPATH: &str = "entities_data.yaml";
+pub const PREFAB_CHILD_MAP: &str = "prefab_child_map.yaml";
 pub const SINGLETONS_SUBPATH: &str = "singleton_data.yaml";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +60,14 @@ impl Scene {
             format!("{}/{}.prefab", PREFAB_DIRECTORY, &self.name)
         } else {
             format!("{}/{}/{}", SCENE_DIRECTORY, &self.name, ENTITY_SUBPATH)
+        }
+    }
+
+    pub fn prefab_child_map_path(&self) -> String {
+        if self.is_prefab {
+            format!("{}/{}.prefab", PREFAB_DIRECTORY, &self.name)
+        } else {
+            format!("{}/{}/{}", SCENE_DIRECTORY, &self.name, PREFAB_CHILD_MAP)
         }
     }
 

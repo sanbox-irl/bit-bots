@@ -87,13 +87,13 @@ pub fn entity_inspector(
                 |component_list| {
                     let possible_sync_statuses = component_list.get_sync_status(
                         entity,
-                        serialized_entity.as_ref(),
                         serialized_prefab.as_ref(),
                         should_have_prefab,
                     );
 
                     let (deferred_serialization_command, delete) = component_list.component_inspector(
                         entity,
+                        ecs.scene_data.scene().mode(),
                         possible_sync_statuses,
                         entities,
                         unsafe { &*names_raw_pointer },
@@ -324,7 +324,6 @@ pub fn entity_inspector(
 pub fn component_inspector_raw<T>(
     comp: &mut Component<T>,
     scene_mode: SceneMode,
-    serialization_sync_status: SyncStatus,
     prefab_sync_status: SyncStatus,
     entities: &[Entity],
     entity_names: &ComponentList<Name>,
@@ -377,77 +376,11 @@ where
                         uid,
                         &mut comp.is_active,
                         default_color,
-                        serialization_sync_status,
                         prefab_sync_status,
                     );
                     requested_action = right_click_actions.0;
                     delete = right_click_actions.1;
                 }
-
-                // Handle the Warning!
-                match serialization_sync_status {
-                    SyncStatus::Unsynced => {
-                        imgui_system::wrap_style_color_var(
-                            ui,
-                            imgui::StyleColor::Text,
-                            imgui_utility::yellow_warning_color(),
-                            || {
-                                if scene_mode == SceneMode::Draft {
-                                    imgui_utility::help_marker_generic(
-                                        ui,
-                                        serialization_sync_status.imgui_symbol(scene_mode),
-                                        format!("{} is not committed to the Scene!", name),
-                                    )
-                                }
-                            },
-                        );
-                    }
-                    SyncStatus::Headless => {
-                        imgui_system::wrap_style_color_var(
-                            ui,
-                            imgui::StyleColor::Text,
-                            imgui_utility::red_warning_color(),
-                            || {
-                                imgui_utility::help_marker_generic(
-                                    ui,
-                                    serialization_sync_status.imgui_symbol(scene_mode),
-                                    format!(
-                                "{} is Headless! It has a serialization marker, but no serialization found!",
-                                name
-                            ),
-                                )
-                            },
-                        );
-                    }
-                    SyncStatus::OutofSync => {
-                        imgui_system::wrap_style_color_var(
-                            ui,
-                            imgui::StyleColor::Text,
-                            imgui_utility::yellow_warning_color(),
-                            || {
-                                imgui_utility::help_marker_generic(
-                                    ui,
-                                    serialization_sync_status.imgui_symbol(scene_mode),
-                                    format!("{} is out of Sync with its Serialization!", name),
-                                );
-                            },
-                        );
-                    }
-                    SyncStatus::Synced => {
-                        imgui_system::wrap_style_color_var(
-                            ui,
-                            imgui::StyleColor::Text,
-                            imgui_utility::green_color(),
-                            || {
-                                imgui_utility::help_marker_generic(
-                                    ui,
-                                    serialization_sync_status.imgui_symbol(scene_mode),
-                                    format!("{} is synced to its Serialization!", name),
-                                );
-                            },
-                        );
-                    }
-                };
             });
 
             if comp.is_active {
@@ -478,7 +411,6 @@ fn component_inspector_right_click(
     uid: &str,
     is_active: &mut bool,
     default_color: ImColor,
-    serialization_sync_status: SyncStatus,
     prefab_sync_status: SyncStatus,
 ) -> (Option<ComponentSerializationCommandType>, bool) {
     let mut requested_action = None;
@@ -490,29 +422,6 @@ fn component_inspector_right_click(
 
             if MenuItem::new(&im_str!("Delete##{}", uid)).build(ui) {
                 delete = true;
-            }
-
-            ui.separator();
-
-            if MenuItem::new(&imgui_str("Serialize", uid))
-                .enabled(serialization_sync_status == SyncStatus::OutofSync)
-                .build(ui)
-            {
-                requested_action = Some(ComponentSerializationCommandType::Serialize);
-            }
-
-            if MenuItem::new(&imgui_str("Stop Serializing", uid))
-                .enabled(serialization_sync_status.is_synced_at_all())
-                .build(ui)
-            {
-                requested_action = Some(ComponentSerializationCommandType::StopSerializing);
-            }
-
-            if MenuItem::new(&imgui_str("Revert to Serialization", uid))
-                .enabled(serialization_sync_status == SyncStatus::Unsynced)
-                .build(ui)
-            {
-                requested_action = Some(ComponentSerializationCommandType::Revert);
             }
 
             ui.separator();

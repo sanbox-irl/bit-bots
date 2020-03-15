@@ -145,7 +145,7 @@ pub fn entity_list(
             }
 
             NameRequestedAction::CreateEntityCommand(create_entity_command) => {
-                super::imgui_main::process_entity_subcommand(create_entity_command, ecs, resources.prefabs())
+                super::imgui_main::process_entity_subcommand(create_entity_command, ecs, resources)
             }
         }
     }
@@ -178,55 +178,49 @@ fn imgui_entity_list(
             if let Some(sub_command) =
                 create_entity_submenu("Create Entity", true, None, resources.prefabs(), ui)
             {
-                super::imgui_main::process_entity_subcommand(sub_command, ecs, resources.prefabs());
+                super::imgui_main::process_entity_subcommand(sub_command, ecs, resources);
             }
 
             // Get Scene Graph Serialization Status:
-            let scene_graph_serialization_status =
-                match serialization_util::serialized_scene_graph::load_scene_graph() {
-                    Ok(sg) => {
-                        let serialized = scene_graph_system::create_serialized_graph(
-                            &ecs.scene_graph,
-                            &ecs.component_database.serialization_markers,
-                        );
+            let scene_graph_serialization_status = {
+                let serialized = scene_graph_system::create_serialized_graph(
+                    &ecs.scene_graph,
+                    &ecs.scene_data.tracked_entities(),
+                );
 
-                        if sg == serialized {
-                            SyncStatus::Synced
-                        } else {
-                            SyncStatus::OutofSync
-                        }
-                    }
-                    Err(e) => {
-                        error!("Couldn't read the scene graph! {}", e);
-                        SyncStatus::Headless
-                    }
+                if ecs.scene_data.saved_serialized_scene_graph() == &serialized {
+                    SyncStatus::Synced
+                } else {
+                    SyncStatus::OutofSync
                 }
-                .imgui_symbol(scene_mode);
+            }
+            .imgui_symbol(scene_mode);
 
             imgui::MenuItem::new(&im_str!("Scene Graph {}", scene_graph_serialization_status)).build(ui);
 
             // Save Button!
             if imgui::MenuItem::new(im_str!("\u{f0c7}")).build(ui) || ui_handler.save_requested() {
-                match serialization_util::entities::serialize_all_entities(
-                    &ecs.entities,
-                    &ecs.component_database,
-                    &ecs.singleton_database,
-                    resources,
-                ) {
-                    Ok(()) => info!("Serialized Scene"),
-                    Err(e) => {
-                        error!("Error on Serialization: {}", e);
-                    }
-                }
+                unimplemented!("We need to implement Saving our SceneData to Disk here!");
+                // match serialization_util::entities::serialize_all_entities(
+                //     &ecs.entities,
+                //     &ecs.component_database,
+                //     &ecs.singleton_database,
+                //     resources,
+                // ) {
+                //     Ok(()) => info!("Serialized Scene"),
+                //     Err(e) => {
+                //         error!("Error on Serialization: {}", e);
+                //     }
+                // }
 
-                let ssg = scene_graph_system::create_serialized_graph(
-                    &ecs.scene_graph,
-                    &ecs.component_database.serialization_markers,
-                );
-                match serialization_util::serialized_scene_graph::save_serialized_scene_graph(ssg) {
-                    Ok(()) => info!("Saved Serialized SceneGraph..."),
-                    Err(e) => error!("Couldn't save scene graph...{}", e),
-                }
+                // let ssg = scene_graph_system::create_serialized_graph(
+                //     &ecs.scene_graph,
+                //     &ecs.component_database.serialization_markers,
+                // );
+                // match serialization_util::serialized_scene_graph::save_serialized_scene_graph(ssg) {
+                //     Ok(()) => info!("Saved Serialized SceneGraph..."),
+                //     Err(e) => error!("Couldn't save scene graph...{}", e),
+                // }
             }
 
             menu_bar.end(ui);
@@ -237,17 +231,32 @@ fn imgui_entity_list(
         // SCENE GRAPH
         let singleton_database = &ecs.singleton_database;
         let component_database = &mut ecs.component_database;
+        let scene_data = &ecs.scene_data;
 
         scene_graph_system::walk_tree_generically(&ecs.scene_graph, |entity, depth, has_children| {
-            let serialized_entity: Option<SerializedEntity> = component_database
-                .serialization_markers
+            // let serialized_entity: Option<SerializedEntity> = component_database
+            //     .serialization_markers
+            //     .get(entity)
+            //     .and_then(|smc| {
+            //         SerializedEntity::new(
+            //             entity,
+            //             smc.inner().id,
+            //             component_database,
+            //             singleton_database,
+            //             resources,
+            //         )
+            //     });
+
+            let fresh_serialized_entity: Option<SerializedEntity> = scene_data
+                .tracked_entities()
                 .get(entity)
-                .and_then(|smc| {
+                .and_then(|serialization_id| {
                     SerializedEntity::new(
                         entity,
-                        smc.inner().id,
+                        *serialization_id,
                         component_database,
                         singleton_database,
+                        scene_data,
                         resources,
                     )
                 });
@@ -262,14 +271,6 @@ fn imgui_entity_list(
                         pmc.inner().prefab_status(resources.prefabs())
                     }),
                 being_inspected: ui_handler.stored_ids.contains(entity),
-                serialization_status: component_database
-                    .serialization_markers
-                    .get_mut(entity)
-                    .map(|smc| {
-                        smc.inner_mut()
-                            .get_serialization_status(serialized_entity.as_ref())
-                    })
-                    .unwrap_or_default(),
                 on_scene_graph: component_database
                     .transforms
                     .get(entity)
@@ -308,36 +309,6 @@ fn imgui_entity_list(
                 continue;
             }
 
-            let serialization_status: SyncStatus = {
-                let serialization_id = component_database
-                    .serialization_markers
-                    .get(entity)
-                    .map(|sc| sc.inner().id);
-
-                if let Some(s_id) = serialization_id {
-                    let se = SerializedEntity::new(
-                        entity,
-                        s_id,
-                        component_database,
-                        singleton_database,
-                        resources,
-                    );
-
-                    Some(
-                        component_database
-                            .serialization_markers
-                            .get_mut(entity)
-                            .as_mut()
-                            .unwrap()
-                            .inner_mut()
-                            .get_serialization_status(se.as_ref()),
-                    )
-                } else {
-                    None
-                }
-                .unwrap_or_default()
-            };
-
             let nip = NameInspectorParameters {
                 prefab_status: component_database
                     .prefab_markers
@@ -348,7 +319,6 @@ fn imgui_entity_list(
                 being_inspected: ui_handler.stored_ids.contains(entity),
                 depth: 0,
                 has_children: false,
-                serialization_status,
                 on_scene_graph: None,
                 prefabs: resources.prefabs(),
                 scene_mode,

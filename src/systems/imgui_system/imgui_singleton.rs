@@ -97,21 +97,6 @@ fn inspect_this_singleton_component<T: SingletonBounds, F, F2>(
 
     // Serde
     ui.spacing();
-    if ui.button(&im_str!("Serialize##{}", marker_name), [0.0, 0.0]) {
-        if let Err(e) =
-            SingletonDatabase::edit_serialized_singleton_database(singleton_component, edit_function)
-        {
-            error!("Error in Serialization: {}", e);
-        }
-    }
-    ui.same_line(0.0);
-    if ui.button(&im_str!("Revert##{}", marker_name), [0.0, 0.0]) {
-        match serialization_util::singleton_components::load_singleton_database() {
-            Ok(scd) => revert_function(scd, singleton_component),
-            Err(e) => error!("Error in loading Serialized Singletons {}", e),
-        }
-    }
-    ui.same_line(0.0);
     if ui.button(&im_str!("Change Associated Entity##{}", marker_name), [0.0, 0.0]) {
         ui.open_popup(&popup_name);
     }

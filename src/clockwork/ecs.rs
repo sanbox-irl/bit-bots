@@ -19,14 +19,14 @@ pub struct Ecs {
 }
 
 impl Ecs {
-    pub fn new(scene: Scene, prefabs: &PrefabMap) -> Result<Self, Error> {
+    pub fn new(scene_data: SceneData, prefabs: &PrefabMap) -> Result<Self, Error> {
         let mut ecs = Ecs {
             component_database: ComponentDatabase::default(),
             scene_graph: SceneGraph::new(),
-            singleton_database: SingletonDatabase::new()?,
+            singleton_database: *scene_data.saved_singleton_data().clone(),
             entities: Vec::new(),
             entity_allocator: EntityAllocator::new(),
-            scene_data: SceneData::new(scene)?,
+            scene_data,
         };
 
         // Load in the SceneGraph...

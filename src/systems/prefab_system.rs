@@ -209,12 +209,15 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
 
     if let Some(post) = success {
         let scene_graph = &ecs.scene_graph;
-        ecs.component_database
-            .post_deserialization(post, |component_list, sl| {
+        ecs.component_database.post_deserialization(
+            post,
+            ecs.scene_data.tracked_entities(),
+            |component_list, sl| {
                 if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
                     inner.post_deserialization(entity, sl, scene_graph);
                 }
-            });
+            },
+        );
     } else {
         if ecs.remove_entity(&entity) == false {
             error!("We couldn't remove the Entity either, so we have a dangler!");

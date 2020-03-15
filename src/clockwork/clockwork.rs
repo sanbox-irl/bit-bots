@@ -178,7 +178,7 @@ impl Clockwork {
         info!("Loading {}...", scene);
 
         // Initialize the ECS and Scene Graph
-        let mut ecs = Ecs::new(scene, &resources.prefabs())?;
+        let mut ecs = Ecs::new(SceneData::new(scene)?, &resources.prefabs())?;
         ecs.game_start(resources, hardware_interfaces)?;
 
         info!("..Scene Loaded!");

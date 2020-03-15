@@ -1,6 +1,6 @@
 use super::{
-    scene_graph::SerializedSceneGraph, serialization_util::entities::SerializedHashMap, PrefabId,
-    SerializationId, SerializedEntity,
+    scene_graph::SerializedSceneGraph, PrefabChildMap, PrefabId, SerializationId, SerializedEntity,
+    SerializedHashMap,
 };
 use std::collections::HashMap;
 
@@ -13,6 +13,7 @@ pub struct Prefab {
     valid: bool,
     pub members: SerializedHashMap,
     pub serialized_graph: SerializedSceneGraph,
+    pub child_map: PrefabChildMap,
 }
 
 impl Prefab {

@@ -30,8 +30,3 @@ pub type SerializedHashMap = std::collections::HashMap<SerializationId, Serializ
 //     let mut entities: SerializedHashMap = load_all_entities(scene)?;
 //     Ok(entities.remove(id))
 // }
-
-// /// The Path to the current Scene. Just a Helper
-// fn path(scene: &Scene) -> (String, bool) {
-//     (scene.entity_path(), scene.is_prefab())
-// }

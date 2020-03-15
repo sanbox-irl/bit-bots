@@ -3,11 +3,6 @@ use super::*;
 use anyhow::{Error, Result as AnyResult};
 use std::fs;
 
-mod serialize_entities;
-pub mod entities {
-    pub use super::serialize_entities::*;
-}
-
 mod serialize_game_config;
 pub mod game_config {
     pub use super::serialize_game_config::*;
@@ -18,9 +13,9 @@ pub mod prefabs {
     pub use super::serialize_prefabs::*;
 }
 
-mod serialize_singleton_components;
-pub mod singleton_components {
-    pub use super::serialize_singleton_components::*;
+mod serialize_scene_data;
+pub mod scene_data {
+    pub use super::serialize_scene_data::*;
 }
 
 mod serialize_sprites;
@@ -36,11 +31,6 @@ pub mod tilemaps {
 mod serialize_tilesets;
 pub mod tilesets {
     pub use super::serialize_tilesets::*;
-}
-
-mod serialize_scene_graph;
-pub mod serialized_scene_graph {
-    pub use super::serialize_scene_graph::*;
 }
 
 pub(super) fn load_serialized_file<T: Default>(path: &str) -> Result<T, Error>

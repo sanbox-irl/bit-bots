@@ -150,7 +150,7 @@ impl SerializedEntity {
             component_list.load_component_into_serialized_entity(
                 entity_id,
                 &mut serialized_entity,
-                scene_data,
+                scene_data.tracked_entities(),
             );
         });
         serialized_entity.marker = singleton_database.save_singleton_markers(entity_id);

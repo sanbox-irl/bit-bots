@@ -1,6 +1,6 @@
 use super::{
-    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, TrackedEntitiesMap, Name,
-    PrefabMap, SerializedEntity,
+    imgui_component_utils::*, scene_graph::SceneGraph, ComponentList, Entity, Name, PrefabMap, SceneMode,
+    SerializedEntity, TrackedEntitiesMap,
 };
 use imgui::Ui;
 
@@ -54,7 +54,8 @@ pub trait ComponentListBounds {
     fn component_inspector(
         &mut self,
         index: &Entity,
-        parent_sync_status: Option<ParentSyncStatus>,
+        scene_mode: SceneMode,
+        prefab_sync_status: SyncStatus,
         entities: &[Entity],
         entity_names: &ComponentList<Name>,
         prefab_hashmap: &PrefabMap,
@@ -83,10 +84,9 @@ pub trait ComponentListBounds {
     fn get_sync_status(
         &self,
         index: &Entity,
-        serialized_entity: Option<&SerializedEntity>,
         serialized_prefab: Option<&SerializedEntity>,
         should_have_prefab_entity: bool,
-    ) -> Option<ParentSyncStatus>;
+    ) -> SyncStatus;
 
     /// `create_yaml_component` creates a YamlValue out of our Component,
     /// ready for serialization. If succesful, the Value will be a Mapping of a
@@ -138,7 +138,8 @@ where
     fn component_inspector(
         &mut self,
         entity: &Entity,
-        parent_sync_status: Option<ParentSyncStatus>,
+        scene_mode: SceneMode,
+        prefab_sync_status: SyncStatus,
         entities: &[Entity],
         entity_names: &ComponentList<Name>,
         prefab_hashmap: &PrefabMap,
@@ -146,12 +147,10 @@ where
         is_open: bool,
     ) -> (Option<ComponentSerializationCommandType>, bool) {
         if let Some(comp) = self.get_mut(entity) {
-            let ParentSyncStatus { serialized, prefab } = parent_sync_status.unwrap();
-
             super::imgui_system::component_inspector_raw(
                 comp,
-                serialized,
-                prefab,
+                scene_mode,
+                prefab_sync_status,
                 entities,
                 entity_names,
                 prefab_hashmap,
@@ -217,17 +216,11 @@ where
     fn get_sync_status(
         &self,
         index: &Entity,
-        serialized_entity: Option<&SerializedEntity>,
         serialized_prefab: Option<&SerializedEntity>,
         should_have_prefab_entity: bool,
-    ) -> Option<ParentSyncStatus> {
-        self.get(index).map(|cmp| {
-            ParentSyncStatus::new(
-                cmp,
-                serialized_entity,
-                serialized_prefab,
-                should_have_prefab_entity,
-            )
+    ) -> SyncStatus {
+        self.get(index).map_or(SyncStatus::Unsynced, |cmp| {
+            SyncStatus::new(cmp, serialized_prefab, should_have_prefab_entity)
         })
     }
 

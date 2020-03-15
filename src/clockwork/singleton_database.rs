@@ -17,14 +17,6 @@ pub struct SingletonDatabase {
 }
 
 impl SingletonDatabase {
-    pub fn new() -> Result<SingletonDatabase, Error> {
-        let mut serialized_singletons: SingletonDatabase =
-            serialization_util::singleton_components::load_singleton_database()?;
-
-        serialized_singletons.associated_entities = AssociatedEntityMap::new();
-        Ok(serialized_singletons)
-    }
-
     pub fn save_singleton_markers(&self, entity: &Entity) -> Option<Marker> {
         for (this_marker, this_entity) in &self.associated_entities {
             if this_entity == entity {
@@ -33,21 +25,6 @@ impl SingletonDatabase {
         }
 
         None
-    }
-
-    pub fn edit_serialized_singleton_database<T: SingletonBounds, F>(
-        live_component: &mut SingletonComponent<T>,
-        edit_function: F,
-    ) -> AnyResult<()>
-    where
-        F: Fn(&mut SingletonDatabase, &mut SingletonComponent<T>),
-    {
-        let mut serialized_singletons: SingletonDatabase =
-            serialization_util::singleton_components::load_singleton_database()?;
-
-        edit_function(&mut serialized_singletons, live_component);
-
-        serialization_util::singleton_components::serialize_singleton_database(&serialized_singletons)
     }
 
     pub fn initialize_with_runtime_resources(

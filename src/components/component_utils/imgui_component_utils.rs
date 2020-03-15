@@ -78,7 +78,6 @@ pub struct NameInspectorParameters<'a> {
     pub prefab_status: PrefabStatus,
     pub being_inspected: bool,
     pub scene_mode: SceneMode,
-    pub serialization_status: SyncStatus,
     pub prefabs: &'a PrefabMap,
 }
 
@@ -156,32 +155,6 @@ impl SyncStatus {
                 SyncStatus::Unsynced | SyncStatus::Headless | SyncStatus::OutofSync => WARNING_ICON,
                 SyncStatus::Synced => SYNCED_ICON,
             }
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct ParentSyncStatus {
-    pub serialized: SyncStatus,
-    pub prefab: SyncStatus,
-}
-
-impl ParentSyncStatus {
-    pub fn new<T: ComponentBounds + Clone>(
-        comp: &super::Component<T>,
-        serialized_entity: Option<&SerializedEntity>,
-        prefab_entity: Option<&SerializedEntity>,
-        should_have_prefab_entity: bool,
-    ) -> ParentSyncStatus {
-        ParentSyncStatus {
-            serialized: serialized_entity.map_or(SyncStatus::Unsynced, |se| {
-                if comp.is_serialized(se) {
-                    SyncStatus::Synced
-                } else {
-                    SyncStatus::OutofSync
-                }
-            }),
-            prefab: SyncStatus::new(comp, prefab_entity, should_have_prefab_entity),
         }
     }
 }

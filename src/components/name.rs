@@ -158,26 +158,6 @@ impl Name {
 
                     ui.separator();
 
-                    ui.menu(im_str!("Serialization"), nip.serialization_status.is_synced_at_all(), || {
-                        if imgui_system::help_menu_item(ui, &im_str!("Serialize Entity##{}", uid), "This overwrites the Entity's serialization.") {
-                            if nip.serialization_status == SyncStatus::OutofSync {
-                                res.requested_action = Some(NameRequestedAction::EntitySerializationCommand(EntitySerializationCommandType::Overwrite));
-                                ui.close_current_popup();
-                            }
-                        }
-                        if imgui_system::help_menu_item(ui, &im_str!("Stop Serializing Entity##{}", uid), "Stops serializing the entity from the scene -- ie, it won't be here when you reload the scene.") {
-                                res.requested_action = Some(NameRequestedAction::EntitySerializationCommand(EntitySerializationCommandType::StopSerializing));
-                            ui.close_current_popup();
-                        }
-
-                        if imgui_system::help_menu_item(ui, &im_str!("Revert Entity##{}", uid), "Reverts the Entity back to its Serialized State.") {
-                            res.requested_action = Some(NameRequestedAction::EntitySerializationCommand(EntitySerializationCommandType::Revert));
-                            ui.close_current_popup();
-                        }
-                    });
-
-                    ui.separator();
-
                     ui.menu(&im_str!("Prefab"), true, || {
                         match nip.prefab_status {
                             PrefabStatus::None => {
@@ -214,10 +194,7 @@ impl Name {
                             ui.close_current_popup();
                         }
 
-                        if MenuItem::new(&im_str!("Log Serialized Entity##{}", uid))
-                            .enabled(nip.serialization_status.is_synced_at_all())
-                            .build(ui)
-                        {
+                        if MenuItem::new(&im_str!("Log Serialized Entity##{}", uid)).build(ui) {
                             res.requested_action = Some(NameRequestedAction::LogSerializedEntity);
                             ui.close_current_popup();
                         }
@@ -244,34 +221,6 @@ impl Name {
                 if nip.being_inspected {
                     eli.color = (eli.color + imgui_system::yellow_warning_color()) / 2.0;
                 }
-
-                match nip.serialization_status {
-                    SyncStatus::Headless => {
-                        ui.same_line(0.0);
-                        ui.text_colored(
-                            imgui_system::red_warning_color().into(),
-                            &format!("{}", nip.serialization_status.imgui_symbol(nip.scene_mode)),
-                        );
-                        if ui.is_item_hovered() {
-                            ui.tooltip_text(
-                                "This entity is Headless! We cannot find its original serialization, even though\nit is serialized. Is your data safe? Consider a Git Revert."
-                            );
-                        }
-                    }
-                    SyncStatus::OutofSync => {
-                        ui.same_line(0.0);
-                        ui.text_colored(
-                            imgui_system::yellow_warning_color().into(),
-                            &format!("{}", nip.serialization_status.imgui_symbol(nip.scene_mode)),
-                        );
-                        if ui.is_item_hovered() {
-                            ui.tooltip_text(
-                                "This entity is Out of Sync with our cached serialization. Save the entity, or lose\nyour changes on exiting Draft Mode or changing Scenes."
-                            );
-                        }
-                    }
-                    _ => {}
-                }
             }
         }
 
@@ -283,7 +232,6 @@ impl Name {
     /// to mutate ourselves. We could have done this in two stages, but this seemed better for simplicity.
     /// Additionally, the unsafety in this is simply to write directly into the internal byte buffer of the vec
     /// So long as no patterns are matched by our regex which are of a *different* byte offset amount, we should
-    /// be okay.
     pub fn update_name(&mut self, our_id: Entity, all_names: &ComponentList<Name>) {
         lazy_static::lazy_static! {
             static ref REGEX_PATTERN: Regex = Regex::new(r"\(\d*\d\)$").unwrap();

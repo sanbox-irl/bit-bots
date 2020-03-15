@@ -1,7 +1,12 @@
 use super::{imgui_component_utils::*, *};
 use sprite_resources::*;
 
-pub fn create_resources_windows(resources: &mut ResourcesDatabase, ui_handler: &mut UiHandler<'_>) {
+pub fn create_resources_windows(
+    resources: &mut ResourcesDatabase,
+    ui_handler: &mut UiHandler<'_>,
+    scene_mode: SceneMode,
+    next_scene: &mut Option<Scene>,
+) {
     imgui_utility::create_window(
         ui_handler,
         ImGuiFlags::SPRITE_RESOURCE,
@@ -23,7 +28,7 @@ pub fn create_resources_windows(resources: &mut ResourcesDatabase, ui_handler: &
     imgui_utility::create_window(
         ui_handler,
         ImGuiFlags::PREFAB_INSPECTOR,
-        |ui_handler: &mut UiHandler<'_>| prefab_entity_viewer(resources, ui_handler),
+        |ui_handler: &mut UiHandler<'_>| prefab_entity_viewer(resources, ui_handler, scene_mode, next_scene),
     );
 }
 
@@ -274,7 +279,12 @@ pub fn game_config_editor(config: &mut game_config::Config, ui_handler: &mut UiH
     close
 }
 
-pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut UiHandler<'_>) -> bool {
+pub fn prefab_entity_viewer(
+    resources: &mut ResourcesDatabase,
+    ui_handler: &mut UiHandler<'_>,
+    scene_mode: SceneMode,
+    next_scene: &mut Option<Scene>,
+) -> bool {
     let mut open = true;
 
     let mut action_on_prefab: Option<(PrefabId, NameRequestedAction)> = None;
@@ -292,9 +302,8 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
                 depth: 0,
                 prefab_status: PrefabStatus::Prefab,
                 being_inspected: false,
-                serialization_status: SyncStatus::Synced,
                 prefabs: resources.prefabs(),
-                scene_mode: scene_system::current_scene_mode(),
+                scene_mode,
             };
 
             // ENTITY ELEMENTS:
@@ -338,7 +347,11 @@ pub fn prefab_entity_viewer(resources: &mut ResourcesDatabase, ui_handler: &mut 
                     prefab.log_to_console();
                 }
                 NameRequestedAction::ToggleInspect | NameRequestedAction::GoToPrefab => {
-                    if scene_system::set_next_scene(Scene::new_prefab(id)) == false {
+                    let new_scene = Scene::new_prefab(id);
+
+                    if scene_system::scene_exists(&new_scene) {
+                        *next_scene = Some(new_scene);
+                    } else {
                         error!("Couldn't switch to Prefab {}", id);
                         error!("Does a Prefab by that name exist?");
                     }

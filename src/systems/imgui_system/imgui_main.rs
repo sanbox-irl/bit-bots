@@ -24,7 +24,7 @@ pub fn imgui_main(
 
     // Scene Entity Inspector
     if ui_handler.flags.contains(ImGuiFlags::ENTITY_VIEWER) {
-        match imgui_entity::entity_list(ecs, resources, ui_handler) {
+        match imgui_entity::entity_list(ecs, resources, ui_handler, next_scene) {
             Ok(sc) => {
                 if let Some(sc) = sc {
                     entity_serialization_command = Some(sc)
@@ -65,7 +65,12 @@ pub fn imgui_main(
     });
 
     // Resources Windows
-    imgui_resources::create_resources_windows(resources, ui_handler);
+    imgui_resources::create_resources_windows(
+        resources,
+        ui_handler,
+        ecs.scene_data.scene().mode(),
+        next_scene,
+    );
 
     // Demo window!
     if ui_handler.flags.contains(ImGuiFlags::IMGUI_EXAMPLE) {
@@ -304,12 +309,12 @@ fn imgui_logging_tool(ui_handler: &mut UiHandler<'_>, ecs: &mut Ecs) -> bool {
 pub(super) fn process_entity_subcommand(
     create_entity: CreateEntityCommand,
     ecs: &mut Ecs,
-    prefabs: &PrefabMap,
+    resources: &ResourcesDatabase,
 ) {
     let entity = match create_entity.command_type {
         CreateEntityCommandType::CreateBlank => ecs.create_entity(),
         CreateEntityCommandType::CreatePrefab(prefab_id) => {
-            prefab_system::instantiate_entity_from_prefab(ecs, prefab_id, prefabs)
+            prefab_system::instantiate_entity_from_prefab(ecs, prefab_id, resources.prefabs())
         }
     };
 
@@ -324,5 +329,18 @@ pub(super) fn process_entity_subcommand(
         }
     }
 
-    ecs.scene_data.serialize_entity()
+    // We don't actually need this check, but let's not waste our time making the SE if
+    // we don't be able to use it, ya know?
+    if ecs.scene_data.scene().mode() == SceneMode::Draft {
+        if let Some(serialized_entity) = SerializedEntity::new(
+            &entity,
+            SerializationId::new(),
+            &ecs.component_database,
+            &ecs.singleton_database,
+            &ecs.scene_data,
+            resources,
+        ) {
+            ecs.scene_data.serialize_entity(entity, serialized_entity);
+        }
+    }
 }
