@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-pub struct GuardedRwLock<T, K>(T, PhantomData<K>);
+pub struct TokenizedRwLock<T, K>(T, PhantomData<K>);
 
-impl<T, K> GuardedRwLock<T, K> {
+impl<T, K> TokenizedRwLock<T, K> {
     pub fn new(t: T) -> Self {
         Self(t, PhantomData)
     }

@@ -26,6 +26,7 @@ impl Prefab {
             members,
             serialized_graph,
             prefab_id,
+            child_map: PrefabChildMap::new(),
             valid: true,
         }
     }
@@ -45,6 +46,7 @@ impl Prefab {
             members,
             serialized_graph,
             valid: true,
+            child_map: PrefabChildMap::new(),
         }
     }
 

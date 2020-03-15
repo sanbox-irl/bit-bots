@@ -114,7 +114,7 @@ where
 /// This iterates over the `ComponentDatabase`, finding the `Component<SerializationMarker>`,
 /// if it exists, which the `SerializedNode` corresponds to. It then finds and returns
 /// the corresponding `Component<Transform>`, if it exists.
-pub fn find_transform_from_serialized_node<'a>(
+pub fn find_transform_from_serialization_id<'a>(
     transforms: &'a mut ComponentList<Transform>,
     tracked_entities: &'_ TrackedEntitiesMap,
     target_id: SerializationId,

@@ -205,19 +205,21 @@ mod utilities {
     mod cached_bool;
     pub mod cardinals;
     mod color;
-    mod guarded_rw_lock;
     mod guarded_uuids;
     pub mod math;
+    mod prefab_child_map;
     mod rect;
+    mod tokenized_rw_lock;
     mod vec;
 
     pub mod number_util;
     pub use axis::Axis;
     pub use cached_bool::CachedBool;
     pub use color::Color;
-    pub use guarded_rw_lock::*;
     pub use guarded_uuids::*;
+    pub use prefab_child_map::*;
     pub use rect::Rect;
+    pub use tokenized_rw_lock::*;
     pub use vec::{Vec2, Vec2Int};
 }
 

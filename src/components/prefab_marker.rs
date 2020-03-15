@@ -19,19 +19,16 @@ use std::collections::HashMap;
 pub struct PrefabMarker {
     prefab_id: PrefabId,
     member_id: SerializationId,
-    child_map: Option<HashMap<SerializationId, SerializationId>>,
 }
 
 impl PrefabMarker {
     pub fn new(
         prefab_id: PrefabId,
         member_id: SerializationId,
-        child_map: Option<HashMap<SerializationId, SerializationId>>,
     ) -> Self {
         Self {
             prefab_id,
             member_id,
-            child_map,
         }
     }
 
@@ -41,14 +38,6 @@ impl PrefabMarker {
 
     pub fn member_id(&self) -> SerializationId {
         self.member_id
-    }
-
-    pub fn child_map(&self) -> &Option<HashMap<SerializationId, SerializationId>> {
-        &self.child_map
-    }
-
-    pub fn set_child_map(&mut self, new_map: Option<HashMap<SerializationId, SerializationId>>) {
-        self.child_map = new_map;
     }
 
     pub fn prefab_status(&self, prefab_map: &PrefabMap) -> PrefabStatus {

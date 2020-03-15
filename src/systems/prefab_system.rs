@@ -182,7 +182,7 @@ fn commit_entity_to_prefab(
     // Have the Main Entity gets its markers!
     component_database.prefab_markers.set_component(
         entity_id,
-        PrefabMarker::new(prefab_id, member_id, child_map),
+        PrefabMarker::new(prefab_id, member_id),
         scene_graph,
     );
 

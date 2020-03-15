@@ -87,7 +87,7 @@ pub fn imgui_main(
     });
 
     if let Some(sc) = entity_serialization_command {
-        if let Err(e) = SceneData::process_serialized_command(sc, ecs, resources) {
+        if let Err(e) = ecs.process_serialized_command(sc, resources) {
             error!("Error Processing Serialized Command: {}", e);
         }
     }
