@@ -125,9 +125,13 @@ fn create_prefab_serialization(
                 scene_data,
                 resources,
             ) {
-                let our_serialized_id = todo!("Gotta do this jack");
+                let our_current_serialization_id = scene_data
+                    .tracked_entities()
+                    .get(entity)
+                    .cloned()
+                    .unwrap_or_else(|| SerializationId::new());
 
-                child_map.insert(member_id, our_serialized_id);
+                child_map.insert(member_id, our_current_serialization_id);
 
                 commit_entity_to_prefab(
                     entity,
@@ -135,7 +139,6 @@ fn create_prefab_serialization(
                     prefab_id,
                     member_id,
                     prefab_members,
-                    None,
                     resources,
                     singleton_database,
                     unsafe { &mut *raw_scene_graph_handle },
@@ -184,6 +187,8 @@ fn commit_entity_to_prefab(
     );
 
     todo!("Serialization Stuff here!");
+    // We need to make our serialization entity again, and then save it back to the database,
+    // as making it part of the prefab probably changes what its serialized form looks like!
 
     // if let Some(sc) = component_database.serialization_markers.get(entity_id) {
     //     serialization_util::entities::serialize_entity_full(
@@ -258,77 +263,68 @@ pub fn update_prefab_inheritor_component(
     ecs: &mut Ecs,
     resources: &ResourcesDatabase,
 ) -> Result<()> {
-    let mut post_deserialization = None;
-    let mut entities_to_post_deserialize = vec![];
+    if ecs.scene_data.scene().mode() == super::SceneMode::Draft {
+        let mut post_deserialization = None;
+        let mut entities_to_post_deserialize: Vec<Entity> = vec![];
 
-    for entity in ecs.entities.iter() {
-        if ecs
-            .component_database
-            .prefab_markers
-            .get(entity)
-            .map_or(false, |pmc| {
-                let pm = pmc.inner();
-                pm.prefab_id() == prefab_id && pm.member_id() == member_id
-            })
-        {
-            // Load the Delta into each existing Prefab inheritor
-            let new_post = ecs.component_database.load_yaml_delta_into_database(
-                entity,
-                key.clone(),
-                delta.clone(),
-                Default::default(),
-                &mut ecs.singleton_database.associated_entities,
-                &mut ecs.scene_graph,
-            );
-
-            // Reload the serialization after the fact
-            post_deserialization = Some(new_post);
-            entities_to_post_deserialize.push((
-                *entity,
-                ecs.component_database
-                    .serialization_markers
-                    .get(entity)
-                    .map(|se| se.inner().id),
-            ));
-        }
-    }
-
-    if let Some(pd) = post_deserialization {
-        let scene_graph = &ecs.scene_graph;
-
-        ecs.component_database
-            .post_deserialization(pd, |component_list, sl| {
-                for (entity, _) in entities_to_post_deserialize.iter_mut() {
-                    if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                        inner.post_deserialization(*entity, sl, scene_graph);
-                    }
-                }
-            });
-
-        let mut serialized_entities =
-            serialization_util::entities::load_all_entities().with_context(|| {
-                format!(
-                    "We couldn't load Scene {}.",
-                    super::scene_system::current_scene_name()
-                )
-            })?;
-
-        for (entity, serialization_id) in entities_to_post_deserialize.iter_mut() {
-            if let Some(serialized_entity) = serialization_id.and_then(|si| serialized_entities.get_mut(&si))
+        for entity in ecs.entities.iter() {
+            if ecs
+                .component_database
+                .prefab_markers
+                .get(entity)
+                .map_or(false, |pmc| {
+                    let pm = pmc.inner();
+                    pm.prefab_id() == prefab_id && pm.member_id() == member_id
+                })
             {
-                if let Some(new_se) = SerializedEntity::new(
+                // Load the Delta into each existing Prefab inheritor
+                let new_post = ecs.component_database.load_yaml_delta_into_database(
                     entity,
-                    serialized_entity.id,
-                    &ecs.component_database,
-                    &ecs.singleton_database,
-                    resources,
-                ) {
-                    *serialized_entity = new_se;
-                }
+                    key.clone(),
+                    delta.clone(),
+                    Default::default(),
+                    &mut ecs.singleton_database.associated_entities,
+                    &mut ecs.scene_graph,
+                );
+
+                // Reload the serialization after the fact
+                post_deserialization = Some(new_post);
+                entities_to_post_deserialize.push(*entity);
             }
         }
 
-        serialization_util::entities::commit_all_entities(&serialized_entities)?;
+        if let Some(pd) = post_deserialization {
+            let scene_graph = &ecs.scene_graph;
+
+            ecs.component_database.post_deserialization(
+                pd,
+                ecs.scene_data.tracked_entities(),
+                |component_list, sl| {
+                    for entity in entities_to_post_deserialize.iter_mut() {
+                        if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
+                            inner.post_deserialization(*entity, sl, scene_graph);
+                        }
+                    }
+                },
+            );
+
+            // Update the Serialization of all the Entities we just changed...
+            for entity in entities_to_post_deserialize.iter_mut() {
+                if let Some(new_se) = SerializedEntity::new(
+                    entity,
+                    *ecs.scene_data.tracked_entities().get(entity).unwrap(),
+                    &ecs.component_database,
+                    &ecs.singleton_database,
+                    &ecs.scene_data,
+                    resources,
+                ) {
+                    if let Some(serialized_entity) = ecs.scene_data.serialized_entity_from_entity_mut(entity)
+                    {
+                        *serialized_entity = new_se;
+                    }
+                }
+            }
+        }
     }
 
     Ok(())

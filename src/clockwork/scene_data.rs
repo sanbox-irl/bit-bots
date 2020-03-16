@@ -1,6 +1,6 @@
 use super::{
     scene_graph::SerializedSceneGraph, serialization_util, ComponentDatabase, Entity, PrefabChildMap,
-    PrefabId, ResourcesDatabase, Scene, SceneIsDraft, SceneMode, SerializationId, SerializedEntity,
+    ResourcesDatabase, Scene, SceneIsDraft, SceneMode, SerializationId, SerializedEntity,
     SingletonDatabase, TokenizedRwLock,
 };
 use anyhow::Result as AnyResult;
@@ -90,17 +90,18 @@ impl SceneData {
     }
 
     pub fn serialized_entity_from_entity_mut(&mut self, entity: &Entity) -> Option<&mut SerializedEntity> {
-        SceneIsDraft::new(self.scene().mode()).and_then(|scene_is_draft| {
-            self.tracked_entities
-                .read()
-                .get(entity)
-                .and_then(|serialization_id| {
-                    self.serialized_scene_cache
-                        .read_mut(scene_is_draft)
-                        .entities
-                        .get_mut(serialization_id)
-                })
-        })
+        if let Some(scene_is_draft) = SceneIsDraft::new(self.scene().mode()) {
+            if let Some(serialization_id) = self.tracked_entities.read().get(entity) {
+                self.serialized_scene_cache
+                    .read_mut(scene_is_draft)
+                    .entities
+                    .get_mut(serialization_id)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     pub fn get_scene_id_for_prefab_child(
@@ -123,6 +124,10 @@ impl SceneData {
                 new_id
             }
         })
+    }
+
+    pub fn copy_cache(&self) -> SerializedSceneCache {
+        self.serialized_scene_cache.read().clone()
     }
 
     fn track_entity_with_token(
@@ -171,11 +176,12 @@ impl SceneData {
 /// This is a serialized scene cache, representing our scene,
 /// while we are editing on it. Changes to the serialized scene
 /// cache are not saved to disk automatically.
+#[derive(Clone)]
 pub struct SerializedSceneCache {
-    entities: SerializedHashMap,
-    prefab_child_map: HashMap<SerializationId, PrefabChildMap>,
-    singleton_data: SingletonDatabase,
-    serialized_scene_graph: SerializedSceneGraph,
+    pub entities: SerializedHashMap,
+    pub prefab_child_map: HashMap<SerializationId, PrefabChildMap>,
+    pub singleton_data: SingletonDatabase,
+    pub serialized_scene_graph: SerializedSceneGraph,
 
     /// If dirty, this SerializedSceneCache no longer directly reflects
     /// what is serialized to disk.

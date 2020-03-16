@@ -18,7 +18,7 @@ impl Clockwork {
         resources.initialize(&mut hardware_interfaces.renderer)?;
 
         let ecs = Clockwork::start_scene(
-            resources.config.default_scene,
+            resources.config.default_scene.clone(),
             &mut resources,
             &mut hardware_interfaces,
         )?;

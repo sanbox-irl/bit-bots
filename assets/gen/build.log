@@ -1,2 +1,18 @@
-2020-03-15T15:58:54.669794800-07:00 INFO build_script_build_main::shader_builder - No shaders were recompiled.
-2020-03-15T15:58:54.690691600-07:00 INFO build_script_build_main::sprite_packer - Sprites were not repacked.
+2020-03-16T01:01:46.597243200-07:00 INFO build_script_build_main::shader_builder - default_frag.frag has been changed.
+2020-03-16T01:01:46.887515-07:00 INFO build_script_build_main::shader_builder - default_vert.vert has been changed.
+2020-03-16T01:01:46.895522200-07:00 INFO build_script_build_main::shader_builder - imgui_frag.frag has been changed.
+2020-03-16T01:01:46.903529400-07:00 INFO build_script_build_main::shader_builder - imgui_vert.vert has been changed.
+2020-03-16T01:01:46.919544-07:00 INFO build_script_build_main::sprite_packer - Background has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - Grass has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - Block has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - Button has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - Fire has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - Flag has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - PlayerDead has been changed.
+2020-03-16T01:01:46.920545100-07:00 INFO build_script_build_main::sprite_packer - PushableBlock has been changed.
+2020-03-16T01:01:46.921545900-07:00 INFO build_script_build_main::sprite_packer - Target has been changed.
+2020-03-16T01:01:46.921545900-07:00 INFO build_script_build_main::sprite_packer - Wall has been changed.
+2020-03-16T01:01:46.921545900-07:00 INFO build_script_build_main::sprite_packer - YellowBot has been changed.
+2020-03-16T01:01:46.921545900-07:00 INFO build_script_build_main::sprite_packer - WhitePixel has been changed.
+2020-03-16T01:01:46.921545900-07:00 INFO build_script_build_main::sprite_packer - PixelMainCharacterStanding has been changed.
+2020-03-16T01:01:46.925549500-07:00 INFO build_script_build_main::sprite_packer - Repacking sprites...

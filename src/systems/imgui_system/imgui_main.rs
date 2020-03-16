@@ -260,7 +260,7 @@ fn menu_option(imstr: &imgui::ImStr, flag: ImGuiFlags, ui: &Ui<'_>, flags_to_cha
     }
 }
 
-fn scene_change<F: Fn(&str)>(prompt: &str, ui: &imgui::Ui<'_>, scene_name: &mut String, on_click: F) {
+fn scene_change<F: FnMut(&str)>(prompt: &str, ui: &imgui::Ui<'_>, scene_name: &mut String, mut on_click: F) {
     let im_prompt = imgui::ImString::new(prompt);
 
     if let Some(scene_submenu) = ui.begin_menu(&im_prompt, true) {

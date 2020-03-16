@@ -73,11 +73,11 @@ pub fn entity_list(
                 }
             }
             NameRequestedAction::PromoteToPrefab => {
-                prefab_system::promote_entity_to_prefab(&entity, &mut ecs, resources)?;
+                prefab_system::promote_entity_to_prefab(&entity, ecs, resources)?;
             }
 
             NameRequestedAction::UnpackPrefab => {
-                let mut success = false;
+                let x = "This actually doesn't really work yet. We need to unpack children...";
 
                 if let Some(prefab_marker) = ecs.component_database.prefab_markers.get(&entity) {
                     if let Some(serialized_entity) = ecs.scene_data.serialized_entity_from_entity_mut(&entity)
@@ -87,17 +87,6 @@ pub fn entity_list(
                             .prefab_markers
                             .unset_component(&entity, &mut ecs.scene_graph);
                     }
-                }
-
-                if success {
-                    ecs.component_database
-                        .prefab_markers
-                        .unset_component(&entity, &mut ecs.scene_graph);
-                } else {
-                    error!(
-                        "We couldn't unpack entity {}! It should still be safely serialized as a prefab.",
-                        Name::get_name_quick(&ecs.component_database.names, &entity)
-                    );
                 }
             }
 
@@ -229,38 +218,8 @@ fn imgui_entity_list(
         ui_handler.scene_graph_entities.clear();
 
         // SCENE GRAPH
-        let singleton_database = &ecs.singleton_database;
         let component_database = &mut ecs.component_database;
-        let scene_data = &ecs.scene_data;
-
         scene_graph_system::walk_tree_generically(&ecs.scene_graph, |entity, depth, has_children| {
-            // let serialized_entity: Option<SerializedEntity> = component_database
-            //     .serialization_markers
-            //     .get(entity)
-            //     .and_then(|smc| {
-            //         SerializedEntity::new(
-            //             entity,
-            //             smc.inner().id,
-            //             component_database,
-            //             singleton_database,
-            //             resources,
-            //         )
-            //     });
-
-            let fresh_serialized_entity: Option<SerializedEntity> = scene_data
-                .tracked_entities()
-                .get(entity)
-                .and_then(|serialization_id| {
-                    SerializedEntity::new(
-                        entity,
-                        *serialization_id,
-                        component_database,
-                        singleton_database,
-                        scene_data,
-                        resources,
-                    )
-                });
-
             let name_inspector_params = NameInspectorParameters {
                 has_children,
                 depth,
@@ -297,7 +256,6 @@ fn imgui_entity_list(
         ui_handler.ui.separator();
 
         let component_database = &mut ecs.component_database;
-        let singleton_database = &mut ecs.singleton_database;
         let entities = &ecs.entities;
 
         for entity in entities.iter() {

@@ -1,11 +1,9 @@
-use super::{
-    Camera, Entity, Marker, RenderingUtility, ResourcesDatabase, SingletonComponent,
-};
+use super::{Camera, Entity, Marker, RenderingUtility, ResourcesDatabase, SingletonComponent};
 use std::collections::HashMap;
 
 pub type AssociatedEntityMap = HashMap<Marker, Entity>;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SingletonDatabase {
     pub camera: SingletonComponent<Camera>,
     #[serde(skip)]

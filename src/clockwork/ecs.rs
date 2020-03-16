@@ -24,65 +24,64 @@ impl Ecs {
         let mut ecs = Ecs {
             component_database: ComponentDatabase::default(),
             scene_graph: SceneGraph::new(),
-            singleton_database: *scene_data.saved_singleton_data().clone(),
+            singleton_database: scene_data.saved_singleton_data().clone(),
             entities: Vec::new(),
             entity_allocator: EntityAllocator::new(),
             scene_data,
         };
 
         // Load in the SceneGraph...
-        ecs.scene_data
-            .saved_serialized_scene_graph()
-            .walk_tree_generically(|s_node| {
-                match ecs.scene_data.saved_serialized_entities().get(s_node.inner()) {
-                    Some(serialized_entity) => {
-                        let new_id = ecs.create_entity();
+        let cache = ecs.scene_data.copy_cache();
 
-                        let _ = ecs.load_serialized_entity(
-                            &new_id,
-                            serialized_entity.id,
-                            serialized_entity.clone(),
-                            prefabs,
-                        );
+        cache.serialized_scene_graph.walk_tree_generically(|s_node| {
+            match cache.entities.get(s_node.inner()) {
+                Some(serialized_entity) => {
+                    let new_id = Ecs::create_entity_raw(
+                        &mut ecs.component_database,
+                        &mut ecs.entity_allocator,
+                        &mut ecs.entities,
+                    );
 
-                        // Load in our Prefab Parent NodeID.
-                        let parent_id = {
-                            s_node.parent().and_then(|s_uuid| {
-                                ecs.scene_data
-                                    .saved_serialized_scene_graph()
-                                    .get(s_uuid)
-                                    .and_then(|parent_uuid| {
-                                        scene_graph_system::find_transform_from_serialization_id(
-                                            &mut ecs.component_database.transforms,
-                                            ecs.scene_data.tracked_entities(),
-                                            *parent_uuid.inner(),
-                                        )
-                                        .and_then(
-                                            |parent_transform| parent_transform.inner().scene_graph_node_id(),
-                                        )
-                                    })
+                    let _ = ecs.load_serialized_entity(
+                        &new_id,
+                        serialized_entity.id,
+                        serialized_entity.clone(),
+                        prefabs,
+                    );
+
+                    // Load in our Prefab Parent NodeID.
+                    let parent_id = {
+                        s_node.parent().and_then(|s_node| {
+                            cache.serialized_scene_graph.get(s_node).and_then(|parent_uuid| {
+                                scene_graph_system::find_transform_from_serialization_id(
+                                    &mut ecs.component_database.transforms,
+                                    ecs.scene_data.tracked_entities(),
+                                    *parent_uuid.inner(),
+                                )
+                                .and_then(|parent_transform| parent_transform.inner().scene_graph_node_id())
                             })
-                        };
+                        })
+                    };
 
-                        // Did we find a PrefabParentNodeID?
-                        if let Some(parent_id) = parent_id {
-                            if let Some(transform) = &mut ecs.component_database.transforms.get_mut(&new_id) {
-                                if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
-                                    parent_id.append(node_id, &mut ecs.scene_graph);
-                                }
+                    // Did we find a PrefabParentNodeID?
+                    if let Some(parent_id) = parent_id {
+                        if let Some(transform) = &mut ecs.component_database.transforms.get_mut(&new_id) {
+                            if let Some(node_id) = transform.inner_mut().scene_graph_node_id() {
+                                parent_id.append(node_id, &mut ecs.scene_graph);
                             }
                         }
                     }
-
-                    None => {
-                        error!(
-                            "Our SceneGraph for {} had a child {} but we couldn't find it in the EntityList?",
-                            ecs.scene_data.scene(),
-                            s_node.inner()
-                        );
-                    }
                 }
-            });
+
+                None => {
+                    error!(
+                        "Our SceneGraph for {} had a child {} but we couldn't find it in the EntityList?",
+                        ecs.scene_data.scene(),
+                        s_node.inner()
+                    );
+                }
+            }
+        });
 
         // #[cfg(debug_assertions)]
         // {
@@ -103,10 +102,19 @@ impl Ecs {
         // }
 
         // For the Non-SceneGraph entities too:
-        for (_, s_entity) in ecs.scene_data.saved_serialized_entities() {
+        for (serialized_id, s_entity) in cache.entities.iter() {
+            if ecs
+                .scene_data
+                .tracked_entities()
+                .iter()
+                .any(|(_, existing_id)| existing_id == serialized_id)
+            {
+                continue;
+            }
+
             let new_entity = ecs.create_entity();
 
-            let _ = ecs.load_serialized_entity(&new_entity, s_entity.id, s_entity.clone(), prefabs);
+            let _ = ecs.load_serialized_entity(&new_entity, *serialized_id, s_entity.clone(), prefabs);
         }
 
         // Post Deserialization Work!
@@ -365,9 +373,10 @@ impl Ecs {
                         .unwrap_or_else(|| SerializationId::new());
 
                     let new_id = self.create_entity();
+                    let member_id = serialized_entity.id;
 
                     // Load in the Prefab
-                    self.load_serialized_entity(&new_id, serialized_id, serialized_entity, prefab_map);
+                    let _ = self.load_serialized_entity(&new_id, serialized_id, serialized_entity, prefab_map);
 
                     // Load in our Prefab Parent NodeID.
                     let parent_id = {
@@ -397,7 +406,7 @@ impl Ecs {
                     // Set our Prefab
                     self.component_database.prefab_markers.set_component(
                         &new_id,
-                        PrefabMarker::new(prefab_id, serialized_entity.id),
+                        PrefabMarker::new(prefab_id, member_id),
                         &mut self.scene_graph,
                     );
                 }

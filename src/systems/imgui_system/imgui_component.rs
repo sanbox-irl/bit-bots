@@ -82,6 +82,7 @@ pub fn entity_inspector(
             // the field .names within component_database. If we use names, then this would
             // become a lot trickier.
             let names_raw_pointer: *const _ = &component_database.names;
+            let scene_mode = scene_data.scene().mode();
             component_database.foreach_component_list_mut(
                 NonInspectableEntities::empty(),
                 |component_list| {
@@ -93,7 +94,7 @@ pub fn entity_inspector(
 
                     let (deferred_serialization_command, delete) = component_list.component_inspector(
                         entity,
-                        ecs.scene_data.scene().mode(),
+                        scene_mode,
                         possible_sync_statuses,
                         entities,
                         unsafe { &*names_raw_pointer },
@@ -173,11 +174,11 @@ pub fn entity_inspector(
                 match command.command_type {
                     ComponentSerializationCommandType::Serialize
                     | ComponentSerializationCommandType::StopSerializing => {
-                        let serialization_id = scene_data.tracked_entities().get(&command.entity).unwrap();
+                        let serialization_id = *scene_data.tracked_entities().get(&command.entity).unwrap();
 
                         let serialized_entity = scene_data
                             .saved_serialized_entities()
-                            .get(serialization_id)
+                            .get(&serialization_id)
                             .cloned()
                             .unwrap();
 
@@ -192,7 +193,7 @@ pub fn entity_inspector(
                         let new_serialized_entity: SerializedEntity =
                             serde_yaml::from_value(serialized_yaml)?;
 
-                        scene_data.serialize_entity(command.entity, new_serialized_entity);
+                        scene_data.serialize_entity(command.entity, new_serialized_entity.clone());
 
                         // If we're in a Prefab Scene, update our Prefab Cache!
                         if scene_data.scene().is_prefab() {
@@ -224,7 +225,7 @@ pub fn entity_inspector(
 
                                 cached_prefab
                                     .members
-                                    .insert(*serialization_id, new_serialized_entity);
+                                    .insert(serialization_id, new_serialized_entity);
                             } else {
                                 // This is very unlikely!
                                 error!("We were in a Prefab Scene but we couldn't find our Prefab.");
@@ -270,42 +271,44 @@ pub fn entity_inspector(
                     }
 
                     ComponentSerializationCommandType::ApplyOverrideToParentPrefab => {
-                        let (main_id, sub_id) = component_database
-                            .prefab_markers
-                            .get(&command.entity)
-                            .map(|pm| (pm.inner().prefab_id(), pm.inner().member_id()))
-                            .unwrap();
+                        if scene_data.scene().mode() == SceneMode::Draft {
+                            let (main_id, sub_id) = component_database
+                                .prefab_markers
+                                .get(&command.entity)
+                                .map(|pm| (pm.inner().prefab_id(), pm.inner().member_id()))
+                                .unwrap();
 
-                        let mut prefab = serialization_util::prefabs::load_prefab(&main_id)?.unwrap();
-                        let (new_member, _diff): (SerializedEntity, _) = {
-                            let mut member_yaml =
-                                serde_yaml::to_value(prefab.members.get(&sub_id).cloned().unwrap())?;
+                            let mut prefab = serialization_util::prefabs::load_prefab(&main_id)?.unwrap();
+                            let (new_member, _diff): (SerializedEntity, _) = {
+                                let mut member_yaml =
+                                    serde_yaml::to_value(prefab.members.get(&sub_id).cloned().unwrap())?;
 
-                            let diff = member_yaml
-                                .as_mapping_mut()
-                                .unwrap()
-                                .insert(command.key.clone(), command.delta.clone());
+                                let diff = member_yaml
+                                    .as_mapping_mut()
+                                    .unwrap()
+                                    .insert(command.key.clone(), command.delta.clone());
 
-                            (serde_yaml::from_value(member_yaml)?, diff)
-                        };
+                                (serde_yaml::from_value(member_yaml)?, diff)
+                            };
 
-                        let prefab_id = prefab.prefab_id();
-                        let member_id = new_member.id;
+                            let prefab_id = prefab.prefab_id();
+                            let member_id = new_member.id;
 
-                        // Add in our Member and Cache the Prefab
-                        prefab.members.insert(new_member.id, new_member);
-                        let prefab_reload_required =
-                            prefab_system::serialize_and_cache_prefab(prefab, resources);
+                            // Add in our Member and Cache the Prefab
+                            prefab.members.insert(new_member.id, new_member);
+                            let prefab_reload_required =
+                                prefab_system::serialize_and_cache_prefab(prefab, resources);
 
-                        prefab_system::update_prefab_inheritor_component(
-                            prefab_reload_required,
-                            prefab_id,
-                            member_id,
-                            command.key,
-                            command.delta,
-                            ecs,
-                            resources,
-                        )?;
+                            prefab_system::update_prefab_inheritor_component(
+                                prefab_reload_required,
+                                prefab_id,
+                                member_id,
+                                command.key,
+                                command.delta,
+                                ecs,
+                                resources,
+                            )?;
+                        }
                     }
                 }
 

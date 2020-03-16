@@ -11,7 +11,7 @@ impl<T, K> TokenizedRwLock<T, K> {
         &self.0
     }
 
-    pub fn read_mut(&self, _: K) -> &mut T {
+    pub fn read_mut(&mut self, _: K) -> &mut T {
         &mut self.0
     }
 }

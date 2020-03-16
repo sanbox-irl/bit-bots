@@ -126,6 +126,7 @@ impl Default for SceneMode {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct SceneIsDraft(());
 impl SceneIsDraft {
     pub fn new(scene_mode: SceneMode) -> Option<SceneIsDraft> {

@@ -23,8 +23,6 @@ pub fn singleton_inspector(
             prefab_hashmap,
             ui_handler,
             is_open,
-            |serialized, live| serialized.camera = live.clone(),
-            |serialized, live| *live = serialized.camera,
         );
 
         // inspect_this_singleton_component(
@@ -44,7 +42,7 @@ pub fn singleton_inspector(
     is_open
 }
 
-fn inspect_this_singleton_component<T: SingletonBounds, F, F2>(
+fn inspect_this_singleton_component<T: SingletonBounds>(
     singleton_component: &mut SingletonComponent<T>,
     associated_entities: &mut HashMap<Marker, Entity>,
     name_list: &ComponentList<Name>,
@@ -52,12 +50,7 @@ fn inspect_this_singleton_component<T: SingletonBounds, F, F2>(
     prefabs: &PrefabMap,
     ui_handler: &mut UiHandler<'_>,
     is_open: bool,
-    edit_function: F,
-    revert_function: F2,
-) where
-    F: Fn(&mut SingletonDatabase, &mut SingletonComponent<T>),
-    F2: Fn(SingletonDatabase, &mut SingletonComponent<T>),
-{
+) {
     let ui: &mut Ui<'_> = &mut ui_handler.ui;
 
     let marker_name = imgui::ImString::new(singleton_component.marker().to_string());

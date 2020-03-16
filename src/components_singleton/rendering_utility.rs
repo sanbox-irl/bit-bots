@@ -2,7 +2,7 @@ use super::{sprite_resources::SpriteName, ResourcesDatabase, StandardQuad, Stand
 use strum::IntoEnumIterator;
 use strum_macros::{EnumCount, EnumIter};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct RenderingUtility {
     pub quad_buffer: Vec<StandardQuad>,
     pub basic_textures: [StandardTexture; BASICTEXTURES_COUNT],
