@@ -1,6 +1,5 @@
 use super::{
-    scene_graph::*, Component, ComponentDatabase, ComponentList, Entity, SerializationId, TrackedEntitiesMap,
-    Transform, Vec2,
+    scene_graph::*, Component, ComponentList, Entity, SerializationId, TrackedEntitiesMap, Transform, Vec2,
 };
 
 /// This function walks the SceneGraph, updating each Transform/GraphNode

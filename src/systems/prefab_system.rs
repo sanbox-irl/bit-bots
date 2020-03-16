@@ -76,7 +76,6 @@ pub fn promote_entity_to_prefab(
                 prefab_id,
                 root_member_id,
                 &mut members,
-                Some(child_map),
                 resources,
                 &ecs.singleton_database,
                 &mut ecs.scene_graph,
@@ -110,7 +109,6 @@ fn create_prefab_serialization(
     resources: &ResourcesDatabase,
 ) {
     for child in node_id.children(scene_graph) {
-        let child: super::scene_graph::NodeId = child;
         if let Some(node) = scene_graph.get(child) {
             let entity = node.inner();
             let member_id = SerializationId::new();
@@ -171,7 +169,6 @@ fn commit_entity_to_prefab(
     prefab_id: PrefabId,
     member_id: SerializationId,
     prefab_members: &mut HashMap<SerializationId, SerializedEntity>,
-    child_map: Option<HashMap<SerializationId, SerializationId>>,
     resources: &ResourcesDatabase,
     singleton_database: &SingletonDatabase,
     scene_graph: &mut SceneGraph,
@@ -205,23 +202,27 @@ pub fn instantiate_entity_from_prefab(ecs: &mut Ecs, prefab_id: PrefabId, prefab
     let entity = ecs.create_entity();
 
     // Instantiate the Prefab
-    let success = ecs.load_serialized_prefab(&entity, prefab_map.get(&prefab_id).cloned(), &None);
+    if let Some(prefab) = prefab_map.get(&prefab_id).cloned() {
+        let success = ecs.load_serialized_prefab(&entity, prefab, prefab_map);
 
-    if let Some(post) = success {
-        let scene_graph = &ecs.scene_graph;
-        ecs.component_database.post_deserialization(
-            post,
-            ecs.scene_data.tracked_entities(),
-            |component_list, sl| {
-                if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
-                    inner.post_deserialization(entity, sl, scene_graph);
-                }
-            },
-        );
-    } else {
-        if ecs.remove_entity(&entity) == false {
-            error!("We couldn't remove the Entity either, so we have a dangler!");
+        if let Some(post) = success {
+            let scene_graph = &ecs.scene_graph;
+            ecs.component_database.post_deserialization(
+                post,
+                ecs.scene_data.tracked_entities(),
+                |component_list, sl| {
+                    if let Some((inner, _)) = component_list.get_for_post_deserialization(&entity) {
+                        inner.post_deserialization(entity, sl, scene_graph);
+                    }
+                },
+            );
+        } else {
+            if ecs.remove_entity(&entity) == false {
+                error!("We couldn't remove the Entity either, so we have a dangler!");
+            }
         }
+    } else {
+        error!("We couldn't instantiate the prefab! Is it still valid?");
     }
 
     entity

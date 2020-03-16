@@ -1,8 +1,6 @@
 use super::{
-    serialization_util, Camera, Entity, Marker, RenderingUtility, ResourcesDatabase, SingletonBounds,
-    SingletonComponent,
+    Camera, Entity, Marker, RenderingUtility, ResourcesDatabase, SingletonComponent,
 };
-use anyhow::{Error, Result as AnyResult};
 use std::collections::HashMap;
 
 pub type AssociatedEntityMap = HashMap<Marker, Entity>;

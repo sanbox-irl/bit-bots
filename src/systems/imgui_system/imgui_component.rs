@@ -1,6 +1,6 @@
 use super::{imgui_component_utils::*, *};
 use anyhow::Error;
-use imgui::{Condition, ImStr, ImString, MenuItem, StyleColor, StyleVar, Window};
+use imgui::{Condition, MenuItem, StyleColor, StyleVar, Window};
 use imgui_utility::imgui_str;
 
 pub fn entity_inspector(

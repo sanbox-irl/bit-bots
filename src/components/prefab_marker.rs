@@ -1,8 +1,7 @@
 use super::{
     imgui_component_utils::{InspectorParameters, PrefabStatus},
-    ComponentBounds, Entity, Prefab, PrefabId, PrefabMap, SerializationId,
+    ComponentBounds, PrefabId, PrefabMap, SerializationId,
 };
-use std::collections::HashMap;
 
 #[derive(
     Debug,
@@ -22,14 +21,8 @@ pub struct PrefabMarker {
 }
 
 impl PrefabMarker {
-    pub fn new(
-        prefab_id: PrefabId,
-        member_id: SerializationId,
-    ) -> Self {
-        Self {
-            prefab_id,
-            member_id,
-        }
+    pub fn new(prefab_id: PrefabId, member_id: SerializationId) -> Self {
+        Self { prefab_id, member_id }
     }
 
     pub fn prefab_id(&self) -> PrefabId {
@@ -70,12 +63,7 @@ impl ComponentBounds for PrefabMarker {
             .map_or(false, |s| s.active == active && &s.inner == self)
     }
 
-    fn commit_to_scene(
-        &self,
-        se: &mut super::SerializedEntity,
-        active: bool,
-        _: &super::TrackedEntitiesMap,
-    ) {
+    fn commit_to_scene(&self, se: &mut super::SerializedEntity, active: bool, _: &super::TrackedEntitiesMap) {
         se.prefab_marker = Some(super::SerializedComponent {
             inner: self.clone(),
             active,
